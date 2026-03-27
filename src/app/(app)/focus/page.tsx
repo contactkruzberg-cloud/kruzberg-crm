@@ -11,9 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getRelanceUrgency, daysUntil, resolveTemplate, formatRelativeDate } from '@/lib/utils';
-import { Target, ArrowRight, Clock, Copy, Check, SkipForward, Pause, Zap } from 'lucide-react';
+import { Target, ArrowRight, Clock, Copy, Check, SkipForward, Pause, Zap, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import { SendEmailDialog } from '@/components/shared/send-email-dialog';
 import type { Deal, Template } from '@/types/database';
 
 export default function FocusPage() {
@@ -24,6 +25,7 @@ export default function FocusPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [generatedEmail, setGeneratedEmail] = useState<string | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   // Filter urgent relances
   const urgentDeals = (deals || [])
@@ -252,13 +254,17 @@ export default function FocusPage() {
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2">
+                  <Button onClick={() => setEmailDialogOpen(true)} className="gap-2">
+                    <Send className="h-4 w-4" />
+                    Envoyer email
+                  </Button>
                   {!generatedEmail ? (
-                    <Button onClick={handleGenerateEmail} className="gap-2">
+                    <Button variant="outline" onClick={handleGenerateEmail} className="gap-2">
                       <Copy className="h-4 w-4" />
-                      Générer email
+                      Générer & copier
                     </Button>
                   ) : (
-                    <Button onClick={handleCopyAndDone} className="gap-2">
+                    <Button variant="outline" onClick={handleCopyAndDone} className="gap-2">
                       <Check className="h-4 w-4" />
                       Copier & terminé
                     </Button>
@@ -281,6 +287,19 @@ export default function FocusPage() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      {currentDeal && (
+        <SendEmailDialog
+          open={emailDialogOpen}
+          onOpenChange={(open) => {
+            setEmailDialogOpen(open);
+            if (!open) markDone();
+          }}
+          deal={currentDeal}
+          contact={currentDeal.contact}
+          venue={currentDeal.venue}
+        />
+      )}
     </div>
   );
 }

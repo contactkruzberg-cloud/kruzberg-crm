@@ -14,9 +14,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { STAGES, PRIORITIES, type DealStage, type DealPriority } from '@/types/database';
 import { formatDate, formatRelativeDate, cn } from '@/lib/utils';
-import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote } from 'lucide-react';
+import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { SendEmailDialog } from '@/components/shared/send-email-dialog';
 
 interface DealSidePanelProps {
   dealId: string;
@@ -30,6 +31,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const createActivity = useCreateActivity();
   const [notes, setNotes] = useState('');
   const [newNote, setNewNote] = useState('');
+  const [emailOpen, setEmailOpen] = useState(false);
 
   useEffect(() => {
     if (deal?.notes) setNotes(deal.notes);
@@ -132,6 +134,15 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                 )}
               </div>
             )}
+
+            {/* Send Email */}
+            <Button
+              className="w-full gap-2"
+              onClick={() => setEmailOpen(true)}
+            >
+              <Send className="h-4 w-4" />
+              Envoyer un email
+            </Button>
 
             <Separator />
 
@@ -257,6 +268,16 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
           </div>
         </ScrollArea>
       ) : null}
+
+      {deal && (
+        <SendEmailDialog
+          open={emailOpen}
+          onOpenChange={setEmailOpen}
+          deal={deal}
+          contact={deal.contact}
+          venue={deal.venue}
+        />
+      )}
     </motion.div>
   );
 }
