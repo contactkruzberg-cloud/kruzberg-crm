@@ -1,26 +1,208 @@
 @import "tailwindcss";
 
+/* ===== KRUZBERG Design System ===== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core palette */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 3.9%;
+  --primary: 162 100% 45%;
+  --primary-foreground: 0 0% 2%;
+  --secondary: 0 0% 96.1%;
+  --secondary-foreground: 0 0% 9%;
+  --muted: 0 0% 96.1%;
+  --muted-foreground: 0 0% 45.1%;
+  --accent: 0 0% 96.1%;
+  --accent-foreground: 0 0% 9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 89.8%;
+  --input: 0 0% 89.8%;
+  --ring: 162 100% 45%;
+  --radius: 0.625rem;
+
+  /* Status colors */
+  --status-urgent: 0 84% 60%;
+  --status-warning: 25 95% 53%;
+  --status-success: 142 76% 36%;
+  --status-info: 217 91% 60%;
+  --status-neutral: 0 0% 45%;
+
+  /* Pipeline stage colors */
+  --stage-a-contacter: 217 91% 60%;
+  --stage-contacte: 262 83% 58%;
+  --stage-relance: 25 95% 53%;
+  --stage-repondu: 47 96% 53%;
+  --stage-confirme: 142 76% 36%;
+  --stage-refuse: 0 84% 60%;
+
+  /* Accent glow */
+  --glow-primary: 0 0 20px hsl(162 100% 45% / 0.3);
+  --glow-urgent: 0 0 20px hsl(0 84% 60% / 0.4);
+  --glow-warning: 0 0 20px hsl(25 95% 53% / 0.3);
+
+  /* Glass */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+}
+
+.dark {
+  --background: 0 0% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 6%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 6%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 162 100% 45%;
+  --primary-foreground: 0 0% 2%;
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+  --accent: 0 0% 14.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 17%;
+  --input: 0 0% 17%;
+  --ring: 162 100% 45%;
+
+  --glass-bg: rgba(10, 10, 10, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --radius: var(--radius);
+
+  --color-sidebar: hsl(var(--card));
+  --color-sidebar-foreground: hsl(var(--card-foreground));
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ===== Base Styles ===== */
+* {
+  border-color: hsl(var(--border));
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* ===== Glassmorphism utility ===== */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+}
+
+/* ===== Glow effects ===== */
+.glow-primary {
+  box-shadow: var(--glow-primary);
+}
+.glow-urgent {
+  box-shadow: var(--glow-urgent);
+}
+
+/* ===== Pulse animation for urgent badges ===== */
+@keyframes pulse-urgent {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px hsl(0 84% 60% / 0.4); }
+  50% { opacity: 0.85; box-shadow: 0 0 20px hsl(0 84% 60% / 0.6); }
+}
+.animate-pulse-urgent {
+  animation: pulse-urgent 2s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px hsl(25 95% 53% / 0.3); }
+  50% { opacity: 0.85; box-shadow: 0 0 16px hsl(25 95% 53% / 0.5); }
+}
+.animate-pulse-warning {
+  animation: pulse-warning 2s ease-in-out infinite;
+}
+
+/* ===== Gradient backgrounds ===== */
+.gradient-hero {
+  background: linear-gradient(135deg,
+    hsl(var(--background)) 0%,
+    hsl(162 100% 45% / 0.05) 50%,
+    hsl(var(--background)) 100%
+  );
+}
+.dark .gradient-hero {
+  background: linear-gradient(135deg,
+    hsl(0 0% 3.9%) 0%,
+    hsl(162 100% 45% / 0.08) 30%,
+    hsl(262 83% 58% / 0.05) 70%,
+    hsl(0 0% 3.9%) 100%
+  );
+}
+
+/* ===== Stage badges ===== */
+.stage-a-contacter { background: hsl(var(--stage-a-contacter) / 0.15); color: hsl(var(--stage-a-contacter)); border: 1px solid hsl(var(--stage-a-contacter) / 0.3); }
+.stage-contacte { background: hsl(var(--stage-contacte) / 0.15); color: hsl(var(--stage-contacte)); border: 1px solid hsl(var(--stage-contacte) / 0.3); }
+.stage-relance { background: hsl(var(--stage-relance) / 0.15); color: hsl(var(--stage-relance)); border: 1px solid hsl(var(--stage-relance) / 0.3); }
+.stage-repondu { background: hsl(var(--stage-repondu) / 0.15); color: hsl(var(--stage-repondu)); border: 1px solid hsl(var(--stage-repondu) / 0.3); }
+.stage-confirme { background: hsl(var(--stage-confirme) / 0.15); color: hsl(var(--stage-confirme)); border: 1px solid hsl(var(--stage-confirme) / 0.3); }
+.stage-refuse { background: hsl(var(--stage-refuse) / 0.15); color: hsl(var(--stage-refuse)); border: 1px solid hsl(var(--stage-refuse) / 0.3); }
+
+/* ===== Kanban drag ===== */
+.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+}
+
+/* ===== Focus mode overlay ===== */
+.focus-overlay {
+  background: hsl(var(--background) / 0.95);
+  backdrop-filter: blur(20px);
+}
+
+/* ===== Leaflet overrides ===== */
+.leaflet-container {
+  background: hsl(var(--card)) !important;
+  border-radius: var(--radius);
 }
