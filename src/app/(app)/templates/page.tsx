@@ -122,15 +122,31 @@ export default function TemplatesPage() {
     templateName: string | null;
   }
 
+  // Parse activities — handle both new format (À:/Objet:/body) and old format (Email envoyé : "subject" → to)
   const sentEmails: SentEmail[] = (emailActivities || [])
-    .filter((a) => a.type === 'email_sent' && a.content.includes('\nObjet :'))
+    .filter((a) => a.type === 'email_sent')
     .map((a) => {
-      const lines = a.content.split('\n');
+      if (a.content.includes('\nObjet :')) {
+        // New format
+        const lines = a.content.split('\n');
+        return {
+          id: a.id,
+          to: lines[0]?.replace('À : ', '') || '',
+          subject: lines[1]?.replace('Objet : ', '') || '',
+          body: lines.slice(3).join('\n'),
+          date: a.created_at,
+          venueName: a.venue ? (a.venue as { name: string }).name : null,
+          contactName: a.contact ? (a.contact as { name: string }).name : null,
+          templateName: null,
+        };
+      }
+      // Old format: 'Email envoyé : "subject" → to'
+      const oldMatch = a.content.match(/Email envoyé : "(.+?)" → (.+)/);
       return {
         id: a.id,
-        to: lines[0]?.replace('À : ', '') || '',
-        subject: lines[1]?.replace('Objet : ', '') || '',
-        body: lines.slice(3).join('\n'),
+        to: oldMatch?.[2] || '',
+        subject: oldMatch?.[1] || a.content,
+        body: '',
         date: a.created_at,
         venueName: a.venue ? (a.venue as { name: string }).name : null,
         contactName: a.contact ? (a.contact as { name: string }).name : null,
@@ -138,17 +154,31 @@ export default function TemplatesPage() {
       };
     });
 
+  // Parse template_sends — handle both new format (À:/Objet:/body) and old format (raw body)
   const templateSendEmails: SentEmail[] = (sends || [])
-    .filter((s) => s.generated_body.includes('\nObjet :'))
     .map((s) => {
-      const lines = s.generated_body.split('\n');
+      if (s.generated_body.startsWith('À : ')) {
+        // New format
+        const lines = s.generated_body.split('\n');
+        return {
+          id: s.id,
+          to: lines[0]?.replace('À : ', '') || '',
+          subject: lines[1]?.replace('Objet : ', '') || '',
+          body: lines.slice(3).join('\n'),
+          date: s.created_at,
+          venueName: s.deal?.venue ? (s.deal.venue as { name: string }).name : null,
+          contactName: s.contact ? (s.contact as { name: string }).name : null,
+          templateName: s.template?.name || null,
+        };
+      }
+      // Old format: generated_body is the raw email body
       return {
         id: s.id,
-        to: lines[0]?.replace('À : ', '') || '',
-        subject: lines[1]?.replace('Objet : ', '') || '',
-        body: lines.slice(3).join('\n'),
+        to: s.contact ? (s.contact as { email?: string }).email || '' : '',
+        subject: s.template?.subject || '',
+        body: s.generated_body,
         date: s.created_at,
-        venueName: null,
+        venueName: s.deal?.venue ? (s.deal.venue as { name: string }).name : null,
         contactName: s.contact ? (s.contact as { name: string }).name : null,
         templateName: s.template?.name || null,
       };
