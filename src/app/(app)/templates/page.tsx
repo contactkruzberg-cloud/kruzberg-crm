@@ -16,8 +16,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { TEMPLATE_CATEGORIES, type Template, type TemplateCategory } from '@/types/database';
 import { resolveTemplate, formatDate } from '@/lib/utils';
-import { Plus, Copy, Trash2, Mail, Clock, FileText, Eye } from 'lucide-react';
+import { Plus, Copy, Trash2, Mail, Clock, FileText, Eye, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { useActivities } from '@/hooks/use-activities';
 
 const SAMPLE_VARIABLES: Record<string, string> = {
   nom_contact: 'Marie Martin',
@@ -30,6 +31,7 @@ const SAMPLE_VARIABLES: Record<string, string> = {
 export default function TemplatesPage() {
   const { data: templates, isLoading } = useTemplates();
   const { data: sends } = useTemplateSends();
+  const { data: emailActivities } = useActivities(500);
   const createTemplate = useCreateTemplate();
   const updateTemplate = useUpdateTemplate();
   const deleteTemplate = useDeleteTemplate();
@@ -40,6 +42,8 @@ export default function TemplatesPage() {
   const [editSubject, setEditSubject] = useState('');
   const [editBody, setEditBody] = useState('');
   const [tab, setTab] = useState('editor');
+  const [pageTab, setPageTab] = useState<'templates' | 'history'>('templates');
+  const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
 
   const selectedTemplate = templates?.find((t) => t.id === selectedId);
 
@@ -106,16 +110,165 @@ export default function TemplatesPage() {
     );
   }
 
+  // Build unified email history
+  interface SentEmail {
+    id: string;
+    to: string;
+    subject: string;
+    body: string;
+    date: string;
+    venueName: string | null;
+    contactName: string | null;
+    templateName: string | null;
+  }
+
+  const sentEmails: SentEmail[] = (emailActivities || [])
+    .filter((a) => a.type === 'email_sent' && a.content.includes('\nObjet :'))
+    .map((a) => {
+      const lines = a.content.split('\n');
+      return {
+        id: a.id,
+        to: lines[0]?.replace('À : ', '') || '',
+        subject: lines[1]?.replace('Objet : ', '') || '',
+        body: lines.slice(3).join('\n'),
+        date: a.created_at,
+        venueName: a.venue ? (a.venue as { name: string }).name : null,
+        contactName: a.contact ? (a.contact as { name: string }).name : null,
+        templateName: null,
+      };
+    });
+
+  const templateSendEmails: SentEmail[] = (sends || [])
+    .filter((s) => s.generated_body.includes('\nObjet :'))
+    .map((s) => {
+      const lines = s.generated_body.split('\n');
+      return {
+        id: s.id,
+        to: lines[0]?.replace('À : ', '') || '',
+        subject: lines[1]?.replace('Objet : ', '') || '',
+        body: lines.slice(3).join('\n'),
+        date: s.created_at,
+        venueName: null,
+        contactName: s.contact ? (s.contact as { name: string }).name : null,
+        templateName: s.template?.name || null,
+      };
+    });
+
+  // Merge and deduplicate
+  const allEmails: SentEmail[] = [...sentEmails];
+  for (const ts of templateSendEmails) {
+    const isDuplicate = allEmails.some((e) =>
+      Math.abs(new Date(e.date).getTime() - new Date(ts.date).getTime()) < 5000 &&
+      e.to === ts.to
+    );
+    if (!isDuplicate) allEmails.push(ts);
+  }
+  allEmails.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Templates & Communications</h1>
-        <Button size="sm" className="gap-2" onClick={handleCreate}>
-          <Plus className="h-4 w-4" />
-          Nouveau template
-        </Button>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold">Templates & Communications</h1>
+          <Tabs value={pageTab} onValueChange={(v) => setPageTab(v as 'templates' | 'history')}>
+            <TabsList>
+              <TabsTrigger value="templates" className="gap-2">
+                <FileText className="h-3.5 w-3.5" />
+                Templates
+              </TabsTrigger>
+              <TabsTrigger value="history" className="gap-2">
+                <Send className="h-3.5 w-3.5" />
+                Emails envoyés ({allEmails.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        {pageTab === 'templates' && (
+          <Button size="sm" className="gap-2" onClick={handleCreate}>
+            <Plus className="h-4 w-4" />
+            Nouveau template
+          </Button>
+        )}
       </div>
 
+      {pageTab === 'history' && (
+        <div className="space-y-2">
+          {allEmails.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground border rounded-xl border-dashed">
+              <Send className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Aucun email envoyé depuis le CRM</p>
+              <p className="text-xs mt-1">Les emails envoyés apparaîtront ici avec leur contenu complet</p>
+            </div>
+          ) : (
+            allEmails.map((email) => {
+              const isExpanded = expandedEmailId === email.id;
+              return (
+                <div
+                  key={email.id}
+                  className="rounded-lg border bg-card overflow-hidden transition-shadow hover:shadow-sm"
+                >
+                  <div
+                    className="flex items-center justify-between p-4 cursor-pointer"
+                    onClick={() => setExpandedEmailId(isExpanded ? null : email.id)}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium truncate">{email.subject || '(sans objet)'}</p>
+                        {'templateName' in email && email.templateName && (
+                          <Badge variant="outline" className="text-[10px] shrink-0">
+                            {email.templateName}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                        <span>→ {email.to}</span>
+                        {'venueName' in email && email.venueName && (
+                          <span>• {email.venueName}</span>
+                        )}
+                        {email.contactName && (
+                          <span>• {email.contactName}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-4">
+                      <span className="text-xs text-muted-foreground">{formatDate(email.date)}</span>
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
+                  {isExpanded && (
+                    <div className="border-t px-4 py-3 bg-muted/30">
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed max-h-80 overflow-y-auto">
+                        {email.body}
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1.5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(email.body);
+                            toast.success('Corps du mail copié');
+                          }}
+                        >
+                          <Copy className="h-3 w-3" />
+                          Copier le corps
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {pageTab === 'templates' && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Template list */}
         <div className="space-y-3">
@@ -287,6 +440,7 @@ export default function TemplatesPage() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

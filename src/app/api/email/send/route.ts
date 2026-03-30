@@ -24,14 +24,14 @@ export async function POST(request: NextRequest) {
       body: emailBody,
     });
 
-    // Log template send
+    // Log template send (template_id is required by DB constraint)
     if (templateId) {
       await supabase.from('template_sends').insert({
         user_id: user.id,
         template_id: templateId,
         deal_id: dealId || null,
         contact_id: contactId || null,
-        generated_body: emailBody,
+        generated_body: `À : ${to}\nObjet : ${subject}\n\n${emailBody}`,
       });
     }
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       venue_id: venueId || null,
       contact_id: contactId || null,
       type: 'email_sent',
-      content: `Email envoyé : "${subject}" → ${to}`,
+      content: `À : ${to}\nObjet : ${subject}\n\n${emailBody}`,
     });
 
     // Update deal if linked

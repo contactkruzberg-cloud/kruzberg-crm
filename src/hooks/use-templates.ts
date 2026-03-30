@@ -81,7 +81,7 @@ export function useTemplateSends() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('template_sends')
-        .select('*, template:templates(*), contact:contacts(id, name)')
+        .select('*, template:templates(*), contact:contacts(id, name, email), deal:deals(id, venue_id, stage, venue:venues(id, name, city))')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as TemplateSend[];
