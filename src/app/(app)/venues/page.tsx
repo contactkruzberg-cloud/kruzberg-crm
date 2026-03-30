@@ -13,10 +13,13 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Upload, Download, Search } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useDeals } from '@/hooks/use-deals';
+import { exportAllData } from '@/utils/export-xlsx';
 
 export default function VenuesPage() {
   const { data: venues, isLoading: venuesLoading } = useVenues();
   const { data: contacts, isLoading: contactsLoading } = useContacts();
+  const { data: deals } = useDeals();
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -79,6 +82,15 @@ export default function VenuesPage() {
           </Tabs>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => exportAllData(venues || [], contacts || [], deals || [])}
+          >
+            <Download className="h-4 w-4" />
+            Exporter
+          </Button>
           <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportOpen(true)}>
             <Upload className="h-4 w-4" />
             Importer
