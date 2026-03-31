@@ -63,6 +63,7 @@ export default function VenuesPage() {
   const [typeFilter, setTypeFilter] = useState<VenueType | 'all'>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
   const [fitFilter, setFitFilter] = useState<number | 'all'>('all');
+  const [pipelineFilter, setPipelineFilter] = useState<'all' | 'not_contacted' | 'in_pipeline'>('all');
   const [venueSort, setVenueSort] = useState<VenueSortKey>('fit_score');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -84,11 +85,17 @@ export default function VenuesPage() {
     return Array.from(set).sort();
   }, [contacts]);
 
+  // Venue IDs that have deals
+  const venueIdsInPipeline = useMemo(() => {
+    return new Set((deals || []).map((d) => d.venue_id));
+  }, [deals]);
+
   // Count active filters
   const activeFilterCount = [
     typeFilter !== 'all',
     cityFilter !== 'all',
     fitFilter !== 'all',
+    pipelineFilter !== 'all',
   ].filter(Boolean).length;
 
   // Filtered & sorted venues
@@ -120,6 +127,13 @@ export default function VenuesPage() {
     // Fit filter
     if (fitFilter !== 'all') {
       result = result.filter((v) => v.fit_score >= fitFilter);
+    }
+
+    // Pipeline filter
+    if (pipelineFilter === 'not_contacted') {
+      result = result.filter((v) => !venueIdsInPipeline.has(v.id));
+    } else if (pipelineFilter === 'in_pipeline') {
+      result = result.filter((v) => venueIdsInPipeline.has(v.id));
     }
 
     // Sort
@@ -184,6 +198,7 @@ export default function VenuesPage() {
     setTypeFilter('all');
     setCityFilter('all');
     setFitFilter('all');
+    setPipelineFilter('all');
     setSearch('');
     setContactRoleFilter('all');
   };
@@ -375,6 +390,38 @@ export default function VenuesPage() {
                   {score}★+
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Pipeline status */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Statut pipeline</p>
+            <div className="flex gap-1">
+              {([
+                { key: 'all', label: 'Tous' },
+                { key: 'not_contacted', label: 'Pas encore contactés' },
+                { key: 'in_pipeline', label: 'Dans le pipeline' },
+              ] as const).map((opt) => {
+                const count = opt.key === 'all'
+                  ? venues?.length || 0
+                  : opt.key === 'not_contacted'
+                  ? (venues || []).filter((v) => !venueIdsInPipeline.has(v.id)).length
+                  : (venues || []).filter((v) => venueIdsInPipeline.has(v.id)).length;
+                return (
+                  <button
+                    key={opt.key}
+                    onClick={() => setPipelineFilter(opt.key)}
+                    className={cn(
+                      'px-2.5 py-1 rounded-full text-xs font-medium transition-all border',
+                      pipelineFilter === opt.key
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-card text-muted-foreground border-border hover:border-primary/50'
+                    )}
+                  >
+                    {opt.label} ({count})
+                  </button>
+                );
+              })}
             </div>
           </div>
         </motion.div>
