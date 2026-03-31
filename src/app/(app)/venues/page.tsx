@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useVenues } from '@/hooks/use-venues';
 import { useContacts } from '@/hooks/use-contacts';
 import { useDeals } from '@/hooks/use-deals';
+import { useActivities } from '@/hooks/use-activities';
 import { VenueList } from '@/components/venues/venue-list';
 import { VenueDetail } from '@/components/venues/venue-detail';
 import { CreateVenueDialog } from '@/components/venues/create-venue-dialog';
@@ -53,6 +54,7 @@ export default function VenuesPage() {
   const { data: venues, isLoading: venuesLoading } = useVenues();
   const { data: contacts, isLoading: contactsLoading } = useContacts();
   const { data: deals } = useDeals();
+  const { data: activities } = useActivities(500);
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -85,10 +87,15 @@ export default function VenuesPage() {
     return Array.from(set).sort();
   }, [contacts]);
 
-  // Venue IDs that have deals
-  const venueIdsInPipeline = useMemo(() => {
-    return new Set((deals || []).map((d) => d.venue_id));
-  }, [deals]);
+  // Venue IDs that have been contacted (deal exists OR email_sent activity)
+  const venueIdsContacted = useMemo(() => {
+    const ids = new Set<string>();
+    (deals || []).forEach((d) => ids.add(d.venue_id));
+    (activities || []).forEach((a) => {
+      if (a.type === 'email_sent' && a.venue_id) ids.add(a.venue_id);
+    });
+    return ids;
+  }, [deals, activities]);
 
   // Count active filters
   const activeFilterCount = [
@@ -131,9 +138,9 @@ export default function VenuesPage() {
 
     // Pipeline filter
     if (pipelineFilter === 'not_contacted') {
-      result = result.filter((v) => !venueIdsInPipeline.has(v.id));
+      result = result.filter((v) => !venueIdsContacted.has(v.id));
     } else if (pipelineFilter === 'in_pipeline') {
-      result = result.filter((v) => venueIdsInPipeline.has(v.id));
+      result = result.filter((v) => venueIdsContacted.has(v.id));
     }
 
     // Sort
@@ -405,8 +412,8 @@ export default function VenuesPage() {
                 const count = opt.key === 'all'
                   ? venues?.length || 0
                   : opt.key === 'not_contacted'
-                  ? (venues || []).filter((v) => !venueIdsInPipeline.has(v.id)).length
-                  : (venues || []).filter((v) => venueIdsInPipeline.has(v.id)).length;
+                  ? (venues || []).filter((v) => !venueIdsContacted.has(v.id)).length
+                  : (venues || []).filter((v) => venueIdsContacted.has(v.id)).length;
                 return (
                   <button
                     key={opt.key}
