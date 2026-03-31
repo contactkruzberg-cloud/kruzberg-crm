@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useUpdateVenue, useDeleteVenue } from '@/hooks/use-venues';
-import { useDeals } from '@/hooks/use-deals';
+import { useDeals, useCreateDeal } from '@/hooks/use-deals';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { VENUE_TYPES, STAGES, type Venue, type Contact, type VenueType } from '@/types/database';
 import { cn, formatDate } from '@/lib/utils';
-import { MapPin, Globe, AtSign, Phone, Mail, Star, Trash2, ExternalLink, User } from 'lucide-react';
+import { MapPin, Globe, AtSign, Phone, Mail, Star, Trash2, ExternalLink, User, Plus, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface VenueDetailProps {
@@ -24,6 +24,7 @@ interface VenueDetailProps {
 export function VenueDetail({ venue, contacts }: VenueDetailProps) {
   const updateVenue = useUpdateVenue();
   const deleteVenue = useDeleteVenue();
+  const createDeal = useCreateDeal();
   const { data: deals } = useDeals();
   const [notes, setNotes] = useState(venue.notes || '');
 
@@ -51,6 +52,24 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
     return () => clearTimeout(timer);
   }, [notes, venue.notes, saveField]);
 
+  const hasActiveDeal = venueDeals.some((d) => !['confirme', 'refuse'].includes(d.stage));
+
+  const handleAddToPipeline = () => {
+    const mainContact = venueContacts[0];
+    createDeal.mutate(
+      {
+        venue_id: venue.id,
+        contact_id: mainContact?.id || null,
+        stage: 'a_contacter',
+        priority: venue.fit_score >= 4 ? 'high' : 'medium',
+      },
+      {
+        onSuccess: () => toast.success(`"${venue.name}" ajouté au pipeline`),
+        onError: () => toast.error('Erreur lors de l\'ajout'),
+      }
+    );
+  };
+
   const handleDelete = () => {
     if (!confirm(`Supprimer "${venue.name}" ?`)) return;
     deleteVenue.mutate(venue.id, {
@@ -75,6 +94,26 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
+        {/* Quick actions */}
+        <div className="flex gap-2 flex-wrap">
+          {!hasActiveDeal && (
+            <Button
+              size="sm"
+              className="gap-2"
+              onClick={handleAddToPipeline}
+              disabled={createDeal.isPending}
+            >
+              <Plus className="h-4 w-4" />
+              {createDeal.isPending ? 'Ajout...' : 'Ajouter au pipeline'}
+            </Button>
+          )}
+          {hasActiveDeal && (
+            <Badge variant="success" className="text-xs py-1">
+              Déjà dans le pipeline
+            </Badge>
+          )}
+        </div>
+
         {/* Quick info */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
