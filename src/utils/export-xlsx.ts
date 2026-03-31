@@ -23,6 +23,7 @@ const TYPE_LABELS: Record<string, string> = {
   festival: 'Festival',
   cafe_concert: 'Café Concert',
   mjc: 'MJC',
+  organisateur: 'Organisateur',
   other: 'Autre',
 };
 

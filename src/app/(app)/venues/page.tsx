@@ -27,6 +27,7 @@ const TYPE_OPTIONS: { key: VenueType | 'all'; label: string }[] = [
   { key: 'festival', label: 'Festival' },
   { key: 'cafe_concert', label: 'Café Concert' },
   { key: 'mjc', label: 'MJC' },
+  { key: 'organisateur', label: 'Organisateur' },
   { key: 'other', label: 'Autre' },
 ];
 

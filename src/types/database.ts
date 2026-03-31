@@ -8,7 +8,7 @@ export type DealStage =
 
 export type DealPriority = 'low' | 'medium' | 'high';
 
-export type VenueType = 'bar' | 'salle' | 'festival' | 'cafe_concert' | 'mjc' | 'other';
+export type VenueType = 'bar' | 'salle' | 'festival' | 'cafe_concert' | 'mjc' | 'organisateur' | 'other';
 
 export type ContactTone = 'tu' | 'vous';
 
@@ -140,6 +140,7 @@ export const VENUE_TYPES: { key: VenueType; label: string }[] = [
   { key: 'festival', label: 'Festival' },
   { key: 'cafe_concert', label: 'Café Concert' },
   { key: 'mjc', label: 'MJC' },
+  { key: 'organisateur', label: 'Organisateur' },
   { key: 'other', label: 'Autre' },
 ];
 

@@ -12,6 +12,7 @@ const TYPE_LABELS: Record<VenueType, string> = {
   festival: 'Festival',
   cafe_concert: 'Café',
   mjc: 'MJC',
+  organisateur: 'Orga',
   other: 'Autre',
 };
 
