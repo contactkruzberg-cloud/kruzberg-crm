@@ -62,14 +62,15 @@ export function SendEmailDialog({
     }
   }, [templates, deal, suggestedCategory, selectedTemplateId]);
 
-  // Auto-fill recipient
+  // Auto-fill recipient only when dialog opens
   useEffect(() => {
+    if (!open) return;
     const email = contact?.email || venue?.email || deal?.contact?.email || deal?.venue?.email || '';
-    // Don't use URLs as email addresses
     if (email && !email.startsWith('http')) {
       setTo(email);
     }
-  }, [contact, venue, deal]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   // Apply template
   useEffect(() => {
