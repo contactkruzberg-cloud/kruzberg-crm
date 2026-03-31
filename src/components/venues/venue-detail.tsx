@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useUpdateVenue, useDeleteVenue } from '@/hooks/use-venues';
 import { useDeals, useCreateDeal } from '@/hooks/use-deals';
+import { useCreateContact } from '@/hooks/use-contacts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,8 +26,15 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
   const updateVenue = useUpdateVenue();
   const deleteVenue = useDeleteVenue();
   const createDeal = useCreateDeal();
+  const createContact = useCreateContact();
   const { data: deals } = useDeals();
   const [notes, setNotes] = useState(venue.notes || '');
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [newContactName, setNewContactName] = useState('');
+  const [newContactRole, setNewContactRole] = useState('');
+  const [newContactEmail, setNewContactEmail] = useState('');
+  const [newContactPhone, setNewContactPhone] = useState('');
+  const [newContactTone, setNewContactTone] = useState<'tu' | 'vous'>('vous');
 
   const venueContacts = contacts.filter((c) => c.venue_id === venue.id);
   const venueDeals = (deals || []).filter((d) => d.venue_id === venue.id);
@@ -215,11 +223,136 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
 
         {/* Linked contacts */}
         <div>
-          <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-            <User className="h-4 w-4" />
-            Contacts ({venueContacts.length})
-          </h3>
-          {venueContacts.length === 0 ? (
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Contacts ({venueContacts.length})
+            </h3>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs h-7"
+              onClick={() => setShowAddContact(!showAddContact)}
+            >
+              <Plus className="h-3 w-3" />
+              Ajouter
+            </Button>
+          </div>
+
+          {/* Inline add contact form */}
+          {showAddContact && (
+            <div className="rounded-lg border p-3 mb-3 space-y-3 bg-muted/30">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[11px]">Nom *</Label>
+                  <Input
+                    value={newContactName}
+                    onChange={(e) => setNewContactName(e.target.value)}
+                    placeholder="Jean Dupont"
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px]">Rôle</Label>
+                  <Input
+                    value={newContactRole}
+                    onChange={(e) => setNewContactRole(e.target.value)}
+                    placeholder="Programmateur"
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px]">Email</Label>
+                  <Input
+                    value={newContactEmail}
+                    onChange={(e) => setNewContactEmail(e.target.value)}
+                    placeholder="email@venue.com"
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[11px]">Téléphone</Label>
+                  <Input
+                    value={newContactPhone}
+                    onChange={(e) => setNewContactPhone(e.target.value)}
+                    placeholder="06..."
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => setNewContactTone('tu')}
+                    className={cn(
+                      'px-2.5 py-1 rounded text-xs font-medium border transition-all',
+                      newContactTone === 'tu' ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground'
+                    )}
+                  >
+                    Tu
+                  </button>
+                  <button
+                    onClick={() => setNewContactTone('vous')}
+                    className={cn(
+                      'px-2.5 py-1 rounded text-xs font-medium border transition-all',
+                      newContactTone === 'vous' ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground'
+                    )}
+                  >
+                    Vous
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => {
+                      setShowAddContact(false);
+                      setNewContactName('');
+                      setNewContactRole('');
+                      setNewContactEmail('');
+                      setNewContactPhone('');
+                      setNewContactTone('vous');
+                    }}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="text-xs h-7"
+                    disabled={!newContactName.trim() || createContact.isPending}
+                    onClick={() => {
+                      createContact.mutate(
+                        {
+                          venue_id: venue.id,
+                          name: newContactName.trim(),
+                          role: newContactRole.trim() || null,
+                          email: newContactEmail.trim() || null,
+                          phone: newContactPhone.trim() || null,
+                          tone: newContactTone,
+                        },
+                        {
+                          onSuccess: () => {
+                            toast.success('Contact ajouté');
+                            setShowAddContact(false);
+                            setNewContactName('');
+                            setNewContactRole('');
+                            setNewContactEmail('');
+                            setNewContactPhone('');
+                            setNewContactTone('vous');
+                          },
+                        }
+                      );
+                    }}
+                  >
+                    {createContact.isPending ? '...' : 'Créer'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {venueContacts.length === 0 && !showAddContact ? (
             <p className="text-xs text-muted-foreground">Aucun contact lié</p>
           ) : (
             <div className="space-y-2">
@@ -227,7 +360,10 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
                 <div key={c.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
                   <div>
                     <p className="text-sm font-medium">{c.name}</p>
-                    <p className="text-xs text-muted-foreground">{c.role || 'Contact'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {c.role || 'Contact'}
+                      {c.email && ` · ${c.email}`}
+                    </p>
                   </div>
                   <Badge variant={c.tone === 'tu' ? 'default' : 'secondary'} className="text-[10px]">
                     {c.tone}
