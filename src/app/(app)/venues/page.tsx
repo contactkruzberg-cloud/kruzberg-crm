@@ -162,7 +162,7 @@ export default function VenuesPage() {
     });
 
     return result;
-  }, [venues, search, typeFilter, cityFilter, fitFilter, venueSort]);
+  }, [venues, search, typeFilter, cityFilter, fitFilter, pipelineFilter, venueIdsContacted, venueSort]);
 
   // Filtered & sorted contacts
   const filteredContacts = useMemo(() => {
