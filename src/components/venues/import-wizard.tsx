@@ -262,7 +262,7 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
         if (!venueName) { countSkipped++; continue; }
 
         const typeRaw = venueMapping.type ? String(row[venueMapping.type] || 'bar').toLowerCase() : 'bar';
-        const typeMap: Record<string, string> = { bar: 'bar', salle: 'salle', festival: 'festival', 'café concert': 'cafe_concert', 'cafe concert': 'cafe_concert', mjc: 'mjc', organisateur: 'organisateur', orga: 'organisateur' };
+        const typeMap: Record<string, string> = { bar: 'bar', salle: 'salle', festival: 'festival', 'café concert': 'cafe_concert', 'cafe concert': 'cafe_concert', mjc: 'mjc', organisateur: 'organisateur', orga: 'organisateur', media: 'media', 'média': 'media' };
         const venueType = typeMap[typeRaw] || 'other';
 
         const venueData = {

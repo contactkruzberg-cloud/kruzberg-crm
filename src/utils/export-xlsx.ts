@@ -24,6 +24,7 @@ const TYPE_LABELS: Record<string, string> = {
   cafe_concert: 'Café Concert',
   mjc: 'MJC',
   organisateur: 'Organisateur',
+  media: 'Média',
   other: 'Autre',
 };
 
