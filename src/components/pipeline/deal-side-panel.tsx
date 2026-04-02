@@ -14,10 +14,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { STAGES, PRIORITIES, type DealStage, type DealPriority } from '@/types/database';
 import { formatDate, formatRelativeDate, cn } from '@/lib/utils';
-import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send } from 'lucide-react';
+import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send, CheckCircle2, Circle, Plus, Trash2, ListTodo } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { SendEmailDialog } from '@/components/shared/send-email-dialog';
+import { useDealTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks';
 
 interface DealSidePanelProps {
   dealId: string;
@@ -27,11 +28,18 @@ interface DealSidePanelProps {
 export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const { data: deal, isLoading } = useDeal(dealId);
   const { data: activities } = useActivities(50);
+  const { data: dealTasks } = useDealTasks(dealId);
   const updateDeal = useUpdateDeal();
   const createActivity = useCreateActivity();
+  const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
   const [notes, setNotes] = useState('');
   const [newNote, setNewNote] = useState('');
   const [emailOpen, setEmailOpen] = useState(false);
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDue, setNewTaskDue] = useState('');
 
   useEffect(() => {
     if (deal?.notes) setNotes(deal.notes);
@@ -238,6 +246,149 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                 </Button>
               </div>
             </div>
+
+            {/* Tasks */}
+            <Separator />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs flex items-center gap-1.5">
+                  <ListTodo className="h-3.5 w-3.5" />
+                  Tâches ({dealTasks?.filter((t) => !t.completed_at).length || 0})
+                </Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs gap-1"
+                  onClick={() => setShowAddTask(!showAddTask)}
+                >
+                  <Plus className="h-3 w-3" />
+                  Ajouter
+                </Button>
+              </div>
+
+              {showAddTask && (
+                <div className="rounded-lg border p-2.5 space-y-2 bg-muted/30">
+                  <Input
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    placeholder="Ex: Envoyer le morceau pour diffusion"
+                    className="h-8 text-xs"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newTaskTitle.trim()) {
+                        createTask.mutate({
+                          deal_id: deal?.id,
+                          venue_id: deal?.venue_id,
+                          title: newTaskTitle.trim(),
+                          due_date: newTaskDue || null,
+                        }, {
+                          onSuccess: () => {
+                            setNewTaskTitle('');
+                            setNewTaskDue('');
+                            toast.success('Tâche créée');
+                          },
+                        });
+                      }
+                    }}
+                  />
+                  <div className="flex items-center justify-between">
+                    <Input
+                      type="date"
+                      value={newTaskDue}
+                      onChange={(e) => setNewTaskDue(e.target.value)}
+                      className="h-7 text-xs w-36"
+                    />
+                    <div className="flex gap-1.5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => { setShowAddTask(false); setNewTaskTitle(''); setNewTaskDue(''); }}
+                      >
+                        Annuler
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-7 text-xs"
+                        disabled={!newTaskTitle.trim() || createTask.isPending}
+                        onClick={() => {
+                          createTask.mutate({
+                            deal_id: deal?.id,
+                            venue_id: deal?.venue_id,
+                            title: newTaskTitle.trim(),
+                            due_date: newTaskDue || null,
+                          }, {
+                            onSuccess: () => {
+                              setNewTaskTitle('');
+                              setNewTaskDue('');
+                              setShowAddTask(false);
+                              toast.success('Tâche créée');
+                            },
+                          });
+                        }}
+                      >
+                        Créer
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {dealTasks && dealTasks.length > 0 ? (
+                <div className="space-y-1.5">
+                  {dealTasks.map((task) => {
+                    const isCompleted = !!task.completed_at;
+                    const isOverdue = !isCompleted && task.due_date && new Date(task.due_date) < new Date();
+                    return (
+                      <div
+                        key={task.id}
+                        className={cn(
+                          'flex items-start gap-2 p-2 rounded-lg group transition-colors',
+                          isCompleted ? 'opacity-50' : 'hover:bg-muted/50',
+                          isOverdue && 'bg-red-500/5'
+                        )}
+                      >
+                        <button
+                          className="mt-0.5 shrink-0"
+                          onClick={() => {
+                            updateTask.mutate({
+                              id: task.id,
+                              completed_at: isCompleted ? null : new Date().toISOString(),
+                            });
+                          }}
+                        >
+                          {isCompleted ? (
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                          ) : (
+                            <Circle className={cn('h-4 w-4', isOverdue ? 'text-red-500' : 'text-muted-foreground')} />
+                          )}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <p className={cn('text-xs', isCompleted && 'line-through')}>{task.title}</p>
+                          {task.due_date && (
+                            <p className={cn(
+                              'text-[10px] mt-0.5',
+                              isOverdue ? 'text-red-500 font-medium' : 'text-muted-foreground'
+                            )}>
+                              {isOverdue ? 'En retard — ' : ''}{formatDate(task.due_date)}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                          onClick={() => deleteTask.mutate(task.id)}
+                        >
+                          <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : !showAddTask ? (
+                <p className="text-xs text-muted-foreground">Aucune tâche</p>
+              ) : null}
+            </div>
+
+            <Separator />
 
             {/* Activity timeline */}
             <div className="space-y-3">

@@ -8,6 +8,7 @@ import { ActivityFeed } from '@/components/dashboard/activity-feed';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { VenueMap } from '@/components/dashboard/venue-map';
 import { WeeklySparklines } from '@/components/dashboard/weekly-sparklines';
+import { PendingTasks } from '@/components/dashboard/pending-tasks';
 
 const container = {
   hidden: { opacity: 0 },
@@ -53,25 +54,30 @@ export default function DashboardPage() {
         <QuickActions />
       </motion.div>
 
-      {/* Alerts + Concerts */}
+      {/* Alerts + Tasks */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div variants={item}>
           <RelanceAlerts />
         </motion.div>
         <motion.div variants={item}>
-          <UpcomingConcerts />
+          <PendingTasks />
         </motion.div>
       </div>
 
-      {/* Map + Activity */}
+      {/* Concerts + Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div variants={item}>
-          <VenueMap />
+          <UpcomingConcerts />
         </motion.div>
         <motion.div variants={item}>
           <ActivityFeed />
         </motion.div>
       </div>
+
+      {/* Map */}
+      <motion.div variants={item}>
+        <VenueMap />
+      </motion.div>
 
       {/* Sparklines */}
       <motion.div variants={item}>
