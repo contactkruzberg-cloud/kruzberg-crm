@@ -12,7 +12,8 @@ export function useDeals() {
       const { data, error } = await supabase
         .from('deals')
         .select('*, venue:venues(*), contact:contacts(*)')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: true });
       if (error) throw error;
       return data as Deal[];
     },
