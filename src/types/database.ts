@@ -14,6 +14,18 @@ export type ContactTone = 'tu' | 'vous';
 
 export type ContactMethod = 'email' | 'phone' | 'instagram' | 'other';
 
+export type RelanceMethod =
+  | 'sms'
+  | 'phone'
+  | 'email'
+  | 'website_form'
+  | 'facebook'
+  | 'instagram'
+  | 'whatsapp'
+  | 'linkedin'
+  | 'in_person'
+  | 'other';
+
 export type ActivityType =
   | 'email_sent'
   | 'reply_received'
@@ -74,6 +86,7 @@ export interface Deal {
   priority: DealPriority;
   first_contact_at: string | null;
   last_message_at: string | null;
+  last_relance_method: RelanceMethod | null;
   next_relance_at: string | null;
   response: string | null;
   concert_date: string | null;
@@ -151,6 +164,19 @@ export const TEMPLATE_CATEGORIES: { key: TemplateCategory; label: string }[] = [
   { key: 'relance_2', label: 'Relance 2' },
   { key: 'confirmation', label: 'Confirmation' },
   { key: 'post_show', label: 'Post-concert' },
+];
+
+export const RELANCE_METHODS: { key: RelanceMethod; label: string }[] = [
+  { key: 'email', label: 'Mail' },
+  { key: 'phone', label: 'Téléphone' },
+  { key: 'sms', label: 'SMS' },
+  { key: 'whatsapp', label: 'WhatsApp' },
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'facebook', label: 'Facebook' },
+  { key: 'linkedin', label: 'LinkedIn' },
+  { key: 'website_form', label: 'Formulaire site' },
+  { key: 'in_person', label: 'En personne' },
+  { key: 'other', label: 'Autre' },
 ];
 
 export const PRIORITIES: { key: DealPriority; label: string; color: string }[] = [

@@ -12,7 +12,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { STAGES, PRIORITIES, type DealStage, type DealPriority } from '@/types/database';
+import { STAGES, PRIORITIES, RELANCE_METHODS, type DealStage, type DealPriority, type RelanceMethod } from '@/types/database';
 import { formatDate, formatRelativeDate, cn } from '@/lib/utils';
 import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send, CheckCircle2, Circle, Plus, Trash2, ListTodo } from 'lucide-react';
 import { toast } from 'sonner';
@@ -72,6 +72,19 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const handlePriorityChange = (priority: DealPriority) => {
     if (!deal) return;
     updateDeal.mutate({ id: deal.id, priority });
+  };
+
+  const handleLastRelanceDateChange = (value: string) => {
+    if (!deal) return;
+    updateDeal.mutate({
+      id: deal.id,
+      last_message_at: value ? new Date(value).toISOString() : null,
+    });
+  };
+
+  const handleLastRelanceMethodChange = (method: RelanceMethod) => {
+    if (!deal) return;
+    updateDeal.mutate({ id: deal.id, last_relance_method: method });
   };
 
   const handleAddNote = () => {
@@ -186,6 +199,38 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Dernière relance */}
+            <div className="space-y-2">
+              <Label className="text-xs">Dernière relance</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  type="date"
+                  value={deal.last_message_at ? deal.last_message_at.slice(0, 10) : ''}
+                  onChange={(e) => handleLastRelanceDateChange(e.target.value)}
+                />
+                <Select
+                  value={deal.last_relance_method ?? ''}
+                  onValueChange={(v) => handleLastRelanceMethodChange(v as RelanceMethod)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Mode..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RELANCE_METHODS.map((m) => (
+                      <SelectItem key={m.key} value={m.key}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {deal.next_relance_at && (
+                <p className="text-[10px] text-muted-foreground">
+                  Prochaine relance prévue : {formatDate(deal.next_relance_at)}
+                </p>
+              )}
             </div>
 
             {/* Fee */}
