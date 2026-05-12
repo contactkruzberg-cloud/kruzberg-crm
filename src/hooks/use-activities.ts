@@ -20,6 +20,24 @@ export function useActivities(limit = 15) {
   });
 }
 
+export function useVenueActivities(venueId: string | null | undefined) {
+  const supabase = useSupabase();
+  return useQuery({
+    queryKey: ['activities', 'venue', venueId],
+    queryFn: async () => {
+      if (!venueId) return [] as Activity[];
+      const { data, error } = await supabase
+        .from('activities')
+        .select('*, contact:contacts(id, name)')
+        .eq('venue_id', venueId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Activity[];
+    },
+    enabled: !!venueId,
+  });
+}
+
 export function useCreateActivity() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();

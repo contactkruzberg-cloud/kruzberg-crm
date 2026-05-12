@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useUpdateVenue, useDeleteVenue } from '@/hooks/use-venues';
 import { useDeals, useCreateDeal } from '@/hooks/use-deals';
 import { useCreateContact } from '@/hooks/use-contacts';
+import { useVenueActivities } from '@/hooks/use-activities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { VENUE_TYPES, STAGES, type Venue, type Contact, type VenueType } from '@/types/database';
-import { cn, formatDate } from '@/lib/utils';
-import { MapPin, Globe, AtSign, Phone, Mail, Star, Trash2, ExternalLink, User, Plus, Send } from 'lucide-react';
+import { cn, formatDate, formatRelativeDate } from '@/lib/utils';
+import { MapPin, Globe, AtSign, Phone, Mail, Star, Trash2, ExternalLink, User, Plus, Send, History, ArrowRightLeft, StickyNote, Music } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface VenueDetailProps {
@@ -28,6 +29,7 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
   const createDeal = useCreateDeal();
   const createContact = useCreateContact();
   const { data: deals } = useDeals();
+  const { data: venueActivities } = useVenueActivities(venue.id);
   const [notes, setNotes] = useState(venue.notes || '');
   const [showAddContact, setShowAddContact] = useState(false);
   const [newContactName, setNewContactName] = useState('');
@@ -395,6 +397,46 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
                         {formatDate(d.concert_date)}
                       </span>
                     )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <Separator />
+
+        {/* Historique */}
+        <div>
+          <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Historique ({venueActivities?.length || 0})
+          </h3>
+          {!venueActivities || venueActivities.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Aucun historique pour le moment</p>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+              {venueActivities.map((activity) => {
+                const Icon =
+                  activity.type === 'email_sent' || activity.type === 'reply_received'
+                    ? Mail
+                    : activity.type === 'status_change'
+                    ? ArrowRightLeft
+                    : activity.type === 'concert_played'
+                    ? Music
+                    : StickyNote;
+                return (
+                  <div key={activity.id} className="flex items-start gap-3">
+                    <div className="rounded-full bg-muted p-1.5 shrink-0">
+                      <Icon className="h-3 w-3 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs whitespace-pre-wrap break-words">{activity.content}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {formatRelativeDate(activity.created_at)}
+                        {activity.contact?.name && ` · ${activity.contact.name}`}
+                      </p>
+                    </div>
                   </div>
                 );
               })}
