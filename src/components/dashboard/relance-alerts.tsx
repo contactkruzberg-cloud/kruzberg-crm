@@ -28,7 +28,7 @@ export function RelanceAlerts() {
   }
 
   const alerts = (deals || [])
-    .filter((d) => d.next_relance_at && getRelanceUrgency(d.next_relance_at) !== 'ok' && !['confirme', 'refuse'].includes(d.stage))
+    .filter((d) => d.next_relance_at && getRelanceUrgency(d.next_relance_at) !== 'ok' && !['confirme', 'termine', 'refuse'].includes(d.stage))
     .sort((a, b) => {
       const dA = daysUntil(a.next_relance_at!);
       const dB = daysUntil(b.next_relance_at!);

@@ -31,7 +31,7 @@ export default function FocusPage() {
   const urgentDeals = (deals || [])
     .filter((d) => {
       if (completedIds.has(d.id)) return false;
-      if (['confirme', 'refuse'].includes(d.stage)) return false;
+      if (['confirme', 'termine', 'refuse'].includes(d.stage)) return false;
       const urgency = getRelanceUrgency(d.next_relance_at);
       return urgency === 'overdue' || urgency === 'urgent';
     })

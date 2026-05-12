@@ -28,7 +28,8 @@ export function KanbanCard({ deal, onClick, isDragging }: KanbanCardProps) {
     transition,
   };
 
-  const urgency = getRelanceUrgency(deal.next_relance_at);
+  const showRelanceAlert = ['contacte', 'relance'].includes(deal.stage);
+  const urgency = showRelanceAlert ? getRelanceUrgency(deal.next_relance_at) : null;
 
   return (
     <div

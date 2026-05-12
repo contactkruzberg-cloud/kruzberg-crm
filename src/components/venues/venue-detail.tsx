@@ -60,7 +60,7 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
     return () => clearTimeout(timer);
   }, [notes, venue.notes, saveField]);
 
-  const hasActiveDeal = venueDeals.some((d) => !['confirme', 'refuse'].includes(d.stage));
+  const hasActiveDeal = venueDeals.some((d) => !['confirme', 'termine', 'refuse'].includes(d.stage));
 
   const handleAddToPipeline = () => {
     const mainContact = venueContacts[0];

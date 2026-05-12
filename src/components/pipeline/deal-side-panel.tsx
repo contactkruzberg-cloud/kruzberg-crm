@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useDeal, useUpdateDeal } from '@/hooks/use-deals';
+import { useDeal, useUpdateDeal, useDeleteDeal } from '@/hooks/use-deals';
 import { useActivities, useCreateActivity } from '@/hooks/use-activities';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { STAGES, PRIORITIES, RELANCE_METHODS, type DealStage, type DealPriority, type RelanceMethod } from '@/types/database';
 import { formatDate, formatRelativeDate, cn } from '@/lib/utils';
 import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send, CheckCircle2, Circle, Plus, Trash2, ListTodo } from 'lucide-react';
@@ -30,6 +31,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const { data: activities } = useActivities(50);
   const { data: dealTasks } = useDealTasks(dealId);
   const updateDeal = useUpdateDeal();
+  const deleteDeal = useDeleteDeal();
   const createActivity = useCreateActivity();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
@@ -37,6 +39,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const [notes, setNotes] = useState('');
   const [newNote, setNewNote] = useState('');
   const [emailOpen, setEmailOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDue, setNewTaskDue] = useState('');
@@ -461,18 +464,68 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                 </div>
               )}
             </div>
+
+            <Separator />
+
+            {/* Delete deal */}
+            <div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setConfirmDeleteOpen(true)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Supprimer l&apos;opportunité
+              </Button>
+            </div>
           </div>
         </ScrollArea>
       ) : null}
 
       {deal && (
-        <SendEmailDialog
-          open={emailOpen}
-          onOpenChange={setEmailOpen}
-          deal={deal}
-          contact={deal.contact}
-          venue={deal.venue}
-        />
+        <>
+          <SendEmailDialog
+            open={emailOpen}
+            onOpenChange={setEmailOpen}
+            deal={deal}
+            contact={deal.contact}
+            venue={deal.venue}
+          />
+          <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Supprimer l&apos;opportunité ?</DialogTitle>
+                <DialogDescription>
+                  L&apos;opportunité « {deal.venue?.name || 'Sans lieu'} » sera supprimée définitivement du pipeline, ainsi que toutes ses activités et tâches liées. Cette action ne peut pas être annulée.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="ghost" onClick={() => setConfirmDeleteOpen(false)}>
+                  Annuler
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={deleteDeal.isPending}
+                  onClick={() => {
+                    deleteDeal.mutate(deal.id, {
+                      onSuccess: () => {
+                        toast.success('Opportunité supprimée');
+                        setConfirmDeleteOpen(false);
+                        onClose();
+                      },
+                      onError: () => {
+                        toast.error('Erreur lors de la suppression');
+                      },
+                    });
+                  }}
+                >
+                  {deleteDeal.isPending ? 'Suppression…' : 'Supprimer'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
       )}
     </motion.div>
   );

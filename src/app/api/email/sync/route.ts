@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
           .select('id, stage')
           .eq('user_id', userId)
           .eq('venue_id', venueId)
-          .not('stage', 'in', '("confirme","refuse")')
+          .not('stage', 'in', '("confirme","termine","refuse")')
           .order('updated_at', { ascending: false })
           .limit(1);
 

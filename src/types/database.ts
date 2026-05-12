@@ -5,6 +5,7 @@ export type DealStage =
   | 'repondu'
   | 'a_suivre'
   | 'confirme'
+  | 'termine'
   | 'refuse';
 
 export type DealPriority = 'low' | 'medium' | 'high';
@@ -146,6 +147,7 @@ export const STAGES: { key: DealStage; label: string; color: string }[] = [
   { key: 'repondu', label: 'Répondu', color: 'stage-repondu' },
   { key: 'a_suivre', label: 'À suivre', color: 'stage-a-suivre' },
   { key: 'confirme', label: 'Confirmé', color: 'stage-confirme' },
+  { key: 'termine', label: 'Terminé', color: 'stage-termine' },
   { key: 'refuse', label: 'Refusé', color: 'stage-refuse' },
 ];
 

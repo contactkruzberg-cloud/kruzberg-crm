@@ -31,6 +31,7 @@ const STAGE_COLORS: Record<string, string> = {
   repondu: '#eab308',
   a_suivre: '#84cc16',
   confirme: '#22c55e',
+  termine: '#64748b',
   refuse: '#ef4444',
 };
 
