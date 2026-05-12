@@ -3,6 +3,7 @@ export type DealStage =
   | 'contacte'
   | 'relance'
   | 'repondu'
+  | 'a_suivre'
   | 'confirme'
   | 'refuse';
 
@@ -143,6 +144,7 @@ export const STAGES: { key: DealStage; label: string; color: string }[] = [
   { key: 'contacte', label: 'Contacté', color: 'stage-contacte' },
   { key: 'relance', label: 'Relancé', color: 'stage-relance' },
   { key: 'repondu', label: 'Répondu', color: 'stage-repondu' },
+  { key: 'a_suivre', label: 'À suivre', color: 'stage-a-suivre' },
   { key: 'confirme', label: 'Confirmé', color: 'stage-confirme' },
   { key: 'refuse', label: 'Refusé', color: 'stage-refuse' },
 ];

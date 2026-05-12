@@ -29,6 +29,7 @@ const STAGE_COLORS: Record<DealStage, string> = {
   contacte: '#8b5cf6',
   relance: '#f97316',
   repondu: '#eab308',
+  a_suivre: '#84cc16',
   confirme: '#22c55e',
   refuse: '#ef4444',
 };
@@ -66,7 +67,7 @@ export default function AnalyticsPage() {
   // Conversion funnel
   const funnelData = [
     { name: 'Contactés', value: allDeals.filter((d) => d.stage !== 'a_contacter').length, fill: '#8b5cf6' },
-    { name: 'Répondu', value: allDeals.filter((d) => ['repondu', 'confirme'].includes(d.stage)).length, fill: '#eab308' },
+    { name: 'Répondu', value: allDeals.filter((d) => ['repondu', 'a_suivre', 'confirme'].includes(d.stage)).length, fill: '#eab308' },
     { name: 'Confirmés', value: allDeals.filter((d) => d.stage === 'confirme').length, fill: '#22c55e' },
   ];
 
@@ -74,7 +75,7 @@ export default function AnalyticsPage() {
   const venueTypes = ['bar', 'salle', 'festival', 'cafe_concert', 'mjc'];
   const responseByType = venueTypes.map((type) => {
     const typeDeals = allDeals.filter((d) => d.venue?.type === type);
-    const responded = typeDeals.filter((d) => ['repondu', 'confirme'].includes(d.stage)).length;
+    const responded = typeDeals.filter((d) => ['repondu', 'a_suivre', 'confirme'].includes(d.stage)).length;
     return {
       type: type === 'cafe_concert' ? 'Café' : type.charAt(0).toUpperCase() + type.slice(1),
       rate: typeDeals.length > 0 ? Math.round((responded / typeDeals.length) * 100) : 0,
@@ -154,7 +155,7 @@ export default function AnalyticsPage() {
           <p className="text-2xl font-bold">
             {allDeals.length > 0
               ? Math.round(
-                  (allDeals.filter((d) => ['repondu', 'confirme'].includes(d.stage)).length /
+                  (allDeals.filter((d) => ['repondu', 'a_suivre', 'confirme'].includes(d.stage)).length /
                     allDeals.length) *
                     100
                 )

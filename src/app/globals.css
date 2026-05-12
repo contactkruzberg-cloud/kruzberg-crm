@@ -37,6 +37,7 @@
   --stage-contacte: 262 83% 58%;
   --stage-relance: 25 95% 53%;
   --stage-repondu: 47 96% 53%;
+  --stage-a-suivre: 82 78% 44%;
   --stage-confirme: 142 76% 36%;
   --stage-refuse: 0 84% 60%;
 
@@ -186,6 +187,7 @@ body {
 .stage-contacte { background: hsl(var(--stage-contacte) / 0.15); color: hsl(var(--stage-contacte)); border: 1px solid hsl(var(--stage-contacte) / 0.3); }
 .stage-relance { background: hsl(var(--stage-relance) / 0.15); color: hsl(var(--stage-relance)); border: 1px solid hsl(var(--stage-relance) / 0.3); }
 .stage-repondu { background: hsl(var(--stage-repondu) / 0.15); color: hsl(var(--stage-repondu)); border: 1px solid hsl(var(--stage-repondu) / 0.3); }
+.stage-a-suivre { background: hsl(var(--stage-a-suivre) / 0.15); color: hsl(var(--stage-a-suivre)); border: 1px solid hsl(var(--stage-a-suivre) / 0.3); }
 .stage-confirme { background: hsl(var(--stage-confirme) / 0.15); color: hsl(var(--stage-confirme)); border: 1px solid hsl(var(--stage-confirme) / 0.3); }
 .stage-refuse { background: hsl(var(--stage-refuse) / 0.15); color: hsl(var(--stage-refuse)); border: 1px solid hsl(var(--stage-refuse) / 0.3); }
 

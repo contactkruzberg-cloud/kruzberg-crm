@@ -7,6 +7,7 @@ const STAGE_LABELS: Record<string, string> = {
   contacte: 'Contacté',
   relance: 'Relancé',
   repondu: 'Répondu',
+  a_suivre: 'À suivre',
   confirme: 'Confirmé',
   refuse: 'Refusé',
 };
