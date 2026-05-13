@@ -125,7 +125,7 @@ export function PipelineTable({ deals, onDealClick }: PipelineTableProps) {
                 <th className="text-left p-3"><SortHeader field="stage">Stage</SortHeader></th>
                 <th className="text-left p-3"><SortHeader field="priority">Priorité</SortHeader></th>
                 <th className="text-left p-3"><SortHeader field="next_relance">Relance</SortHeader></th>
-                <th className="text-left p-3"><SortHeader field="last_message">Dernier msg</SortHeader></th>
+                <th className="text-left p-3"><SortHeader field="last_message">Dernier contact</SortHeader></th>
                 <th className="text-left p-3">Tags</th>
               </tr>
             </thead>

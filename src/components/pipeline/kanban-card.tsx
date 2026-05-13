@@ -85,7 +85,7 @@ export function KanbanCard({ deal, onClick, isDragging }: KanbanCardProps) {
 
       {deal.last_message_at && (
         <p className="text-[10px] text-muted-foreground mt-1.5">
-          Dernier msg: {formatRelativeDate(deal.last_message_at)}
+          Dernier contact : {formatRelativeDate(deal.last_message_at)}
         </p>
       )}
     </div>

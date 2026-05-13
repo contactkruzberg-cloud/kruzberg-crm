@@ -51,8 +51,15 @@ export function KanbanBoard({ deals, onDealClick }: KanbanBoardProps) {
     if (!deal || deal.stage === newStage) return;
 
     const stageLabel = STAGES.find((s) => s.key === newStage)?.label || newStage;
+    const updates: { id: string; stage: DealStage; last_message_at?: string } = {
+      id: dealId,
+      stage: newStage,
+    };
+    if (deal.stage === 'a_contacter' && newStage === 'contacte') {
+      updates.last_message_at = new Date().toISOString();
+    }
     updateDeal.mutate(
-      { id: dealId, stage: newStage },
+      updates,
       {
         onSuccess: () => {
           toast.success(`Déplacé vers "${stageLabel}"`);

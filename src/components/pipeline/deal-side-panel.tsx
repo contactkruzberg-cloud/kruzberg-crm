@@ -204,9 +204,9 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
               </div>
             </div>
 
-            {/* Dernière relance */}
+            {/* Dernier contact */}
             <div className="space-y-2">
-              <Label className="text-xs">Dernière relance</Label>
+              <Label className="text-xs">Dernier contact</Label>
               <div className="grid grid-cols-2 gap-2">
                 <Input
                   type="date"
