@@ -236,18 +236,33 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
               )}
             </div>
 
-            {/* Fee */}
-            <div className="space-y-2">
-              <Label className="text-xs">Cachet (€)</Label>
-              <Input
-                type="number"
-                value={deal.fee ?? ''}
-                onChange={(e) => {
-                  const fee = e.target.value ? parseFloat(e.target.value) : null;
-                  updateDeal.mutate({ id: deal.id, fee });
-                }}
-                placeholder="250"
-              />
+            {/* Concert date + Fee */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs">Date du concert</Label>
+                <Input
+                  type="date"
+                  value={deal.concert_date ? deal.concert_date.slice(0, 10) : ''}
+                  onChange={(e) => {
+                    updateDeal.mutate({
+                      id: deal.id,
+                      concert_date: e.target.value || null,
+                    });
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Cachet (€)</Label>
+                <Input
+                  type="number"
+                  value={deal.fee ?? ''}
+                  onChange={(e) => {
+                    const fee = e.target.value ? parseFloat(e.target.value) : null;
+                    updateDeal.mutate({ id: deal.id, fee });
+                  }}
+                  placeholder="250"
+                />
+              </div>
             </div>
 
             {/* Tags */}
