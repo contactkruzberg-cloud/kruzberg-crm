@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDeal, useUpdateDeal, useDeleteDeal } from '@/hooks/use-deals';
 import { useActivities, useCreateActivity } from '@/hooks/use-activities';
 import { Button } from '@/components/ui/button';
@@ -44,26 +44,34 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDue, setNewTaskDue] = useState('');
 
-  useEffect(() => {
-    if (deal?.notes) setNotes(deal.notes);
-  }, [deal?.notes]);
-
-  // Debounced auto-save for notes
-  const saveNotes = useCallback(
-    (value: string) => {
-      if (!deal) return;
-      const timer = setTimeout(() => {
-        updateDeal.mutate({ id: deal.id, notes: value });
-      }, 800);
-      return () => clearTimeout(timer);
-    },
-    [deal, updateDeal]
-  );
+  // Track which deal is currently loaded so we can reset transient state
+  // when switching between opportunities (prevents typed notes/tasks from
+  // leaking onto the next deal via the debounced autosave).
+  const loadedDealIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const cleanup = saveNotes(notes);
-    return cleanup;
-  }, [notes, saveNotes]);
+    if (!deal) return;
+    if (loadedDealIdRef.current === deal.id) return;
+    loadedDealIdRef.current = deal.id;
+    setNotes(deal.notes ?? '');
+    setNewNote('');
+    setNewTaskTitle('');
+    setNewTaskDue('');
+    setShowAddTask(false);
+  }, [deal]);
+
+  // Debounced auto-save for notes, scoped strictly to the loaded deal.
+  useEffect(() => {
+    if (!deal || deal.id !== dealId) return;
+    if (loadedDealIdRef.current !== deal.id) return;
+    if (notes === (deal.notes ?? '')) return;
+    const targetId = deal.id;
+    const value = notes;
+    const timer = setTimeout(() => {
+      updateDeal.mutate({ id: targetId, notes: value });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [notes, deal, dealId, updateDeal]);
 
   const handleStageChange = (stage: DealStage) => {
     if (!deal) return;
