@@ -74,6 +74,7 @@ export function CommandPalette() {
           <div className="flex items-center border-b px-4">
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <Command.Input
+              autoFocus
               value={search}
               onValueChange={setSearch}
               placeholder="Rechercher lieux, contacts, pages..."
