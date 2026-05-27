@@ -7,6 +7,7 @@ import { useAppStore } from '@/stores/app-store';
 import { useVenues } from '@/hooks/use-venues';
 import { useContacts } from '@/hooks/use-contacts';
 import { useDeals } from '@/hooks/use-deals';
+import { STAGES } from '@/types/database';
 import {
   LayoutDashboard,
   Kanban,
@@ -100,10 +101,10 @@ export function CommandPalette() {
 
             {venues && venues.length > 0 && (
               <Command.Group heading="Lieux" className="text-xs text-muted-foreground px-2 py-1.5">
-                {venues.slice(0, 5).map((venue) => (
+                {(search ? venues : venues.slice(0, 5)).map((venue) => (
                   <Command.Item
                     key={venue.id}
-                    value={`${venue.name} ${venue.city}`}
+                    value={`venue-${venue.id} ${venue.name} ${venue.city} ${venue.country || ''}`}
                     onSelect={() => navigate(`/venues?id=${venue.id}`)}
                     className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent aria-selected:bg-accent"
                   >
@@ -117,10 +118,10 @@ export function CommandPalette() {
 
             {contacts && contacts.length > 0 && (
               <Command.Group heading="Contacts" className="text-xs text-muted-foreground px-2 py-1.5">
-                {contacts.slice(0, 5).map((contact) => (
+                {(search ? contacts : contacts.slice(0, 5)).map((contact) => (
                   <Command.Item
                     key={contact.id}
-                    value={`${contact.name} ${contact.email || ''}`}
+                    value={`contact-${contact.id} ${contact.name} ${contact.email || ''} ${contact.role || ''} ${contact.venue?.name || ''}`}
                     onSelect={() => navigate(`/venues?contact=${contact.id}`)}
                     className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent aria-selected:bg-accent"
                   >
@@ -138,20 +139,26 @@ export function CommandPalette() {
 
             {deals && deals.length > 0 && (
               <Command.Group heading="Opportunités" className="text-xs text-muted-foreground px-2 py-1.5">
-                {deals.slice(0, 5).map((deal) => (
-                  <Command.Item
-                    key={deal.id}
-                    value={`${deal.venue?.name || ''} ${deal.stage}`}
-                    onSelect={() => navigate(`/pipeline?deal=${deal.id}`)}
-                    className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent aria-selected:bg-accent"
-                  >
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span>{deal.venue?.name || 'Deal'}</span>
-                    <span className="ml-auto text-xs text-muted-foreground capitalize">
-                      {deal.stage.replace('_', ' ')}
-                    </span>
-                  </Command.Item>
-                ))}
+                {(search ? deals : deals.slice(0, 5)).map((deal) => {
+                  const stageLabel = STAGES.find((s) => s.key === deal.stage)?.label || deal.stage;
+                  return (
+                    <Command.Item
+                      key={deal.id}
+                      value={`deal-${deal.id} ${deal.venue?.name || ''} ${deal.venue?.city || ''} ${deal.contact?.name || ''} ${deal.contact?.email || ''} ${stageLabel} ${deal.notes || ''} ${(deal.tags || []).join(' ')}`}
+                      onSelect={() => navigate(`/pipeline?deal=${deal.id}`)}
+                      className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                    >
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span>{deal.venue?.name || 'Opportunité'}</span>
+                      {deal.contact?.name && (
+                        <span className="text-xs text-muted-foreground">· {deal.contact.name}</span>
+                      )}
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {stageLabel}
+                      </span>
+                    </Command.Item>
+                  );
+                })}
               </Command.Group>
             )}
           </Command.List>
