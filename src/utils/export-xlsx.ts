@@ -44,6 +44,115 @@ const RELANCE_METHOD_LABELS: Record<string, string> = RELANCE_METHODS.reduce(
   {}
 );
 
+export function downloadImportTemplate() {
+  const wb = XLSX.utils.book_new();
+
+  // ===== Sheet "Lieux" =====
+  // Headers in French match the import wizard auto-mapping aliases.
+  // Two example rows so users see the expected shape; they can delete them.
+  const venueExamples = [
+    {
+      'Nom': 'Le Petit Bain',
+      'Type': 'salle',
+      'Adresse': '7 Port de la Gare',
+      'Code postal': '75013',
+      'Ville': 'Paris',
+      'Pays': 'France',
+      'Email': 'booking@petitbain.org',
+      'Téléphone': '01 23 45 67 89',
+      'Site web': 'https://petitbain.org',
+      'Instagram': '@petitbain',
+      'Capacité': 250,
+      'Fit (1-5)': 4,
+      'Notes': 'Programmation indé / rock',
+    },
+    {
+      'Nom': '',
+      'Type': '',
+      'Adresse': '',
+      'Code postal': '',
+      'Ville': '',
+      'Pays': '',
+      'Email': '',
+      'Téléphone': '',
+      'Site web': '',
+      'Instagram': '',
+      'Capacité': '',
+      'Fit (1-5)': '',
+      'Notes': '',
+    },
+  ];
+  const venueSheet = XLSX.utils.json_to_sheet(venueExamples);
+  XLSX.utils.book_append_sheet(wb, venueSheet, 'Lieux');
+
+  // ===== Sheet "Contacts" =====
+  const contactExamples = [
+    {
+      'Nom contact': 'Camille Martin',
+      'Rôle': 'Programmatrice',
+      'Lieu du contact': 'Le Petit Bain',
+      'Email contact': 'camille@petitbain.org',
+      'Tél contact': '06 12 34 56 78',
+      'Instagram contact': '@camille',
+      'Méthode préférée': 'email',
+      'Notes contact': 'Préfère un mail le lundi matin',
+    },
+    {
+      'Nom contact': '',
+      'Rôle': '',
+      'Lieu du contact': '',
+      'Email contact': '',
+      'Tél contact': '',
+      'Instagram contact': '',
+      'Méthode préférée': '',
+      'Notes contact': '',
+    },
+  ];
+  const contactSheet = XLSX.utils.json_to_sheet(contactExamples);
+  XLSX.utils.book_append_sheet(wb, contactSheet, 'Contacts');
+
+  // ===== Sheet "Instructions" =====
+  const instructions = [
+    { Champ: 'Nom', Obligatoire: 'Oui', Notes: 'Nom du lieu (utilisé pour détecter les doublons)' },
+    { Champ: 'Type', Obligatoire: 'Non', Notes: 'bar | salle | festival | cafe_concert | mjc | organisateur | media | other' },
+    { Champ: 'Adresse', Obligatoire: 'Non', Notes: 'N° et rue. Sert au géocodage pour la carte.' },
+    { Champ: 'Code postal', Obligatoire: 'Non', Notes: '' },
+    { Champ: 'Ville', Obligatoire: 'Non (mais utile)', Notes: 'Utilisée pour la détection de doublons avec le nom.' },
+    { Champ: 'Pays', Obligatoire: 'Non', Notes: 'Défaut "France" si vide.' },
+    { Champ: 'Email / Téléphone / Site web / Instagram', Obligatoire: 'Non', Notes: 'Coordonnées du lieu.' },
+    { Champ: 'Capacité', Obligatoire: 'Non', Notes: 'Nombre entier.' },
+    { Champ: 'Fit (1-5)', Obligatoire: 'Non', Notes: 'Note de pertinence. Défaut 3.' },
+    { Champ: 'Notes', Obligatoire: 'Non', Notes: 'Texte libre.' },
+    { Champ: '', Obligatoire: '', Notes: '' },
+    { Champ: 'Nom contact', Obligatoire: 'Oui (feuille Contacts)', Notes: 'Nom du contact.' },
+    { Champ: 'Lieu du contact', Obligatoire: 'Non', Notes: 'Doit correspondre EXACTEMENT au "Nom" d\'un lieu de la feuille Lieux pour faire le lien.' },
+    { Champ: 'Méthode préférée', Obligatoire: 'Non', Notes: 'email | phone | instagram | other' },
+    { Champ: '', Obligatoire: '', Notes: '' },
+    { Champ: 'Astuce', Obligatoire: '', Notes: 'Vous pouvez supprimer les lignes d\'exemple avant d\'importer. Les colonnes peuvent être renommées : l\'import détecte automatiquement les variantes (Adresse, address, rue…).' },
+  ];
+  const instructionsSheet = XLSX.utils.json_to_sheet(instructions);
+  XLSX.utils.book_append_sheet(wb, instructionsSheet, 'Instructions');
+
+  // Auto-size columns
+  [venueSheet, contactSheet, instructionsSheet].forEach((sheet) => {
+    const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+    const colWidths: number[] = [];
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      let maxLen = 12;
+      for (let R = range.s.r; R <= range.e.r; R++) {
+        const cell = sheet[XLSX.utils.encode_cell({ r: R, c: C })];
+        if (cell && cell.v) {
+          maxLen = Math.max(maxLen, String(cell.v).length);
+        }
+      }
+      colWidths.push(Math.min(maxLen + 2, 50));
+    }
+    sheet['!cols'] = colWidths.map((w) => ({ wch: w }));
+  });
+
+  XLSX.writeFile(wb, 'KRUZBERG_CRM_modele_import.xlsx');
+}
+
 export function exportAllData(
   venues: Venue[],
   contacts: Contact[],

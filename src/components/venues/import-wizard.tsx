@@ -38,7 +38,7 @@ interface RowWithDuplicate {
 
 // All expected venue fields
 const VENUE_FIELDS = [
-  'name', 'type', 'city', 'country', 'email', 'phone', 'instagram',
+  'name', 'type', 'address', 'postal_code', 'city', 'country', 'email', 'phone', 'instagram',
   'website', 'capacity', 'fit_score', 'notes',
 ];
 
@@ -53,6 +53,8 @@ const ALL_FIELDS = [...VENUE_FIELDS, ...CONTACT_FIELDS];
 const FIELD_LABELS: Record<string, string> = {
   name: 'Nom lieu',
   type: 'Type',
+  address: 'Adresse',
+  postal_code: 'Code postal',
   city: 'Ville',
   country: 'Pays',
   email: 'Email lieu',
@@ -76,6 +78,8 @@ const FIELD_LABELS: Record<string, string> = {
 const FIELD_ALIASES: Record<string, string[]> = {
   name: ['nom', 'nom lieu', 'nom du lieu', 'venue', 'name', 'lieu'],
   type: ['type', 'catégorie', 'categorie'],
+  address: ['adresse', 'address', 'rue', 'street'],
+  postal_code: ['code postal', 'cp', 'postal_code', 'postal code', 'zip', 'zipcode'],
   city: ['ville', 'city', 'localité'],
   country: ['pays', 'country'],
   email: ['email', 'mail', 'e-mail', 'email booking', 'courriel'],
@@ -268,6 +272,8 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
         const venueData = {
           name: venueName,
           type: venueType as 'bar',
+          address: venueMapping.address ? String(row[venueMapping.address] || '') || null : null,
+          postal_code: venueMapping.postal_code ? String(row[venueMapping.postal_code] || '') || null : null,
           city: venueMapping.city ? String(row[venueMapping.city] || '') : '',
           country: venueMapping.country ? String(row[venueMapping.country] || 'France') : 'France',
           email: venueMapping.email ? String(row[venueMapping.email] || '') || null : null,

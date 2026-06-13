@@ -18,9 +18,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Plus, Upload, Download, Search, SlidersHorizontal, X, ArrowUpDown, List, Map as MapIcon } from 'lucide-react';
+import { Plus, Upload, Download, Search, SlidersHorizontal, X, ArrowUpDown, List, Map as MapIcon, FileDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { exportAllData } from '@/utils/export-xlsx';
+import { exportAllData, downloadImportTemplate } from '@/utils/export-xlsx';
 import { cn } from '@/lib/utils';
 import type { VenueType } from '@/types/database';
 
@@ -260,6 +260,16 @@ export default function VenuesPage() {
           >
             <Download className="h-4 w-4" />
             Exporter
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => downloadImportTemplate()}
+            title="Télécharger un fichier .xlsx vide aux bons formats"
+          >
+            <FileDown className="h-4 w-4" />
+            Modèle d&apos;import
           </Button>
           <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportOpen(true)}>
             <Upload className="h-4 w-4" />
