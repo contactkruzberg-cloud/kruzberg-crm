@@ -6,6 +6,7 @@ import { useVenues } from '@/hooks/use-venues';
 import { useContacts } from '@/hooks/use-contacts';
 import { useDeals } from '@/hooks/use-deals';
 import { useActivities } from '@/hooks/use-activities';
+import { useTasks } from '@/hooks/use-tasks';
 import { VenueList } from '@/components/venues/venue-list';
 import { VenueDetail } from '@/components/venues/venue-detail';
 import { CreateVenueDialog } from '@/components/venues/create-venue-dialog';
@@ -58,6 +59,7 @@ export default function VenuesPage() {
   const { data: contacts, isLoading: contactsLoading } = useContacts();
   const { data: deals } = useDeals();
   const { data: activities } = useActivities(500);
+  const { data: tasks } = useTasks();
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
   const [createVenueOpen, setCreateVenueOpen] = useState(false);
   const [createContactOpen, setCreateContactOpen] = useState(false);
@@ -254,7 +256,7 @@ export default function VenuesPage() {
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={() => exportAllData(venues || [], contacts || [], deals || [])}
+            onClick={() => exportAllData(venues || [], contacts || [], deals || [], tasks || [])}
           >
             <Download className="h-4 w-4" />
             Exporter
