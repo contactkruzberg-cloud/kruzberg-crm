@@ -15,8 +15,12 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { VENUE_TYPES, STAGES, type Venue, type Contact, type VenueType } from '@/types/database';
 import { cn, formatDate, formatRelativeDate } from '@/lib/utils';
-import { MapPin, Globe, AtSign, Phone, Mail, Star, Trash2, ExternalLink, User, Plus, Send, History, ArrowRightLeft, StickyNote, Music } from 'lucide-react';
+import { geocodeAddress } from '@/lib/geocode';
+import { MapPin, Globe, AtSign, Phone, Mail, Star, Trash2, ExternalLink, User, Plus, Send, History, ArrowRightLeft, StickyNote, Music, Locate } from 'lucide-react';
 import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
+
+const VenueLocationMap = dynamic(() => import('./venue-location-map').then((m) => m.VenueLocationMap), { ssr: false });
 
 interface VenueDetailProps {
   venue: Venue;
@@ -31,6 +35,7 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
   const { data: deals } = useDeals();
   const { data: venueActivities } = useVenueActivities(venue.id);
   const [notes, setNotes] = useState(venue.notes || '');
+  const [geocoding, setGeocoding] = useState(false);
   const [showAddContact, setShowAddContact] = useState(false);
   const [newContactName, setNewContactName] = useState('');
   const [newContactRole, setNewContactRole] = useState('');
@@ -85,6 +90,33 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
     deleteVenue.mutate(venue.id, {
       onSuccess: () => toast.success('Lieu supprimé'),
     });
+  };
+
+  const handleGeocode = async () => {
+    setGeocoding(true);
+    try {
+      const result = await geocodeAddress({
+        address: venue.address,
+        postal_code: venue.postal_code,
+        city: venue.city,
+        country: venue.country,
+      });
+      if (!result) {
+        toast.error('Adresse introuvable. Précisez la rue / le code postal / la ville.');
+        return;
+      }
+      updateVenue.mutate(
+        { id: venue.id, latitude: result.lat, longitude: result.lng },
+        {
+          onSuccess: () => toast.success('Lieu localisé sur la carte'),
+          onError: () => toast.error('Erreur lors de la sauvegarde des coordonnées'),
+        }
+      );
+    } catch {
+      toast.error('Erreur de géocodage');
+    } finally {
+      setGeocoding(false);
+    }
   };
 
   return (
@@ -172,6 +204,52 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Address */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs flex items-center gap-1"><MapPin className="h-3 w-3" /> Adresse</Label>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5 text-xs"
+              onClick={handleGeocode}
+              disabled={geocoding || (!venue.address && !venue.postal_code && !venue.city)}
+              title="Calcule les coordonnées GPS depuis l'adresse"
+            >
+              <Locate className="h-3 w-3" />
+              {geocoding ? 'Localisation...' : 'Localiser sur la carte'}
+            </Button>
+          </div>
+          <Input
+            defaultValue={venue.address || ''}
+            onBlur={(e) => saveField('address', e.target.value || null)}
+            placeholder="12 rue de la Musique"
+          />
+          <div className="grid grid-cols-3 gap-2">
+            <Input
+              defaultValue={venue.postal_code || ''}
+              onBlur={(e) => saveField('postal_code', e.target.value || null)}
+              placeholder="Code postal"
+              className="col-span-1"
+            />
+            <Input
+              defaultValue={venue.city || ''}
+              onBlur={(e) => saveField('city', e.target.value || null)}
+              placeholder="Ville"
+              className="col-span-1"
+            />
+            <Input
+              defaultValue={venue.country || ''}
+              onBlur={(e) => saveField('country', e.target.value || null)}
+              placeholder="Pays"
+              className="col-span-1"
+            />
+          </div>
+          {venue.latitude && venue.longitude && (
+            <VenueLocationMap latitude={venue.latitude} longitude={venue.longitude} name={venue.name} />
+          )}
         </div>
 
         {/* Contact info */}

@@ -47,6 +47,8 @@ export interface Venue {
   user_id: string;
   name: string;
   type: VenueType;
+  address: string | null;
+  postal_code: string | null;
   city: string;
   country: string;
   capacity: number | null;

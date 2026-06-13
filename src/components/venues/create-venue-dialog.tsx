@@ -33,6 +33,8 @@ export function CreateVenueDialog({
 
   const [name, setName] = useState('');
   const [type, setType] = useState<VenueType>('bar');
+  const [address, setAddress] = useState('');
+  const [postalCode, setPostalCode] = useState('');
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('France');
   const [capacity, setCapacity] = useState('');
@@ -45,6 +47,8 @@ export function CreateVenueDialog({
   const resetForm = () => {
     setName('');
     setType('bar');
+    setAddress('');
+    setPostalCode('');
     setCity('');
     setCountry('France');
     setCapacity('');
@@ -65,6 +69,8 @@ export function CreateVenueDialog({
       const venue = await createVenue.mutateAsync({
         name: name.trim(),
         type,
+        address: address.trim() || null,
+        postal_code: postalCode.trim() || null,
         city: city.trim(),
         country: country.trim() || 'France',
         capacity: capacity ? parseInt(capacity) : null,
@@ -131,11 +137,27 @@ export function CreateVenueDialog({
                 placeholder="200"
               />
             </div>
+            <div className="space-y-2 col-span-2">
+              <Label>Adresse</Label>
+              <Input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="12 rue de la Musique"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Code postal</Label>
+              <Input
+                value={postalCode}
+                onChange={(e) => setPostalCode(e.target.value)}
+                placeholder="75000"
+              />
+            </div>
             <div className="space-y-2">
               <Label>Ville</Label>
               <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Paris" />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 col-span-2">
               <Label>Pays</Label>
               <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="France" />
             </div>

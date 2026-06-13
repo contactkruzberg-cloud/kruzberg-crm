@@ -10,13 +10,14 @@ import { VenueList } from '@/components/venues/venue-list';
 import { VenueDetail } from '@/components/venues/venue-detail';
 import { CreateVenueDialog } from '@/components/venues/create-venue-dialog';
 import { CreateContactDialog } from '@/components/venues/create-contact-dialog';
+import { VenuesMapView } from '@/components/venues/venues-map-view';
 import { ImportWizard } from '@/components/venues/import-wizard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Plus, Upload, Download, Search, SlidersHorizontal, X, ArrowUpDown } from 'lucide-react';
+import { Plus, Upload, Download, Search, SlidersHorizontal, X, ArrowUpDown, List, Map as MapIcon } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { exportAllData } from '@/utils/export-xlsx';
 import { cn } from '@/lib/utils';
@@ -64,6 +65,7 @@ export default function VenuesPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('venues');
+  const [venuesView, setVenuesView] = useState<'list' | 'map'>('list');
 
   // Venue filters
   const [typeFilter, setTypeFilter] = useState<VenueType | 'all'>('all');
@@ -324,6 +326,39 @@ export default function VenuesPage() {
           </SelectContent>
         </Select>
 
+        {tab === 'venues' && (
+          <div className="inline-flex rounded-md border overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setVenuesView('list')}
+              className={cn(
+                'px-2.5 h-9 text-xs flex items-center gap-1.5 transition-colors',
+                venuesView === 'list'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card text-muted-foreground hover:text-foreground'
+              )}
+              title="Vue liste"
+            >
+              <List className="h-3.5 w-3.5" />
+              Liste
+            </button>
+            <button
+              type="button"
+              onClick={() => setVenuesView('map')}
+              className={cn(
+                'px-2.5 h-9 text-xs flex items-center gap-1.5 transition-colors border-l',
+                venuesView === 'map'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card text-muted-foreground hover:text-foreground'
+              )}
+              title="Vue carte"
+            >
+              <MapIcon className="h-3.5 w-3.5" />
+              Carte
+            </button>
+          </div>
+        )}
+
         {activeFilterCount > 0 && (
           <Button variant="ghost" size="sm" className="text-xs gap-1 text-muted-foreground" onClick={clearFilters}>
             <X className="h-3 w-3" />
@@ -475,31 +510,42 @@ export default function VenuesPage() {
 
       {/* Content */}
       {tab === 'venues' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <VenueList
-              venues={filteredVenues}
-              selectedId={selectedVenueId}
-              onSelect={setSelectedVenueId}
-            />
+        venuesView === 'map' ? (
+          <VenuesMapView
+            venues={filteredVenues}
+            deals={deals}
+            onSelect={(id) => {
+              setSelectedVenueId(id);
+              setVenuesView('list');
+            }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              <VenueList
+                venues={filteredVenues}
+                selectedId={selectedVenueId}
+                onSelect={setSelectedVenueId}
+              />
+            </div>
+            <div className="lg:col-span-2">
+              {selectedVenue ? (
+                <motion.div
+                  key={selectedVenue.id}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <VenueDetail venue={selectedVenue} contacts={contacts || []} />
+                </motion.div>
+              ) : (
+                <div className="flex items-center justify-center h-64 text-muted-foreground border rounded-xl border-dashed">
+                  <p className="text-sm">Sélectionnez un lieu pour voir les détails</p>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="lg:col-span-2">
-            {selectedVenue ? (
-              <motion.div
-                key={selectedVenue.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <VenueDetail venue={selectedVenue} contacts={contacts || []} />
-              </motion.div>
-            ) : (
-              <div className="flex items-center justify-center h-64 text-muted-foreground border rounded-xl border-dashed">
-                <p className="text-sm">Sélectionnez un lieu pour voir les détails</p>
-              </div>
-            )}
-          </div>
-        </div>
+        )
       ) : (
         <div className="rounded-xl border overflow-hidden">
           <table className="w-full text-sm">
