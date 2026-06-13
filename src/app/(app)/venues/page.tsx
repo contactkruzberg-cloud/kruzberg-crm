@@ -9,6 +9,7 @@ import { useActivities } from '@/hooks/use-activities';
 import { VenueList } from '@/components/venues/venue-list';
 import { VenueDetail } from '@/components/venues/venue-detail';
 import { CreateVenueDialog } from '@/components/venues/create-venue-dialog';
+import { CreateContactDialog } from '@/components/venues/create-contact-dialog';
 import { ImportWizard } from '@/components/venues/import-wizard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,7 +58,9 @@ export default function VenuesPage() {
   const { data: deals } = useDeals();
   const { data: activities } = useActivities(500);
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
+  const [createVenueOpen, setCreateVenueOpen] = useState(false);
+  const [createContactOpen, setCreateContactOpen] = useState(false);
+  const [contactDefaultVenueId, setContactDefaultVenueId] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('venues');
@@ -258,7 +261,18 @@ export default function VenuesPage() {
             <Upload className="h-4 w-4" />
             Importer
           </Button>
-          <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
+          <Button
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              if (tab === 'venues') {
+                setCreateVenueOpen(true);
+              } else {
+                setContactDefaultVenueId(null);
+                setCreateContactOpen(true);
+              }
+            }}
+          >
             <Plus className="h-4 w-4" />
             {tab === 'venues' ? 'Ajouter un lieu' : 'Ajouter un contact'}
           </Button>
@@ -530,7 +544,19 @@ export default function VenuesPage() {
         </div>
       )}
 
-      <CreateVenueDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <CreateVenueDialog
+        open={createVenueOpen}
+        onOpenChange={setCreateVenueOpen}
+        onCreatedAddContact={(venue) => {
+          setContactDefaultVenueId(venue.id);
+          setCreateContactOpen(true);
+        }}
+      />
+      <CreateContactDialog
+        open={createContactOpen}
+        onOpenChange={setCreateContactOpen}
+        defaultVenueId={contactDefaultVenueId}
+      />
       <ImportWizard open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
