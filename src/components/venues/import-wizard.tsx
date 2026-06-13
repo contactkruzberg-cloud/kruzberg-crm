@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useVenues, useCreateVenue, useUpdateVenue } from '@/hooks/use-venues';
-import { useContacts, useCreateContact } from '@/hooks/use-contacts';
+import { useContacts, useCreateContact, useUpdateContact } from '@/hooks/use-contacts';
 import { Upload, FileSpreadsheet, Check, AlertTriangle, Copy, RefreshCw, SkipForward } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -143,6 +143,7 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
   const [skipped, setSkipped] = useState(0);
   const [updated, setUpdated] = useState(0);
   const [contactsCreated, setContactsCreated] = useState(0);
+  const [contactsUpdated, setContactsUpdated] = useState(0);
   const [rowActions, setRowActions] = useState<Map<number, DuplicateAction>>(new Map());
 
   const { data: existingVenues } = useVenues();
@@ -150,6 +151,7 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
   const createVenue = useCreateVenue();
   const updateVenue = useUpdateVenue();
   const createContact = useCreateContact();
+  const updateContact = useUpdateContact();
 
   // Detect duplicates
   const rowsWithDuplicates: RowWithDuplicate[] = useMemo(() => {
@@ -254,6 +256,67 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
     let countSkipped = 0;
     let countUpdated = 0;
     let countContacts = 0;
+    let countContactsUpdated = 0;
+
+    // Read a mapped field from a row, returning null if empty.
+    const readField = (row: ParsedRow | ContactRow, header: string | undefined) => {
+      if (!header) return null;
+      const val = String(row[header] ?? '').trim();
+      return val || null;
+    };
+
+    // Upsert a contact: match an existing contact by (name + venue_id) or
+    // (name + email), then merge-update with non-empty fields only. Falls back
+    // to create if no match.
+    type ContactInput = {
+      name: string;
+      venue_id: string | null;
+      role: string | null;
+      email: string | null;
+      phone: string | null;
+      pref_method: 'email' | 'phone' | 'instagram' | 'other';
+      notes: string | null;
+    };
+    const upsertContact = async (input: ContactInput): Promise<'created' | 'updated' | 'skipped'> => {
+      const normName = input.name.trim().toLowerCase();
+      const normEmail = input.email?.toLowerCase() || null;
+      const existing = (existingContacts || []).find((c) => {
+        if (c.name.trim().toLowerCase() !== normName) return false;
+        if (input.venue_id && c.venue_id === input.venue_id) return true;
+        if (normEmail && c.email?.toLowerCase() === normEmail) return true;
+        return false;
+      });
+
+      if (existing) {
+        const updates: Record<string, unknown> = {};
+        // Only fill venue_id if existing had none — never overwrite an
+        // existing link to a different venue.
+        if (input.venue_id && !existing.venue_id) updates.venue_id = input.venue_id;
+        if (input.role) updates.role = input.role;
+        if (input.email) updates.email = input.email;
+        if (input.phone) updates.phone = input.phone;
+        if (input.notes) updates.notes = input.notes;
+        // pref_method is non-nullable — only update if explicitly different
+        // from default 'email' to avoid unwanted overwrites.
+        if (input.pref_method && input.pref_method !== 'email') {
+          updates.pref_method = input.pref_method;
+        }
+        if (Object.keys(updates).length === 0) return 'skipped';
+        await updateContact.mutateAsync({ id: existing.id, ...updates });
+        return 'updated';
+      }
+
+      await createContact.mutateAsync({
+        venue_id: input.venue_id,
+        name: input.name,
+        role: input.role,
+        email: input.email,
+        phone: input.phone,
+        pref_method: input.pref_method,
+        notes: input.notes,
+      });
+      return 'created';
+    };
 
     // Map of venue name (lowercase) → venue ID for contact linking
     const venueNameToId = new Map<string, string>();
@@ -265,34 +328,67 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
         const venueName = venueMapping.name ? String(row[venueMapping.name] || '').trim() : '';
         if (!venueName) { countSkipped++; continue; }
 
-        const typeRaw = venueMapping.type ? String(row[venueMapping.type] || 'bar').toLowerCase() : 'bar';
         const typeMap: Record<string, string> = { bar: 'bar', salle: 'salle', festival: 'festival', 'café concert': 'cafe_concert', 'cafe concert': 'cafe_concert', mjc: 'mjc', organisateur: 'organisateur', orga: 'organisateur', media: 'media', 'média': 'media' };
-        const venueType = typeMap[typeRaw] || 'other';
 
-        const venueData = {
-          name: venueName,
-          type: venueType as 'bar',
-          address: venueMapping.address ? String(row[venueMapping.address] || '') || null : null,
-          postal_code: venueMapping.postal_code ? String(row[venueMapping.postal_code] || '') || null : null,
-          city: venueMapping.city ? String(row[venueMapping.city] || '') : '',
-          country: venueMapping.country ? String(row[venueMapping.country] || 'France') : 'France',
-          email: venueMapping.email ? String(row[venueMapping.email] || '') || null : null,
-          phone: venueMapping.phone ? String(row[venueMapping.phone] || '') || null : null,
-          instagram: venueMapping.instagram ? String(row[venueMapping.instagram] || '') || null : null,
-          website: venueMapping.website ? String(row[venueMapping.website] || '') || null : null,
-          capacity: venueMapping.capacity ? parseInt(String(row[venueMapping.capacity] || '0')) || null : null,
-          fit_score: venueMapping.fit_score ? parseInt(String(row[venueMapping.fit_score] || '3')) || 3 : 3,
-          notes: venueMapping.notes ? String(row[venueMapping.notes] || '') || null : null,
-        };
+        // Read each field from the row (or null if absent/empty)
+        const addressVal = readField(row, venueMapping.address);
+        const postalVal = readField(row, venueMapping.postal_code);
+        const cityVal = readField(row, venueMapping.city);
+        const countryVal = readField(row, venueMapping.country);
+        const emailVal = readField(row, venueMapping.email);
+        const phoneVal = readField(row, venueMapping.phone);
+        const instagramVal = readField(row, venueMapping.instagram);
+        const websiteVal = readField(row, venueMapping.website);
+        const notesVal = readField(row, venueMapping.notes);
+        const capacityRaw = readField(row, venueMapping.capacity);
+        const capacityVal = capacityRaw ? parseInt(capacityRaw) || null : null;
+        const fitRaw = readField(row, venueMapping.fit_score);
+        const fitVal = fitRaw ? parseInt(fitRaw) || null : null;
+        const typeRaw = readField(row, venueMapping.type);
+        const venueType = typeRaw ? typeMap[typeRaw.toLowerCase()] || 'other' : null;
 
         if (duplicateOf && action === 'skip') {
           countSkipped++;
         } else if (duplicateOf && action === 'update') {
-          await updateVenue.mutateAsync({ id: duplicateOf.id, ...venueData });
+          // Merge update: only fields that have a value in the file. Existing
+          // values for empty cells are preserved.
+          const updates: Record<string, unknown> = {};
+          if (venueType) updates.type = venueType;
+          if (addressVal) updates.address = addressVal;
+          if (postalVal) updates.postal_code = postalVal;
+          if (cityVal) updates.city = cityVal;
+          if (countryVal) updates.country = countryVal;
+          if (emailVal) updates.email = emailVal;
+          if (phoneVal) updates.phone = phoneVal;
+          if (instagramVal) updates.instagram = instagramVal;
+          if (websiteVal) updates.website = websiteVal;
+          if (capacityVal != null) updates.capacity = capacityVal;
+          if (fitVal != null) updates.fit_score = fitVal;
+          if (notesVal) updates.notes = notesVal;
+
+          if (Object.keys(updates).length > 0) {
+            await updateVenue.mutateAsync({ id: duplicateOf.id, ...updates });
+            countUpdated++;
+          } else {
+            countSkipped++;
+          }
           venueNameToId.set(venueName.toLowerCase(), duplicateOf.id);
-          countUpdated++;
         } else {
-          const venue = await createVenue.mutateAsync(venueData);
+          const venue = await createVenue.mutateAsync({
+            name: venueName,
+            type: (venueType || 'bar') as 'bar',
+            address: addressVal,
+            postal_code: postalVal,
+            city: cityVal || '',
+            country: countryVal || 'France',
+            email: emailVal,
+            phone: phoneVal,
+            instagram: instagramVal,
+            website: websiteVal,
+            capacity: capacityVal,
+            fit_score: fitVal ?? 3,
+            notes: notesVal,
+          });
           venueNameToId.set(venueName.toLowerCase(), venue.id);
           countCreated++;
         }
@@ -301,18 +397,18 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
         if (!hasMultipleSheets && contactMapping.contact_name) {
           const cName = String(row[contactMapping.contact_name] || '').trim();
           if (cName) {
-            const venueId = venueNameToId.get(venueName.toLowerCase());
-            if (venueId) {
-              await createContact.mutateAsync({
-                venue_id: venueId,
-                name: cName,
-                role: contactMapping.contact_role ? String(row[contactMapping.contact_role] || '') || null : null,
-                email: contactMapping.contact_email ? String(row[contactMapping.contact_email] || '') || null : null,
-                phone: contactMapping.contact_phone ? String(row[contactMapping.contact_phone] || '') || null : null,
-                pref_method: mapMethod(contactMapping.contact_method ? String(row[contactMapping.contact_method] || '') : ''),
-              });
-              countContacts++;
-            }
+            const venueId = venueNameToId.get(venueName.toLowerCase()) || null;
+            const result = await upsertContact({
+              venue_id: venueId,
+              name: cName,
+              role: readField(row, contactMapping.contact_role),
+              email: readField(row, contactMapping.contact_email),
+              phone: readField(row, contactMapping.contact_phone),
+              pref_method: mapMethod(String(row[contactMapping.contact_method || ''] || '')),
+              notes: readField(row, contactMapping.contact_notes),
+            });
+            if (result === 'created') countContacts++;
+            else if (result === 'updated') countContactsUpdated++;
           }
         }
 
@@ -335,16 +431,17 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
           const venueName = contactMapping.contact_venue ? String(crow[contactMapping.contact_venue] || '').trim().toLowerCase() : '';
           const venueId = venueName ? venueNameToId.get(venueName) : null;
 
-          await createContact.mutateAsync({
+          const result = await upsertContact({
             venue_id: venueId || null,
             name: cName,
-            role: contactMapping.contact_role ? String(crow[contactMapping.contact_role] || '') || null : null,
-            email: contactMapping.contact_email ? String(crow[contactMapping.contact_email] || '') || null : null,
-            phone: contactMapping.contact_phone ? String(crow[contactMapping.contact_phone] || '') || null : null,
-            pref_method: mapMethod(contactMapping.contact_method ? String(crow[contactMapping.contact_method] || '') : ''),
-            notes: contactMapping.contact_notes ? String(crow[contactMapping.contact_notes] || '') || null : null,
+            role: readField(crow, contactMapping.contact_role),
+            email: readField(crow, contactMapping.contact_email),
+            phone: readField(crow, contactMapping.contact_phone),
+            pref_method: mapMethod(String(crow[contactMapping.contact_method || ''] || '')),
+            notes: readField(crow, contactMapping.contact_notes),
           });
-          countContacts++;
+          if (result === 'created') countContacts++;
+          else if (result === 'updated') countContactsUpdated++;
         } catch {
           // Continue
         }
@@ -356,6 +453,7 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
     setSkipped(countSkipped);
     setUpdated(countUpdated);
     setContactsCreated(countContacts);
+    setContactsUpdated(countContactsUpdated);
     setStep(5);
     toast.success('Import terminé !');
   };
@@ -375,6 +473,7 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
     setSkipped(0);
     setUpdated(0);
     setContactsCreated(0);
+    setContactsUpdated(0);
     setRowActions(new Map());
   };
 
@@ -455,6 +554,9 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
                 Colonnes Contacts
                 {hasMultipleSheets && <span className="text-xs text-muted-foreground ml-2">(onglet séparé détecté)</span>}
               </p>
+              <p className="text-xs text-muted-foreground mb-2">
+                Les contacts déjà présents (même nom + même lieu, ou même nom + même email) seront fusionnés : seules les colonnes renseignées dans le fichier écrasent les valeurs existantes.
+              </p>
               <div className="space-y-2">
                 {activeContactFields.map((field) => (
                   <div key={field} className="flex items-center gap-3">
@@ -497,7 +599,7 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Même nom + ville qu&apos;un lieu existant.
+                  Même nom + ville qu&apos;un lieu existant. <span className="text-foreground">« Mettre à jour »</span> fusionne : seules les colonnes renseignées dans le fichier sont écrites, les valeurs existantes (notes, etc.) sont conservées.
                 </p>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={() => setAllDuplicateAction('skip')}>
@@ -627,6 +729,12 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
                 <div className="flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-purple-500" />
                   {contactsCreated} contact{contactsCreated > 1 ? 's' : ''} créé{contactsCreated > 1 ? 's' : ''}
+                </div>
+              )}
+              {contactsUpdated > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-indigo-400" />
+                  {contactsUpdated} contact{contactsUpdated > 1 ? 's' : ''} mis à jour
                 </div>
               )}
             </div>
