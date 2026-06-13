@@ -6,6 +6,8 @@ import { useDeals } from '@/hooks/use-deals';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useMemo, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -35,10 +37,62 @@ const STAGE_COLORS: Record<string, string> = {
   refuse: '#ef4444',
 };
 
+type MapFilter = 'upcoming' | 'past' | 'both' | 'all';
+
+const FILTER_OPTIONS: { key: MapFilter; label: string }[] = [
+  { key: 'upcoming', label: 'Prochains concerts' },
+  { key: 'past', label: 'Concerts passés' },
+  { key: 'both', label: 'Passés + à venir' },
+  { key: 'all', label: 'Tous les lieux' },
+];
+
 export function VenueMap() {
   const { data: venues, isLoading: venuesLoading } = useVenues();
   const { data: deals, isLoading: dealsLoading } = useDeals();
   const isLoading = venuesLoading || dealsLoading;
+  const [filter, setFilter] = useState<MapFilter>('upcoming');
+
+  // Bucket venues by whether they have an upcoming (confirmé) or past (terminé) deal.
+  const { upcomingIds, pastIds } = useMemo(() => {
+    const upcoming = new Set<string>();
+    const past = new Set<string>();
+    (deals || []).forEach((d) => {
+      if (d.stage === 'confirme') upcoming.add(d.venue_id);
+      else if (d.stage === 'termine') past.add(d.venue_id);
+    });
+    return { upcomingIds: upcoming, pastIds: past };
+  }, [deals]);
+
+  const counts = useMemo(() => {
+    const venuesWithCoords = (venues || []).filter(
+      (v) => v.latitude != null && v.longitude != null
+    );
+    return {
+      upcoming: venuesWithCoords.filter((v) => upcomingIds.has(v.id)).length,
+      past: venuesWithCoords.filter((v) => pastIds.has(v.id)).length,
+      both: venuesWithCoords.filter((v) => upcomingIds.has(v.id) || pastIds.has(v.id)).length,
+      all: venuesWithCoords.length,
+    };
+  }, [venues, upcomingIds, pastIds]);
+
+  const filteredVenues = useMemo(() => {
+    const withCoords = (venues || []).filter(
+      (v) => v.latitude != null && v.longitude != null
+    );
+    switch (filter) {
+      case 'upcoming':
+        return withCoords.filter((v) => upcomingIds.has(v.id));
+      case 'past':
+        return withCoords.filter((v) => pastIds.has(v.id));
+      case 'both':
+        return withCoords.filter((v) => upcomingIds.has(v.id) || pastIds.has(v.id));
+      case 'all':
+      default:
+        return withCoords;
+    }
+  }, [venues, filter, upcomingIds, pastIds]);
+
+  const dealsByVenue = useMemo(() => new Map((deals || []).map((d) => [d.venue_id, d])), [deals]);
 
   if (isLoading) {
     return (
@@ -53,25 +107,47 @@ export function VenueMap() {
     );
   }
 
-  const venuesWithCoords = (venues || []).filter((v) => v.latitude && v.longitude);
-  const dealsByVenue = new Map((deals || []).map((d) => [d.venue_id, d]));
-
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-primary" />
-          Carte des lieux
-        </CardTitle>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <CardTitle className="text-base flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            Carte des lieux
+          </CardTitle>
+          <div className="flex gap-1 flex-wrap">
+            {FILTER_OPTIONS.map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setFilter(opt.key)}
+                className={cn(
+                  'px-2.5 py-1 rounded-full text-xs font-medium transition-all border',
+                  filter === opt.key
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-card text-muted-foreground border-border hover:border-primary/50'
+                )}
+              >
+                {opt.label} ({counts[opt.key]})
+              </button>
+            ))}
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        {venuesWithCoords.length === 0 ? (
+        {filteredVenues.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Aucun lieu avec coordonnées</p>
-            <p className="text-xs mt-1">
-              Ajoutez des coordonnées GPS à vos lieux pour les voir ici
+            <p className="text-sm">
+              {filter === 'upcoming' && 'Aucun concert à venir géolocalisé'}
+              {filter === 'past' && 'Aucun concert passé géolocalisé'}
+              {filter === 'both' && 'Aucun concert géolocalisé'}
+              {filter === 'all' && 'Aucun lieu avec coordonnées'}
             </p>
+            {filter === 'all' && (
+              <p className="text-xs mt-1">
+                Ajoutez des coordonnées GPS à vos lieux pour les voir ici
+              </p>
+            )}
           </div>
         ) : (
           <div className="h-64 rounded-lg overflow-hidden border">
@@ -89,7 +165,7 @@ export function VenueMap() {
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
               />
-              {venuesWithCoords.map((venue) => {
+              {filteredVenues.map((venue) => {
                 const deal = dealsByVenue.get(venue.id);
                 const color = deal ? STAGE_COLORS[deal.stage] || '#22d3ee' : '#22d3ee';
                 return (
