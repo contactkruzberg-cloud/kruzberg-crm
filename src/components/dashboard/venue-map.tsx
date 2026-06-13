@@ -52,18 +52,29 @@ export function VenueMap() {
   const isLoading = venuesLoading || dealsLoading;
   const [filter, setFilter] = useState<MapFilter>('upcoming');
 
-  // Bucket venues by whether they have an upcoming (confirmé) or past (terminé +
-  // dated) deal. "Terminé" without a concert_date is treated as a closed
-  // opportunity (sans suite), not a played concert.
+  // Today as YYYY-MM-DD in local time, to compare with concert_date (DATE).
+  const today = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, []);
+
+  // Bucket venues by past vs upcoming concerts.
+  // - Upcoming: stage "Confirmé" with no concert_date yet OR a date today/future.
+  // - Past: stage "Terminé" with a concert_date, OR stage "Confirmé" with a past date.
+  // "Terminé" without a date = closed opportunity (sans suite), not counted.
   const { upcomingIds, pastIds } = useMemo(() => {
     const upcoming = new Set<string>();
     const past = new Set<string>();
     (deals || []).forEach((d) => {
-      if (d.stage === 'confirme') upcoming.add(d.venue_id);
-      else if (d.stage === 'termine' && d.concert_date) past.add(d.venue_id);
+      if (d.stage === 'confirme') {
+        if (d.concert_date && d.concert_date < today) past.add(d.venue_id);
+        else upcoming.add(d.venue_id);
+      } else if (d.stage === 'termine' && d.concert_date) {
+        past.add(d.venue_id);
+      }
     });
     return { upcomingIds: upcoming, pastIds: past };
-  }, [deals]);
+  }, [deals, today]);
 
   const counts = useMemo(() => {
     const venuesWithCoords = (venues || []).filter(
