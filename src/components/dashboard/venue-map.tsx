@@ -52,13 +52,15 @@ export function VenueMap() {
   const isLoading = venuesLoading || dealsLoading;
   const [filter, setFilter] = useState<MapFilter>('upcoming');
 
-  // Bucket venues by whether they have an upcoming (confirmé) or past (terminé) deal.
+  // Bucket venues by whether they have an upcoming (confirmé) or past (terminé +
+  // dated) deal. "Terminé" without a concert_date is treated as a closed
+  // opportunity (sans suite), not a played concert.
   const { upcomingIds, pastIds } = useMemo(() => {
     const upcoming = new Set<string>();
     const past = new Set<string>();
     (deals || []).forEach((d) => {
       if (d.stage === 'confirme') upcoming.add(d.venue_id);
-      else if (d.stage === 'termine') past.add(d.venue_id);
+      else if (d.stage === 'termine' && d.concert_date) past.add(d.venue_id);
     });
     return { upcomingIds: upcoming, pastIds: past };
   }, [deals]);
