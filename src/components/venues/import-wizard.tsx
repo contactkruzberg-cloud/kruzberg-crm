@@ -426,7 +426,7 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
             {/* Venue mapping */}
             <div>
               <p className="text-sm font-medium mb-2">Colonnes Lieux</p>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
+              <div className="space-y-2">
                 {activeVenueFields.map((field) => (
                   <div key={field} className="flex items-center gap-3">
                     <span className="text-xs w-28 shrink-0 text-muted-foreground">{FIELD_LABELS[field]}</span>
@@ -455,7 +455,7 @@ export function ImportWizard({ open, onOpenChange }: ImportWizardProps) {
                 Colonnes Contacts
                 {hasMultipleSheets && <span className="text-xs text-muted-foreground ml-2">(onglet séparé détecté)</span>}
               </p>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
+              <div className="space-y-2">
                 {activeContactFields.map((field) => (
                   <div key={field} className="flex items-center gap-3">
                     <span className="text-xs w-28 shrink-0 text-muted-foreground">{FIELD_LABELS[field]}</span>
