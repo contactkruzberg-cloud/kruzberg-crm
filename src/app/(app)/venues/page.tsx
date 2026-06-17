@@ -21,6 +21,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Plus, Upload, Download, Search, SlidersHorizontal, X, ArrowUpDown, List, Map as MapIcon, FileDown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { exportAllData, downloadImportTemplate } from '@/utils/export-xlsx';
+import { departementFromPostal } from '@/lib/france-geo';
 import { cn } from '@/lib/utils';
 import type { VenueType } from '@/types/database';
 
@@ -71,6 +72,8 @@ export default function VenuesPage() {
 
   // Venue filters
   const [typeFilter, setTypeFilter] = useState<VenueType | 'all'>('all');
+  const [regionFilter, setRegionFilter] = useState<string>('all');
+  const [deptFilter, setDeptFilter] = useState<string>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
   const [fitFilter, setFitFilter] = useState<number | 'all'>('all');
   const [pipelineFilter, setPipelineFilter] = useState<'all' | 'not_contacted' | 'in_pipeline'>('all');
@@ -88,6 +91,46 @@ export default function VenuesPage() {
     const set = new Set((venues || []).map((v) => v.city).filter(Boolean));
     return Array.from(set).sort();
   }, [venues]);
+
+  // Derive région / département from each venue's postal code (no DB column).
+  const venueGeo = useMemo(() => {
+    const map = new Map<string, { region: string; deptCode: string; deptName: string }>();
+    (venues || []).forEach((v) => {
+      const dep = departementFromPostal(v.postal_code);
+      if (dep) {
+        map.set(v.id, { region: dep.region, deptCode: dep.code, deptName: dep.name });
+      }
+    });
+    return map;
+  }, [venues]);
+
+  // Régions present in the data, with counts.
+  const regions = useMemo(() => {
+    const counts = new Map<string, number>();
+    (venues || []).forEach((v) => {
+      const g = venueGeo.get(v.id);
+      if (g) counts.set(g.region, (counts.get(g.region) || 0) + 1);
+    });
+    return Array.from(counts.entries())
+      .map(([region, count]) => ({ region, count }))
+      .sort((a, b) => a.region.localeCompare(b.region, 'fr'));
+  }, [venues, venueGeo]);
+
+  // Départements present (optionally narrowed to the selected région), with counts.
+  const departements = useMemo(() => {
+    const counts = new Map<string, { name: string; count: number }>();
+    (venues || []).forEach((v) => {
+      const g = venueGeo.get(v.id);
+      if (!g) return;
+      if (regionFilter !== 'all' && g.region !== regionFilter) return;
+      const entry = counts.get(g.deptCode) || { name: g.deptName, count: 0 };
+      entry.count += 1;
+      counts.set(g.deptCode, entry);
+    });
+    return Array.from(counts.entries())
+      .map(([code, { name, count }]) => ({ code, name, count }))
+      .sort((a, b) => a.code.localeCompare(b.code, 'fr'));
+  }, [venues, venueGeo, regionFilter]);
 
   // Extract unique roles for contact filter
   const roles = useMemo(() => {
@@ -108,6 +151,8 @@ export default function VenuesPage() {
   // Count active filters
   const activeFilterCount = [
     typeFilter !== 'all',
+    regionFilter !== 'all',
+    deptFilter !== 'all',
     cityFilter !== 'all',
     fitFilter !== 'all',
     pipelineFilter !== 'all',
@@ -132,6 +177,16 @@ export default function VenuesPage() {
     // Type filter
     if (typeFilter !== 'all') {
       result = result.filter((v) => v.type === typeFilter);
+    }
+
+    // Région filter
+    if (regionFilter !== 'all') {
+      result = result.filter((v) => venueGeo.get(v.id)?.region === regionFilter);
+    }
+
+    // Département filter
+    if (deptFilter !== 'all') {
+      result = result.filter((v) => venueGeo.get(v.id)?.deptCode === deptFilter);
     }
 
     // City filter
@@ -170,7 +225,7 @@ export default function VenuesPage() {
     });
 
     return result;
-  }, [venues, search, typeFilter, cityFilter, fitFilter, pipelineFilter, venueIdsContacted, venueSort]);
+  }, [venues, search, typeFilter, regionFilter, deptFilter, cityFilter, fitFilter, pipelineFilter, venueIdsContacted, venueSort, venueGeo]);
 
   // Filtered & sorted contacts
   const filteredContacts = useMemo(() => {
@@ -211,6 +266,8 @@ export default function VenuesPage() {
 
   const clearFilters = () => {
     setTypeFilter('all');
+    setRegionFilter('all');
+    setDeptFilter('all');
     setCityFilter('all');
     setFitFilter('all');
     setPipelineFilter('all');
@@ -411,6 +468,48 @@ export default function VenuesPage() {
                 );
               })}
             </div>
+          </div>
+
+          {/* Région */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Région</p>
+            <Select
+              value={regionFilter}
+              onValueChange={(v) => {
+                setRegionFilter(v);
+                setDeptFilter('all');
+              }}
+            >
+              <SelectTrigger className="w-52 h-8 text-xs">
+                <SelectValue placeholder="Toutes les régions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les régions</SelectItem>
+                {regions.map(({ region, count }) => (
+                  <SelectItem key={region} value={region}>
+                    {region} ({count})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Département */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Département</p>
+            <Select value={deptFilter} onValueChange={setDeptFilter}>
+              <SelectTrigger className="w-52 h-8 text-xs">
+                <SelectValue placeholder="Tous les départements" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les départements</SelectItem>
+                {departements.map(({ code, name, count }) => (
+                  <SelectItem key={code} value={code}>
+                    {code} — {name} ({count})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* City */}
