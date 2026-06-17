@@ -9,6 +9,7 @@ import { QuickActions } from '@/components/dashboard/quick-actions';
 import { VenueMap } from '@/components/dashboard/venue-map';
 import { WeeklySparklines } from '@/components/dashboard/weekly-sparklines';
 import { PendingTasks } from '@/components/dashboard/pending-tasks';
+import { NextTour } from '@/components/dashboard/next-tour';
 
 const container = {
   hidden: { opacity: 0 },
@@ -64,15 +65,20 @@ export default function DashboardPage() {
         </motion.div>
       </div>
 
-      {/* Concerts + Activity */}
+      {/* Concerts + Next tour */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div variants={item}>
           <UpcomingConcerts />
         </motion.div>
         <motion.div variants={item}>
-          <ActivityFeed />
+          <NextTour />
         </motion.div>
       </div>
+
+      {/* Activity */}
+      <motion.div variants={item}>
+        <ActivityFeed />
+      </motion.div>
 
       {/* Map */}
       <motion.div variants={item}>

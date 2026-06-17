@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   LayoutDashboard,
   Kanban,
+  Route,
   Building2,
   Mail,
   Target,
@@ -25,6 +26,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/pipeline', label: 'Pipeline', icon: Kanban },
+  { href: '/tours', label: 'Tournées', icon: Route },
   { href: '/venues', label: 'Lieux & Contacts', icon: Building2 },
   { href: '/templates', label: 'Templates', icon: Mail },
   { href: '/focus', label: 'Focus Mode', icon: Target },

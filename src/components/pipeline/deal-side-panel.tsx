@@ -15,10 +15,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { STAGES, PRIORITIES, RELANCE_METHODS, type DealStage, type DealPriority, type RelanceMethod } from '@/types/database';
 import { formatDate, formatRelativeDate, cn } from '@/lib/utils';
-import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send, CheckCircle2, Circle, Plus, Trash2, ListTodo } from 'lucide-react';
+import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send, CheckCircle2, Circle, Plus, Trash2, ListTodo, Route } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { SendEmailDialog } from '@/components/shared/send-email-dialog';
+import { AddToTourDialog } from '@/components/tours/add-to-tour-dialog';
 import { useDealTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks';
 
 interface DealSidePanelProps {
@@ -39,6 +40,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const [notes, setNotes] = useState('');
   const [newNote, setNewNote] = useState('');
   const [emailOpen, setEmailOpen] = useState(false);
+  const [addToTourOpen, setAddToTourOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -175,6 +177,17 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
               <Send className="h-4 w-4" />
               Envoyer un email
             </Button>
+
+            {(deal.stage === 'confirme' || deal.stage === 'termine') && (
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => setAddToTourOpen(true)}
+              >
+                <Route className="h-4 w-4" />
+                Ajouter à une tournée
+              </Button>
+            )}
 
             <Separator />
 
@@ -515,6 +528,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
             contact={deal.contact}
             venue={deal.venue}
           />
+          <AddToTourDialog open={addToTourOpen} onOpenChange={setAddToTourOpen} deal={deal} />
           <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
             <DialogContent>
               <DialogHeader>

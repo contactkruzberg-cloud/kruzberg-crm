@@ -42,6 +42,19 @@ export type TemplateCategory =
   | 'confirmation'
   | 'post_show';
 
+export type TourStatus = 'brouillon' | 'confirmee' | 'terminee' | 'annulee';
+
+export type TourStopType = 'show' | 'day_off' | 'travel';
+
+export type ExpenseCategory =
+  | 'fuel'
+  | 'toll'
+  | 'hotel'
+  | 'food'
+  | 'per_diem'
+  | 'transport'
+  | 'misc';
+
 export interface Venue {
   id: string;
   user_id: string;
@@ -141,6 +154,69 @@ export interface TemplateSend {
   contact?: Contact;
 }
 
+export interface Tour {
+  id: string;
+  user_id: string;
+  name: string;
+  status: TourStatus;
+  start_date: string | null;
+  end_date: string | null;
+  members_count: number;
+  vehicle_label: string | null;
+  fuel_consumption: number;
+  fuel_price: number;
+  per_diem: number;
+  road_factor: number;
+  color: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TourStop {
+  id: string;
+  user_id: string;
+  tour_id: string;
+  deal_id: string | null;
+  venue_id: string | null;
+  stop_date: string;
+  type: TourStopType;
+  order_index: number;
+  fee: number | null;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  arrival_time: string | null;
+  load_in_time: string | null;
+  soundcheck_time: string | null;
+  doors_time: string | null;
+  set_time: string | null;
+  hotel_name: string | null;
+  hotel_address: string | null;
+  hotel_cost: number | null;
+  hotel_rooms: number | null;
+  hotel_booked: boolean;
+  on_site_contact: string | null;
+  on_site_phone: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  deal?: Deal;
+  venue?: Venue;
+}
+
+export interface TourExpense {
+  id: string;
+  user_id: string;
+  tour_id: string;
+  stop_id: string | null;
+  category: ExpenseCategory;
+  label: string;
+  amount: number;
+  expense_date: string | null;
+  created_at: string;
+}
+
 // Pipeline stage metadata
 export const STAGES: { key: DealStage; label: string; color: string }[] = [
   { key: 'a_contacter', label: 'À contacter', color: 'stage-a-contacter' },
@@ -189,4 +265,27 @@ export const PRIORITIES: { key: DealPriority; label: string; color: string }[] =
   { key: 'high', label: 'Haute', color: 'text-red-500' },
   { key: 'medium', label: 'Moyenne', color: 'text-orange-500' },
   { key: 'low', label: 'Basse', color: 'text-gray-500' },
+];
+
+export const TOUR_STATUSES: { key: TourStatus; label: string; color: string }[] = [
+  { key: 'brouillon', label: 'Brouillon', color: 'text-gray-500' },
+  { key: 'confirmee', label: 'Confirmée', color: 'text-green-500' },
+  { key: 'terminee', label: 'Terminée', color: 'text-blue-500' },
+  { key: 'annulee', label: 'Annulée', color: 'text-red-500' },
+];
+
+export const STOP_TYPES: { key: TourStopType; label: string; color: string }[] = [
+  { key: 'show', label: 'Concert', color: '#22c55e' },
+  { key: 'day_off', label: 'Jour off', color: '#64748b' },
+  { key: 'travel', label: 'Trajet', color: '#3b82f6' },
+];
+
+export const EXPENSE_CATEGORIES: { key: ExpenseCategory; label: string }[] = [
+  { key: 'fuel', label: 'Carburant' },
+  { key: 'toll', label: 'Péages' },
+  { key: 'hotel', label: 'Hôtel' },
+  { key: 'food', label: 'Repas' },
+  { key: 'per_diem', label: 'Per-diem' },
+  { key: 'transport', label: 'Transport' },
+  { key: 'misc', label: 'Divers' },
 ];
