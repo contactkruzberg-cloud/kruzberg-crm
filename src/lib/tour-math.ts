@@ -64,6 +64,7 @@ export function totalKm(stops: TourStop[], roadFactor = 1.3): number {
 export interface TourBudget {
   revenue: number;
   fuel: number;
+  vehicle: number;
   hotels: number;
   perDiems: number;
   otherExpenses: number;
@@ -71,6 +72,7 @@ export interface TourBudget {
   net: number;
   perPerson: number; // net split across members
   km: number;
+  days: number;
 }
 
 /** Number of inclusive days spanned by the stops (min 1). */
@@ -94,13 +96,15 @@ export function tourBudget(
   const fuel = (km / 100) * tour.fuel_consumption * tour.fuel_price;
   const hotels = stops.reduce((sum, s) => sum + (s.hotel_cost ?? 0), 0);
   const days = tourDays(stops);
+  const vehicle = (tour.vehicle_daily_cost ?? 0) * days;
   const perDiems = tour.per_diem * tour.members_count * days;
   const otherExpenses = expenses.reduce((sum, e) => sum + (e.amount ?? 0), 0);
-  const totalExpenses = fuel + hotels + perDiems + otherExpenses;
+  const totalExpenses = fuel + vehicle + hotels + perDiems + otherExpenses;
   const net = revenue - totalExpenses;
   return {
     revenue,
     fuel,
+    vehicle,
     hotels,
     perDiems,
     otherExpenses,
@@ -108,6 +112,7 @@ export function tourBudget(
     net,
     perPerson: tour.members_count > 0 ? net / tour.members_count : net,
     km,
+    days,
   };
 }
 

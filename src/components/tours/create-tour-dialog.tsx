@@ -21,6 +21,7 @@ export function CreateTourDialog({ open, onOpenChange }: CreateTourDialogProps) 
   const [name, setName] = useState('');
   const [membersCount, setMembersCount] = useState('4');
   const [vehicleLabel, setVehicleLabel] = useState('');
+  const [vehicleDailyCost, setVehicleDailyCost] = useState('0');
   const [fuelConsumption, setFuelConsumption] = useState('8');
   const [fuelPrice, setFuelPrice] = useState('1.8');
   const [perDiem, setPerDiem] = useState('0');
@@ -29,6 +30,7 @@ export function CreateTourDialog({ open, onOpenChange }: CreateTourDialogProps) 
     setName('');
     setMembersCount('4');
     setVehicleLabel('');
+    setVehicleDailyCost('0');
     setFuelConsumption('8');
     setFuelPrice('1.8');
     setPerDiem('0');
@@ -44,6 +46,7 @@ export function CreateTourDialog({ open, onOpenChange }: CreateTourDialogProps) 
         name: name.trim(),
         members_count: parseInt(membersCount) || 4,
         vehicle_label: vehicleLabel.trim() || null,
+        vehicle_daily_cost: parseFloat(vehicleDailyCost) || 0,
         fuel_consumption: parseFloat(fuelConsumption) || 8,
         fuel_price: parseFloat(fuelPrice) || 1.8,
         per_diem: parseFloat(perDiem) || 0,
@@ -94,6 +97,15 @@ export function CreateTourDialog({ open, onOpenChange }: CreateTourDialogProps) 
                 value={vehicleLabel}
                 onChange={(e) => setVehicleLabel(e.target.value)}
                 placeholder="Van diesel"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Location véhicule (€/jour)</Label>
+              <Input
+                type="number"
+                step="1"
+                value={vehicleDailyCost}
+                onChange={(e) => setVehicleDailyCost(e.target.value)}
               />
             </div>
             <div className="space-y-2">

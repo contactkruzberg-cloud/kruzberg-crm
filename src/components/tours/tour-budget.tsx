@@ -46,6 +46,7 @@ export function TourBudget({ tour, stops }: TourBudgetProps) {
   // editable params buffer
   const [params, setParams] = useState({
     members_count: tour.members_count.toString(),
+    vehicle_daily_cost: (tour.vehicle_daily_cost ?? 0).toString(),
     fuel_consumption: tour.fuel_consumption.toString(),
     fuel_price: tour.fuel_price.toString(),
     per_diem: tour.per_diem.toString(),
@@ -81,6 +82,7 @@ export function TourBudget({ tour, stops }: TourBudgetProps) {
   const chartData = [
     { name: 'Recettes', value: budget.revenue, fill: '#22c55e' },
     { name: 'Carburant', value: budget.fuel, fill: '#f97316' },
+    { name: 'Véhicule', value: budget.vehicle, fill: '#06b6d4' },
     { name: 'Hôtels', value: budget.hotels, fill: '#8b5cf6' },
     { name: 'Per-diems', value: budget.perDiems, fill: '#eab308' },
     { name: 'Autres', value: budget.otherExpenses, fill: '#64748b' },
@@ -89,9 +91,10 @@ export function TourBudget({ tour, stops }: TourBudgetProps) {
   return (
     <div className="space-y-4">
       {/* KPI grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         <KpiBox label="Recettes" value={euro(budget.revenue)} accent="text-green-500" />
         <KpiBox label="Carburant" value={euro(budget.fuel)} sub={formatKm(budget.km)} />
+        <KpiBox label="Véhicule" value={euro(budget.vehicle)} sub={`${budget.days} j`} />
         <KpiBox label="Hôtels" value={euro(budget.hotels)} />
         <KpiBox label="Per-diems" value={euro(budget.perDiems)} />
         <KpiBox label="Autres" value={euro(budget.otherExpenses)} />
@@ -136,9 +139,10 @@ export function TourBudget({ tour, stops }: TourBudgetProps) {
       {/* params */}
       <Card className="p-4 space-y-3">
         <h3 className="text-sm font-medium">Paramètres de calcul</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {([
             ['members_count', 'Personnes', tour.members_count],
+            ['vehicle_daily_cost', 'Location véh. (€/jour)', tour.vehicle_daily_cost],
             ['fuel_consumption', 'Conso (L/100km)', tour.fuel_consumption],
             ['fuel_price', 'Carburant (€/L)', tour.fuel_price],
             ['per_diem', 'Per-diem (€/j/pers)', tour.per_diem],

@@ -163,6 +163,7 @@ export interface Tour {
   end_date: string | null;
   members_count: number;
   vehicle_label: string | null;
+  vehicle_daily_cost: number;
   fuel_consumption: number;
   fuel_price: number;
   per_diem: number;
