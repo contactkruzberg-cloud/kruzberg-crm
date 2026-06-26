@@ -5,6 +5,7 @@ import type { Tour, TourStop } from '@/types/database';
 import { STOP_TYPES } from '@/types/database';
 import { useReorderTourStops, useDeleteTourStop, useUpdateTourStop } from '@/hooks/use-tour-stops';
 import { legs, formatKm, formatDriveTime, totalKm, googleMapsUrl } from '@/lib/tour-math';
+import { geocodeAddress } from '@/lib/geocode';
 import { TourRouteMap } from './tour-route-map';
 import { AddStopDialog } from './add-stop-dialog';
 import { Button } from '@/components/ui/button';
@@ -35,10 +36,28 @@ export function TourItinerary({ tour, stops }: TourItineraryProps) {
   const updateStop = useUpdateTourStop();
   const [addOpen, setAddOpen] = useState(false);
   const [editingDateId, setEditingDateId] = useState<string | null>(null);
+  const [editingCityId, setEditingCityId] = useState<string | null>(null);
 
   const saveDate = (stopId: string, value: string) => {
     setEditingDateId(null);
     if (value) updateStop.mutate({ id: stopId, stop_date: value });
+  };
+
+  const saveCity = async (stopId: string, value: string) => {
+    setEditingCityId(null);
+    const city = value.trim();
+    if (!city) return;
+    const updates: Partial<TourStop> & { id: string } = { id: stopId, city };
+    try {
+      const geo = await geocodeAddress({ city });
+      if (geo) {
+        updates.latitude = geo.lat;
+        updates.longitude = geo.lng;
+      }
+    } catch {
+      // géocodage best-effort : on garde la ville même sans coords
+    }
+    updateStop.mutate(updates);
   };
 
   const tourLegs = legs(stops, tour.road_factor);
@@ -147,11 +166,38 @@ export function TourItinerary({ tour, stops }: TourItineraryProps) {
                           </button>
                         )
                       )}
-                      {(stop.venue?.city || stop.city) && (
+                      {stop.venue ? (
+                        stop.venue.city && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {stop.venue.city}
+                          </span>
+                        )
+                      ) : editingCityId === stop.id ? (
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          {stop.venue?.city || stop.city}
+                          <Input
+                            autoFocus
+                            defaultValue={stop.city ?? ''}
+                            placeholder="Vienne, Autriche"
+                            onBlur={(e) => saveCity(stop.id, e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveCity(stop.id, e.currentTarget.value);
+                              if (e.key === 'Escape') setEditingCityId(null);
+                            }}
+                            className="h-6 w-[170px] text-xs py-0"
+                          />
                         </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setEditingCityId(stop.id)}
+                          className="flex items-center gap-1 rounded px-1 -mx-1 hover:bg-muted hover:text-foreground transition-colors"
+                          title="Modifier le lieu"
+                        >
+                          <MapPin className="h-3 w-3" />
+                          {stop.city || 'Ajouter un lieu'}
+                        </button>
                       )}
                       {stop.type === 'show' && stop.fee != null && <span>{stop.fee} €</span>}
                     </div>
