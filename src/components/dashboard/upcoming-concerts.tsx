@@ -24,8 +24,11 @@ export function UpcomingConcerts() {
     );
   }
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const concerts = (deals || [])
-    .filter((d) => d.stage === 'confirme' && d.concert_date)
+    .filter((d) => d.stage === 'confirme' && d.concert_date && new Date(d.concert_date) >= today)
     .sort((a, b) => new Date(a.concert_date!).getTime() - new Date(b.concert_date!).getTime());
 
   return (
