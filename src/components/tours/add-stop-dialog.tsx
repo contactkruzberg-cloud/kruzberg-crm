@@ -31,6 +31,7 @@ export function AddStopDialog({ open, onOpenChange, tourId, stops }: AddStopDial
   // Free stop fields
   const [freeType, setFreeType] = useState<TourStopType>('show');
   const [freeCity, setFreeCity] = useState('');
+  const [freeCountry, setFreeCountry] = useState('France');
   const [freeDate, setFreeDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -87,7 +88,7 @@ export function AddStopDialog({ open, onOpenChange, tourId, stops }: AddStopDial
       let longitude: number | null = null;
       if (freeCity.trim()) {
         try {
-          const geo = await geocodeAddress({ city: freeCity.trim(), country: 'France' });
+          const geo = await geocodeAddress({ city: freeCity.trim(), country: freeCountry.trim() || null });
           if (geo) {
             latitude = geo.lat;
             longitude = geo.lng;
@@ -107,6 +108,7 @@ export function AddStopDialog({ open, onOpenChange, tourId, stops }: AddStopDial
       });
       toast.success('Étape ajoutée');
       setFreeCity('');
+      setFreeCountry('France');
       setFreeDate('');
       setFreeType('show');
       onOpenChange(false);
@@ -204,13 +206,23 @@ export function AddStopDialog({ open, onOpenChange, tourId, stops }: AddStopDial
               <Label>Date *</Label>
               <Input type="date" value={freeDate} onChange={(e) => setFreeDate(e.target.value)} />
             </div>
-            <div className="space-y-2">
-              <Label>Ville {freeType !== 'day_off' && '(géolocalisée automatiquement)'}</Label>
-              <Input
-                value={freeCity}
-                onChange={(e) => setFreeCity(e.target.value)}
-                placeholder="Toulouse"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Ville {freeType !== 'day_off' && '(géolocalisée)'}</Label>
+                <Input
+                  value={freeCity}
+                  onChange={(e) => setFreeCity(e.target.value)}
+                  placeholder="Vienne"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Pays</Label>
+                <Input
+                  value={freeCountry}
+                  onChange={(e) => setFreeCountry(e.target.value)}
+                  placeholder="Autriche"
+                />
+              </div>
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="outline" onClick={() => onOpenChange(false)}>

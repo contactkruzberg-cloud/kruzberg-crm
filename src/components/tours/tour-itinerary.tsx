@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import type { Tour, TourStop } from '@/types/database';
 import { STOP_TYPES } from '@/types/database';
-import { useReorderTourStops, useDeleteTourStop } from '@/hooks/use-tour-stops';
+import { useReorderTourStops, useDeleteTourStop, useUpdateTourStop } from '@/hooks/use-tour-stops';
 import { legs, formatKm, formatDriveTime, totalKm, googleMapsUrl } from '@/lib/tour-math';
 import { TourRouteMap } from './tour-route-map';
 import { AddStopDialog } from './add-stop-dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
   Plus,
@@ -31,7 +32,14 @@ interface TourItineraryProps {
 export function TourItinerary({ tour, stops }: TourItineraryProps) {
   const reorder = useReorderTourStops();
   const deleteStop = useDeleteTourStop();
+  const updateStop = useUpdateTourStop();
   const [addOpen, setAddOpen] = useState(false);
+  const [editingDateId, setEditingDateId] = useState<string | null>(null);
+
+  const saveDate = (stopId: string, value: string) => {
+    setEditingDateId(null);
+    if (value) updateStop.mutate({ id: stopId, stop_date: value });
+  };
 
   const tourLegs = legs(stops, tour.road_factor);
   const total = totalKm(stops, tour.road_factor);
@@ -111,14 +119,33 @@ export function TourItinerary({ tour, stops }: TourItineraryProps) {
                       )}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
-                      {stop.stop_date && (
-                        <span>
-                          {new Date(stop.stop_date).toLocaleDateString('fr-FR', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                          })}
-                        </span>
+                      {editingDateId === stop.id ? (
+                        <Input
+                          type="date"
+                          autoFocus
+                          defaultValue={stop.stop_date?.slice(0, 10)}
+                          onBlur={(e) => saveDate(stop.id, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') saveDate(stop.id, e.currentTarget.value);
+                            if (e.key === 'Escape') setEditingDateId(null);
+                          }}
+                          className="h-6 w-[150px] text-xs py-0"
+                        />
+                      ) : (
+                        stop.stop_date && (
+                          <button
+                            type="button"
+                            onClick={() => setEditingDateId(stop.id)}
+                            className="rounded px-1 -mx-1 hover:bg-muted hover:text-foreground transition-colors"
+                            title="Modifier la date"
+                          >
+                            {new Date(stop.stop_date).toLocaleDateString('fr-FR', {
+                              weekday: 'short',
+                              day: 'numeric',
+                              month: 'short',
+                            })}
+                          </button>
+                        )
                       )}
                       {(stop.venue?.city || stop.city) && (
                         <span className="flex items-center gap-1">
