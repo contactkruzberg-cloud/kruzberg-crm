@@ -1,16 +1,35 @@
 'use client';
 
-import { useTasks, useUpdateTask } from '@/hooks/use-tasks';
+import { useTasks, useUpdateTask, useCreateTask } from '@/hooks/use-tasks';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { cn, formatDate, daysUntil } from '@/lib/utils';
-import { ListTodo, CheckCircle2, Circle, Clock } from 'lucide-react';
-import Link from 'next/link';
+import { ListTodo, CheckCircle2, Circle, Clock, Plus } from 'lucide-react';
+import { useState } from 'react';
 
 export function PendingTasks() {
   const { data: tasks, isLoading } = useTasks();
   const updateTask = useUpdateTask();
+  const createTask = useCreateTask();
+  const [title, setTitle] = useState('');
+  const [dueDate, setDueDate] = useState('');
+
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    createTask.mutate({
+      title: trimmed,
+      due_date: dueDate || null,
+      deal_id: null,
+      venue_id: null,
+    });
+    setTitle('');
+    setDueDate('');
+  };
 
   if (isLoading) {
     return (
@@ -53,11 +72,34 @@ export function PendingTasks() {
         </div>
       </CardHeader>
       <CardContent>
+        <form onSubmit={handleAdd} className="flex gap-1.5 mb-3">
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Ajouter une tâche…"
+            className="h-9 text-sm"
+          />
+          <Input
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            className="h-9 text-sm w-[140px] shrink-0"
+            title="Échéance (optionnel)"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            disabled={!title.trim() || createTask.isPending}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </form>
         {pending.length === 0 ? (
           <div className="text-center py-6 text-muted-foreground">
             <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">Aucune tâche en cours</p>
-            <p className="text-xs mt-1">Ajoutez des tâches depuis vos opportunités</p>
+            <p className="text-xs mt-1">Ajoutez une tâche ci-dessus ou depuis vos opportunités</p>
           </div>
         ) : (
           <div className="space-y-1.5">
