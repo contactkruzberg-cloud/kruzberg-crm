@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useDeals } from '@/hooks/use-deals';
 import { useCreateTourStop } from '@/hooks/use-tour-stops';
 import { geocodeAddress } from '@/lib/geocode';
+import { composeStopLabel } from '@/lib/tour-math';
 import type { TourStop, TourStopType, Deal } from '@/types/database';
 import { STOP_TYPES } from '@/types/database';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -31,7 +32,7 @@ export function AddStopDialog({ open, onOpenChange, tourId, stops }: AddStopDial
   // Free stop fields
   const [freeType, setFreeType] = useState<TourStopType>('show');
   const [freeCity, setFreeCity] = useState('');
-  const [freeCountry, setFreeCountry] = useState('France');
+  const [freeCountry, setFreeCountry] = useState('FR');
   const [freeDate, setFreeDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -102,13 +103,13 @@ export function AddStopDialog({ open, onOpenChange, tourId, stops }: AddStopDial
         stop_date: freeDate,
         type: freeType,
         order_index: nextOrder,
-        city: freeCity.trim() || null,
+        city: composeStopLabel(freeCity, freeCountry) || null,
         latitude,
         longitude,
       });
       toast.success('Étape ajoutée');
       setFreeCity('');
-      setFreeCountry('France');
+      setFreeCountry('FR');
       setFreeDate('');
       setFreeType('show');
       onOpenChange(false);
@@ -206,13 +207,13 @@ export function AddStopDialog({ open, onOpenChange, tourId, stops }: AddStopDial
               <Label>Date *</Label>
               <Input type="date" value={freeDate} onChange={(e) => setFreeDate(e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-[1fr_auto] gap-3">
               <div className="space-y-2">
                 <Label>Ville {freeType !== 'day_off' && '(géolocalisée)'}</Label>
                 <Input
                   value={freeCity}
                   onChange={(e) => setFreeCity(e.target.value)}
-                  placeholder="Vienne"
+                  placeholder="Berlin"
                 />
               </div>
               <div className="space-y-2">
@@ -220,7 +221,8 @@ export function AddStopDialog({ open, onOpenChange, tourId, stops }: AddStopDial
                 <Input
                   value={freeCountry}
                   onChange={(e) => setFreeCountry(e.target.value)}
-                  placeholder="Autriche"
+                  placeholder="DE"
+                  className="w-20 uppercase"
                 />
               </div>
             </div>

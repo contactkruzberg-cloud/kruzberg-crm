@@ -133,9 +133,33 @@ export function googleMapsUrl(stops: TourStop[]): string | null {
   );
 }
 
-/** Libellé de ville utilisable comme point Mappy (ville libre ou venue liée). */
+const STOP_LABEL_RE = /^(.*?)\s*\(([^)]+)\)\s*$/;
+
+/** Sépare un libellé "Ville (PAYS)" en ses parties (pays vide si absent). */
+export function parseStopLabel(label?: string | null): { city: string; country: string } {
+  if (!label) return { city: '', country: '' };
+  const m = label.match(STOP_LABEL_RE);
+  if (m) return { city: m[1].trim(), country: m[2].trim() };
+  return { city: label.trim(), country: '' };
+}
+
+/** Compose un libellé "Ville (PAYS)" — pays en majuscules, omis si vide. */
+export function composeStopLabel(city?: string | null, country?: string | null): string {
+  const c = (city || '').trim();
+  const k = (country || '').trim().toUpperCase();
+  if (!c) return '';
+  return k ? `${c} (${k})` : c;
+}
+
+/**
+ * Ville utilisable comme point d'itinéraire (Mappy/Google), forme propre
+ * "Ville, PAYS" — on évite les parenthèses qui cassent le routage Mappy.
+ */
 export function stopCity(stop: TourStop): string | null {
-  return stop.city || stop.venue?.city || null;
+  const raw = stop.city || stop.venue?.city || null;
+  if (!raw) return null;
+  const { city, country } = parseStopLabel(raw);
+  return country ? `${city}, ${country}` : city;
 }
 
 /**

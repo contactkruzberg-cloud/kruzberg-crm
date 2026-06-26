@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { Tour, TourStop } from '@/types/database';
 import { STOP_TYPES } from '@/types/database';
 import { useReorderTourStops, useDeleteTourStop, useUpdateTourStop } from '@/hooks/use-tour-stops';
-import { legs, formatKm, formatDriveTime, totalKm, googleMapsUrl, mappyLegUrl, stopCity } from '@/lib/tour-math';
+import { legs, formatKm, formatDriveTime, totalKm, googleMapsUrl, mappyLegUrl, stopCity, parseStopLabel, composeStopLabel } from '@/lib/tour-math';
 import { geocodeAddress } from '@/lib/geocode';
 import { TourRouteMap } from './tour-route-map';
 import { AddStopDialog } from './add-stop-dialog';
@@ -20,6 +20,7 @@ import {
   Navigation,
   AlertTriangle,
   ExternalLink,
+  Check,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -37,19 +38,32 @@ export function TourItinerary({ tour, stops }: TourItineraryProps) {
   const [addOpen, setAddOpen] = useState(false);
   const [editingDateId, setEditingDateId] = useState<string | null>(null);
   const [editingCityId, setEditingCityId] = useState<string | null>(null);
+  const [editCity, setEditCity] = useState('');
+  const [editCountry, setEditCountry] = useState('');
 
   const saveDate = (stopId: string, value: string) => {
     setEditingDateId(null);
     if (value) updateStop.mutate({ id: stopId, stop_date: value });
   };
 
-  const saveCity = async (stopId: string, value: string) => {
+  const startEditCity = (stop: TourStop) => {
+    const { city, country } = parseStopLabel(stop.city);
+    setEditCity(city);
+    setEditCountry(country);
+    setEditingCityId(stop.id);
+  };
+
+  const saveCity = async (stopId: string) => {
     setEditingCityId(null);
-    const city = value.trim();
+    const city = editCity.trim();
     if (!city) return;
-    const updates: Partial<TourStop> & { id: string } = { id: stopId, city };
+    const country = editCountry.trim();
+    const updates: Partial<TourStop> & { id: string } = {
+      id: stopId,
+      city: composeStopLabel(city, country),
+    };
     try {
-      const geo = await geocodeAddress({ city });
+      const geo = await geocodeAddress({ city, country: country || null });
       if (geo) {
         updates.latitude = geo.lat;
         updates.longitude = geo.lng;
@@ -178,20 +192,38 @@ export function TourItinerary({ tour, stops }: TourItineraryProps) {
                           <MapPin className="h-3 w-3" />
                           <Input
                             autoFocus
-                            defaultValue={stop.city ?? ''}
-                            placeholder="Vienne, Autriche"
-                            onBlur={(e) => saveCity(stop.id, e.target.value)}
+                            value={editCity}
+                            onChange={(e) => setEditCity(e.target.value)}
+                            placeholder="Berlin"
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveCity(stop.id, e.currentTarget.value);
+                              if (e.key === 'Enter') saveCity(stop.id);
                               if (e.key === 'Escape') setEditingCityId(null);
                             }}
-                            className="h-6 w-[170px] text-xs py-0"
+                            className="h-6 w-[130px] text-xs py-0"
                           />
+                          <Input
+                            value={editCountry}
+                            onChange={(e) => setEditCountry(e.target.value)}
+                            placeholder="DE"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveCity(stop.id);
+                              if (e.key === 'Escape') setEditingCityId(null);
+                            }}
+                            className="h-6 w-[56px] text-xs py-0 uppercase"
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            className="h-6 w-6 shrink-0"
+                            onClick={() => saveCity(stop.id)}
+                          >
+                            <Check className="h-3 w-3" />
+                          </Button>
                         </span>
                       ) : (
                         <button
                           type="button"
-                          onClick={() => setEditingCityId(stop.id)}
+                          onClick={() => startEditCity(stop)}
                           className="flex items-center gap-1 rounded px-1 -mx-1 hover:bg-muted hover:text-foreground transition-colors"
                           title="Modifier le lieu"
                         >
