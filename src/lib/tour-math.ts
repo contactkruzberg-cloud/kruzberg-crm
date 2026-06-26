@@ -133,29 +133,20 @@ export function googleMapsUrl(stops: TourStop[]): string | null {
   );
 }
 
+/** Libellé de ville utilisable comme point Mappy (ville libre ou venue liée). */
+export function stopCity(stop: TourStop): string | null {
+  return stop.city || stop.venue?.city || null;
+}
+
 /**
- * Mappy directions URL chaining the stops in order.
- * Mappy (fr) affiche le coût estimé du trajet (péage + carburant), utile pour
- * affiner le budget d'une tournée. Format de route segmenté `#/recherche/A/B/.../`.
- * Les villes sont préférées (entrée documentée), avec repli sur les coordonnées.
+ * Mappy directions URL pour un tronçon (2 points). Mappy (fr) affiche le coût
+ * estimé péage + carburant — utile pour affiner le budget d'une tournée.
+ * Mappy ne gère que départ/arrivée par URL (`/itineraire/<ville>/<ville>`),
+ * d'où un lien par tronçon plutôt qu'un itinéraire global.
  */
-export function mappyUrl(stops: TourStop[]): string | null {
-  const points = stops
-    .map((s) => {
-      if (s.city) return s.city;
-      if (s.venue?.city) return s.venue.city;
-      if (s.latitude != null && s.longitude != null) {
-        return `${s.latitude},${s.longitude}`;
-      }
-      return null;
-    })
-    .filter(Boolean) as string[];
-  if (points.length < 2) return null;
-  return (
-    'https://fr.mappy.com/itineraire#/recherche/' +
-    points.map((p) => encodeURIComponent(p)).join('/') +
-    '/'
-  );
+export function mappyLegUrl(from: string | null, to: string | null): string | null {
+  if (!from || !to) return null;
+  return `https://fr.mappy.com/itineraire/${encodeURIComponent(from)}/${encodeURIComponent(to)}`;
 }
 
 export function formatKm(km: number | null): string {
