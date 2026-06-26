@@ -133,6 +133,31 @@ export function googleMapsUrl(stops: TourStop[]): string | null {
   );
 }
 
+/**
+ * Mappy directions URL chaining the stops in order.
+ * Mappy (fr) affiche le coût estimé du trajet (péage + carburant), utile pour
+ * affiner le budget d'une tournée. Format de route segmenté `#/recherche/A/B/.../`.
+ * Les villes sont préférées (entrée documentée), avec repli sur les coordonnées.
+ */
+export function mappyUrl(stops: TourStop[]): string | null {
+  const points = stops
+    .map((s) => {
+      if (s.city) return s.city;
+      if (s.venue?.city) return s.venue.city;
+      if (s.latitude != null && s.longitude != null) {
+        return `${s.latitude},${s.longitude}`;
+      }
+      return null;
+    })
+    .filter(Boolean) as string[];
+  if (points.length < 2) return null;
+  return (
+    'https://fr.mappy.com/itineraire#/recherche/' +
+    points.map((p) => encodeURIComponent(p)).join('/') +
+    '/'
+  );
+}
+
 export function formatKm(km: number | null): string {
   if (km == null) return '—';
   return `${Math.round(km)} km`;

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { Tour, TourStop } from '@/types/database';
 import { STOP_TYPES } from '@/types/database';
 import { useReorderTourStops, useDeleteTourStop, useUpdateTourStop } from '@/hooks/use-tour-stops';
-import { legs, formatKm, formatDriveTime, totalKm, googleMapsUrl } from '@/lib/tour-math';
+import { legs, formatKm, formatDriveTime, totalKm, googleMapsUrl, mappyUrl } from '@/lib/tour-math';
 import { geocodeAddress } from '@/lib/geocode';
 import { TourRouteMap } from './tour-route-map';
 import { AddStopDialog } from './add-stop-dialog';
@@ -63,6 +63,7 @@ export function TourItinerary({ tour, stops }: TourItineraryProps) {
   const tourLegs = legs(stops, tour.road_factor);
   const total = totalKm(stops, tour.road_factor);
   const mapsUrl = googleMapsUrl(stops);
+  const mappy = mappyUrl(stops);
 
   const move = (index: number, dir: -1 | 1) => {
     const target = index + dir;
@@ -89,6 +90,18 @@ export function TourItinerary({ tour, stops }: TourItineraryProps) {
             >
               <ExternalLink className="h-3.5 w-3.5" />
               Itinéraire Google Maps
+            </a>
+          )}
+          {mappy && (
+            <a
+              href={mappy}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs text-primary hover:underline"
+              title="Estimation péage + carburant sur Mappy"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Coût du trajet (Mappy)
             </a>
           )}
         </div>
