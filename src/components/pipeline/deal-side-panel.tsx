@@ -9,13 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { STAGES, PRIORITIES, RELANCE_METHODS, type DealStage, type DealPriority, type RelanceMethod } from '@/types/database';
 import { formatDate, formatRelativeDate, cn } from '@/lib/utils';
-import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send, CheckCircle2, Circle, Plus, Trash2, ListTodo, Route } from 'lucide-react';
+import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send, CheckCircle2, Circle, Plus, Trash2, ListTodo, Route, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { SendEmailDialog } from '@/components/shared/send-email-dialog';
@@ -284,6 +285,25 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                   placeholder="250"
                 />
               </div>
+            </div>
+
+            {/* Afficher sur le site public */}
+            <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2.5">
+              <div className="space-y-0.5 pr-3">
+                <Label className="text-xs flex items-center gap-1.5">
+                  <Globe className="h-3.5 w-3.5" />
+                  Afficher sur le site
+                </Label>
+                <p className="text-[11px] leading-tight text-muted-foreground">
+                  Publie cette date sur kruzberg.com (uniquement si stage confirmé ou terminé).
+                </p>
+              </div>
+              <Switch
+                checked={deal.show_on_website ?? false}
+                onCheckedChange={(checked) => {
+                  updateDeal.mutate({ id: deal.id, show_on_website: checked });
+                }}
+              />
             </div>
 
             {/* Tags */}

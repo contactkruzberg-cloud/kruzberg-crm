@@ -108,6 +108,7 @@ export interface Deal {
   response: string | null;
   concert_date: string | null;
   fee: number | null;
+  show_on_website: boolean;
   notes: string | null;
   tags: string[];
   created_at: string;
