@@ -8,13 +8,10 @@ import { MapPin } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { MapTiles } from '@/components/shared/map-tiles';
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
   { ssr: false }
 );
 const CircleMarker = dynamic(
@@ -174,10 +171,7 @@ export function VenueMap() {
               className="h-full w-full"
               scrollWheelZoom={false}
             >
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-              />
+              <MapTiles />
               {filteredVenues.map((venue) => {
                 const deal = dealsByVenue.get(venue.id);
                 const color = deal ? STAGE_COLORS[deal.stage] || '#22d3ee' : '#22d3ee';

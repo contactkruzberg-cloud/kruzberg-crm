@@ -4,9 +4,9 @@ import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 import type { TourStop } from '@/types/database';
 import { STOP_TYPES } from '@/types/database';
+import { MapTiles } from '@/components/shared/map-tiles';
 
 const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
 const CircleMarker = dynamic(() => import('react-leaflet').then((m) => m.CircleMarker), { ssr: false });
 const LeafletTooltip = dynamic(() => import('react-leaflet').then((m) => m.Tooltip), { ssr: false });
 const Polyline = dynamic(() => import('react-leaflet').then((m) => m.Polyline), { ssr: false });
@@ -51,10 +51,7 @@ export function TourRouteMap({ stops }: TourRouteMapProps) {
     <div className="h-[420px] rounded-xl overflow-hidden border">
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
       <MapContainer center={center} zoom={zoom} className="h-full w-full" scrollWheelZoom>
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-        />
+        <MapTiles />
         {path.length > 1 && (
           <Polyline
             positions={path}

@@ -9,9 +9,9 @@ import { Progress } from '@/components/ui/progress';
 import { useUpdateVenue } from '@/hooks/use-venues';
 import { geocodeAddress } from '@/lib/geocode';
 import { toast } from 'sonner';
+import { MapTiles } from '@/components/shared/map-tiles';
 
 const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then((m) => m.TileLayer), { ssr: false });
 const CircleMarker = dynamic(() => import('react-leaflet').then((m) => m.CircleMarker), { ssr: false });
 const LeafletTooltip = dynamic(() => import('react-leaflet').then((m) => m.Tooltip), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then((m) => m.Popup), { ssr: false });
@@ -193,10 +193,7 @@ export function VenuesMapView({ venues, deals, onSelect }: VenuesMapViewProps) {
       <div className="h-[600px] rounded-xl overflow-hidden border">
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <MapContainer center={center} zoom={zoom} className="h-full w-full" scrollWheelZoom>
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-          />
+          <MapTiles />
           {venuesWithCoords.map((venue) => {
             const deal = dealsByVenue.get(venue.id);
             const color = deal ? STAGE_COLORS[deal.stage] || '#22d3ee' : '#22d3ee';

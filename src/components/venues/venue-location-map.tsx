@@ -1,13 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { MapTiles } from '@/components/shared/map-tiles';
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
   { ssr: false }
 );
 const CircleMarker = dynamic(
@@ -39,10 +36,7 @@ export function VenueLocationMap({ latitude, longitude, name, height = 'h-44' }:
         className="h-full w-full"
         scrollWheelZoom={false}
       >
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-        />
+        <MapTiles />
         <CircleMarker
           center={[latitude, longitude]}
           radius={9}
