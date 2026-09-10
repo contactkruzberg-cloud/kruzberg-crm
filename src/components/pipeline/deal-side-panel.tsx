@@ -301,7 +301,27 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
               <Switch
                 checked={deal.show_on_website ?? false}
                 onCheckedChange={(checked) => {
-                  updateDeal.mutate({ id: deal.id, show_on_website: checked });
+                  updateDeal.mutate(
+                    { id: deal.id, show_on_website: checked },
+                    {
+                      onSuccess: () => {
+                        if (!checked) {
+                          toast.success('Retiré du site — mise à jour d\'ici 5 min');
+                          return;
+                        }
+                        // The public_shows view only exposes confirmed/finished deals
+                        // that have a date, so say so instead of promising a publish.
+                        if (deal.stage !== 'confirme' && deal.stage !== 'termine') {
+                          toast.warning('Coché, mais la date restera masquée tant que le stage n\'est pas Confirmé ou Terminé');
+                        } else if (!deal.concert_date) {
+                          toast.warning('Coché, mais la date restera masquée tant qu\'il n\'y a pas de date de concert');
+                        } else {
+                          toast.success('Publié sur kruzberg.com — visible d\'ici 5 min');
+                        }
+                      },
+                      onError: () => toast.error('Échec de la mise à jour'),
+                    }
+                  );
                 }}
               />
             </div>
