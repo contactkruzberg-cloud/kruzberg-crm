@@ -68,3 +68,14 @@ export function resolveTemplate(
     return variables[key] ?? match;
   });
 }
+
+/**
+ * Display name of an opportunity: its custom title if set, otherwise the
+ * venue name, otherwise the contact name (a deal has a venue OR a contact).
+ */
+export function dealLabel(
+  deal: { title?: string | null; venue?: { name: string } | null; contact?: { name: string } | null } | null | undefined,
+  fallback = 'Opportunité'
+): string {
+  return deal?.title?.trim() || deal?.venue?.name || deal?.contact?.name || fallback;
+}

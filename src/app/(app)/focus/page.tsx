@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getRelanceUrgency, daysUntil, resolveTemplate, formatRelativeDate } from '@/lib/utils';
+import { getRelanceUrgency, daysUntil, resolveTemplate, formatRelativeDate, dealLabel } from '@/lib/utils';
 import { Target, ArrowRight, Clock, Copy, Check, SkipForward, Pause, Zap, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
@@ -210,7 +210,7 @@ export default function FocusPage() {
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-lg font-bold">{currentDeal.venue?.name}</h2>
+                    <h2 className="text-lg font-bold">{dealLabel(currentDeal)}</h2>
                     <p className="text-sm text-muted-foreground">
                       {currentDeal.venue?.city}
                     </p>

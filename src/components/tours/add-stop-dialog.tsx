@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MapPin, Calendar, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, dealLabel } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface AddStopDialogProps {
@@ -69,7 +69,7 @@ export function AddStopDialog({ open, onOpenChange, tourId, stops }: AddStopDial
         latitude: deal.venue?.latitude ?? null,
         longitude: deal.venue?.longitude ?? null,
       });
-      toast.success(`${deal.venue?.name || 'Date'} ajoutée à la tournée`);
+      toast.success(`${dealLabel(deal, 'Date')} ajoutée à la tournée`);
       onOpenChange(false);
     } catch {
       toast.error("Erreur lors de l'ajout");
@@ -153,7 +153,7 @@ export function AddStopDialog({ open, onOpenChange, tourId, stops }: AddStopDial
                       className="w-full text-left rounded-lg border p-3 hover:border-primary/50 hover:bg-accent transition-colors disabled:opacity-50"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium text-sm">{deal.venue?.name || 'Lieu'}</span>
+                        <span className="font-medium text-sm">{dealLabel(deal, 'Lieu')}</span>
                         {deal.fee != null && (
                           <span className="text-xs text-muted-foreground">{deal.fee} €</span>
                         )}

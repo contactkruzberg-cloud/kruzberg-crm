@@ -141,7 +141,9 @@ export default function VenuesPage() {
   // Venue IDs that have been contacted (deal exists OR email_sent activity)
   const venueIdsContacted = useMemo(() => {
     const ids = new Set<string>();
-    (deals || []).forEach((d) => ids.add(d.venue_id));
+    (deals || []).forEach((d) => {
+      if (d.venue_id) ids.add(d.venue_id);
+    });
     (activities || []).forEach((a) => {
       if (a.type === 'email_sent' && a.venue_id) ids.add(a.venue_id);
     });

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn, formatDate, getRelanceUrgency, daysUntil } from '@/lib/utils';
+import { cn, formatDate, getRelanceUrgency, daysUntil, dealLabel } from '@/lib/utils';
 import { STAGES, type Deal, type DealStage } from '@/types/database';
 import { ArrowUpDown, Search, Clock } from 'lucide-react';
 
@@ -41,7 +41,9 @@ export function PipelineTable({ deals, onDealClick }: PipelineTableProps) {
       const q = search.toLowerCase();
       result = result.filter(
         (d) =>
+          d.title?.toLowerCase().includes(q) ||
           d.venue?.name?.toLowerCase().includes(q) ||
+          d.contact?.name?.toLowerCase().includes(q) ||
           d.venue?.city?.toLowerCase().includes(q) ||
           d.tags?.some((t) => t.toLowerCase().includes(q))
       );
@@ -51,7 +53,7 @@ export function PipelineTable({ deals, onDealClick }: PipelineTableProps) {
       const dir = sortDir === 'asc' ? 1 : -1;
       switch (sortField) {
         case 'venue':
-          return dir * (a.venue?.name || '').localeCompare(b.venue?.name || '');
+          return dir * dealLabel(a, '').localeCompare(dealLabel(b, ''));
         case 'city':
           return dir * (a.venue?.city || '').localeCompare(b.venue?.city || '');
         case 'stage':
@@ -139,7 +141,14 @@ export function PipelineTable({ deals, onDealClick }: PipelineTableProps) {
                     onClick={() => onDealClick(deal.id)}
                     className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
                   >
-                    <td className="p-3 font-medium">{deal.venue?.name || '—'}</td>
+                    <td className="p-3 font-medium">
+                      {dealLabel(deal, '—')}
+                      {deal.title?.trim() && (deal.venue || deal.contact) && (
+                        <span className="block text-xs font-normal text-muted-foreground">
+                          {deal.venue?.name || deal.contact?.name}
+                        </span>
+                      )}
+                    </td>
                     <td className="p-3 text-muted-foreground">{deal.venue?.city || '—'}</td>
                     <td className="p-3">
                       <span className={cn('inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium', stageData?.color)}>

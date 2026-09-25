@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@/components/ui/badge';
-import { cn, getRelanceUrgency, daysUntil, formatRelativeDate } from '@/lib/utils';
+import { cn, getRelanceUrgency, daysUntil, formatRelativeDate, dealLabel } from '@/lib/utils';
 import type { Deal } from '@/types/database';
 import { Clock, MapPin, Star } from 'lucide-react';
 
@@ -47,17 +47,21 @@ export function KanbanCard({ deal, onClick, isDragging }: KanbanCardProps) {
     >
       <div className="flex items-start justify-between gap-2">
         <h4 className="text-sm font-medium truncate">
-          {deal.venue?.name || 'Sans lieu'}
+          {dealLabel(deal, 'Sans lieu')}
         </h4>
         {deal.priority === 'high' && (
           <Star className="h-3.5 w-3.5 text-yellow-500 shrink-0 fill-yellow-500" />
         )}
       </div>
 
-      {deal.venue?.city && (
+      {(deal.title?.trim() || deal.venue?.city) && (
         <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-          <MapPin className="h-3 w-3" />
-          {deal.venue.city}
+          <MapPin className="h-3 w-3 shrink-0" />
+          <span className="truncate">
+            {[deal.title?.trim() ? deal.venue?.name || deal.contact?.name : null, deal.venue?.city]
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
         </div>
       )}
 

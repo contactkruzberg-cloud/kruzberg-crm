@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { formatDate } from '@/lib/utils';
+import { formatDate, dealLabel } from '@/lib/utils';
 import { Calendar, Music } from 'lucide-react';
 
 export function UpcomingConcerts() {
@@ -57,7 +57,7 @@ export function UpcomingConcerts() {
                   key={deal.id}
                   className="flex-shrink-0 w-44 rounded-lg border p-3 bg-gradient-to-br from-primary/5 to-transparent hover:shadow-md transition-shadow"
                 >
-                  <p className="font-medium text-sm truncate">{deal.venue?.name}</p>
+                  <p className="font-medium text-sm truncate">{dealLabel(deal)}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {deal.venue?.city}
                   </p>

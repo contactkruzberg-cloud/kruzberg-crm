@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, dealLabel } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface AddToTourDialogProps {
@@ -63,7 +63,7 @@ export function AddToTourDialog({ open, onOpenChange, deal }: AddToTourDialogPro
         <DialogHeader>
           <DialogTitle>Ajouter à une tournée</DialogTitle>
           <DialogDescription>
-            {deal.venue?.name}
+            {dealLabel(deal)}
             {deal.concert_date && ` · ${new Date(deal.concert_date).toLocaleDateString('fr-FR')}`}
           </DialogDescription>
         </DialogHeader>

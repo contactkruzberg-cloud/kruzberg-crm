@@ -138,22 +138,21 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
       <CardContent className="space-y-5">
         {/* Quick actions */}
         <div className="flex gap-2 flex-wrap">
-          {!hasActiveDeal && (
-            <Button
-              size="sm"
-              className="gap-2"
-              onClick={handleAddToPipeline}
-              disabled={createDeal.isPending}
-            >
-              <Plus className="h-4 w-4" />
-              {createDeal.isPending ? 'Ajout...' : 'Ajouter au pipeline'}
-            </Button>
-          )}
           {hasActiveDeal && (
             <Badge variant="success" className="text-xs py-1">
               Déjà dans le pipeline
             </Badge>
           )}
+          <Button
+            size="sm"
+            variant={hasActiveDeal ? 'outline' : 'default'}
+            className="gap-2"
+            onClick={handleAddToPipeline}
+            disabled={createDeal.isPending}
+          >
+            <Plus className="h-4 w-4" />
+            {createDeal.isPending ? 'Ajout...' : hasActiveDeal ? 'Nouvelle opportunité' : 'Ajouter au pipeline'}
+          </Button>
         </div>
 
         {/* Quick info */}
@@ -466,10 +465,13 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
               {venueDeals.map((d) => {
                 const stageInfo = STAGES.find((s) => s.key === d.stage);
                 return (
-                  <div key={d.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
-                    <span className={cn('text-xs font-medium px-2 py-0.5 rounded', stageInfo?.color)}>
-                      {stageInfo?.label}
-                    </span>
+                  <div key={d.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={cn('text-xs font-medium px-2 py-0.5 rounded shrink-0', stageInfo?.color)}>
+                        {stageInfo?.label}
+                      </span>
+                      {d.title?.trim() && <span className="text-xs truncate">{d.title}</span>}
+                    </div>
                     {d.concert_date && (
                       <span className="text-xs text-muted-foreground">
                         {formatDate(d.concert_date)}

@@ -12,6 +12,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { STAGES, PRIORITIES, type DealStage, type DealPriority } from '@/types/database';
 import { toast } from 'sonner';
 
+const NONE = '__none__';
+
 interface CreateDealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -21,25 +23,42 @@ export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) 
   const { data: venues } = useVenues();
   const { data: contacts } = useContacts();
   const createDeal = useCreateDeal();
-  const [venueId, setVenueId] = useState('');
-  const [contactId, setContactId] = useState('');
+  const [title, setTitle] = useState('');
+  const [venueId, setVenueId] = useState(NONE);
+  const [contactId, setContactId] = useState(NONE);
   const [stage, setStage] = useState<DealStage>('a_contacter');
   const [priority, setPriority] = useState<DealPriority>('medium');
   const [concertDate, setConcertDate] = useState('');
   const [fee, setFee] = useState('');
 
-  const venueContacts = contacts?.filter((c) => c.venue_id === venueId) || [];
+  const hasVenue = venueId !== NONE;
+  // With a venue: its contacts. Without: every contact (deal tied to a person).
+  const contactOptions = (contacts || []).filter((c) => !hasVenue || c.venue_id === venueId);
+
+  const handleVenueChange = (value: string) => {
+    setVenueId(value);
+    const contact = contacts?.find((c) => c.id === contactId);
+    if (value !== NONE && contact && contact.venue_id !== value) setContactId(NONE);
+  };
+
+  const handleContactChange = (value: string) => {
+    setContactId(value);
+    // Picking a contact first: attach their venue too, if they have one.
+    const contact = contacts?.find((c) => c.id === value);
+    if (!hasVenue && contact?.venue_id) setVenueId(contact.venue_id);
+  };
 
   const handleCreate = () => {
-    if (!venueId) {
-      toast.error('Veuillez sélectionner un lieu');
+    if (!hasVenue && contactId === NONE) {
+      toast.error('Choisissez un lieu ou un contact');
       return;
     }
 
     createDeal.mutate(
       {
-        venue_id: venueId,
-        contact_id: contactId || null,
+        title: title.trim() || null,
+        venue_id: hasVenue ? venueId : null,
+        contact_id: contactId === NONE ? null : contactId,
         stage,
         priority,
         concert_date: concertDate || null,
@@ -51,8 +70,9 @@ export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) 
         onSuccess: () => {
           toast.success('Opportunité créée');
           onOpenChange(false);
-          setVenueId('');
-          setContactId('');
+          setTitle('');
+          setVenueId(NONE);
+          setContactId(NONE);
           setStage('a_contacter');
           setPriority('medium');
           setConcertDate('');
@@ -77,12 +97,26 @@ export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) 
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Lieu *</Label>
-            <Select value={venueId} onValueChange={setVenueId}>
+            <Label>Nom de l&apos;opportunité</Label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ex. Première partie, Candidature headline… (sinon : nom du lieu)"
+            />
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Lieu ou contact obligatoire (au moins l&apos;un des deux).
+          </p>
+
+          <div className="space-y-2">
+            <Label>Lieu</Label>
+            <Select value={venueId} onValueChange={handleVenueChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un lieu" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={NONE}>Aucun lieu</SelectItem>
                 {venues?.map((v) => (
                   <SelectItem key={v.id} value={v.id}>
                     {v.name} — {v.city}
@@ -92,23 +126,26 @@ export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) 
             </Select>
           </div>
 
-          {venueContacts.length > 0 && (
-            <div className="space-y-2">
-              <Label>Contact</Label>
-              <Select value={contactId} onValueChange={setContactId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un contact" />
-                </SelectTrigger>
-                <SelectContent>
-                  {venueContacts.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label>Contact</Label>
+            <Select value={contactId} onValueChange={handleContactChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un contact" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Aucun contact</SelectItem>
+                {contactOptions.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                    {!hasVenue && c.venue?.name ? ` — ${c.venue.name}` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {hasVenue && contactOptions.length === 0 && (
+              <p className="text-[11px] text-muted-foreground">Aucun contact rattaché à ce lieu.</p>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

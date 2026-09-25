@@ -8,6 +8,7 @@ import { useVenues } from '@/hooks/use-venues';
 import { useContacts } from '@/hooks/use-contacts';
 import { useDeals } from '@/hooks/use-deals';
 import { STAGES } from '@/types/database';
+import { dealLabel } from '@/lib/utils';
 import {
   LayoutDashboard,
   Kanban,
@@ -145,12 +146,12 @@ export function CommandPalette() {
                   return (
                     <Command.Item
                       key={deal.id}
-                      value={`deal-${deal.id} ${deal.venue?.name || ''} ${deal.venue?.city || ''} ${deal.contact?.name || ''} ${deal.contact?.email || ''} ${stageLabel} ${deal.notes || ''} ${(deal.tags || []).join(' ')}`}
+                      value={`deal-${deal.id} ${deal.title || ''} ${deal.venue?.name || ''} ${deal.venue?.city || ''} ${deal.contact?.name || ''} ${deal.contact?.email || ''} ${stageLabel} ${deal.notes || ''} ${(deal.tags || []).join(' ')}`}
                       onSelect={() => navigate(`/pipeline?deal=${deal.id}`)}
                       className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent aria-selected:bg-accent"
                     >
                       <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span>{deal.venue?.name || 'Opportunité'}</span>
+                      <span>{dealLabel(deal)}</span>
                       {deal.contact?.name && (
                         <span className="text-xs text-muted-foreground">· {deal.contact.name}</span>
                       )}

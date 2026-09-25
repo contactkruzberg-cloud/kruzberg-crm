@@ -39,7 +39,7 @@ export function createMemoryRepo() {
       if (d.external_id && db.deals.some((x) => x.external_source === d.external_source && x.external_id === d.external_id)) {
         throw new UniqueViolationError();
       }
-      const row = { ...d, id: randomUUID(), updated_at: tick() };
+      const row = { ...d, title: d.title ?? null, id: randomUUID(), updated_at: tick() };
       db.deals.push(row);
       return { ...row };
     },

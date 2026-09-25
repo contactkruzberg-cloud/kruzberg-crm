@@ -203,6 +203,7 @@ export function exportAllData(
 
   // ===== PIPELINE =====
   const dealRows = deals.map((d) => ({
+    'Opportunité': d.title || '',
     'Lieu': d.venue?.name || '',
     'Adresse': d.venue?.address || '',
     'Code postal': d.venue?.postal_code || '',
@@ -234,6 +235,7 @@ export function exportAllData(
   const taskRows = tasks.map((t) => ({
     'Titre': t.title,
     'Description': t.description || '',
+    'Opportunité': t.deal?.title || '',
     'Lieu': t.deal?.venue?.name || t.venue?.name || '',
     'Ville': t.deal?.venue?.city || '',
     'Étape opportunité': t.deal?.stage ? STAGE_LABELS[t.deal.stage] || t.deal.stage : '',

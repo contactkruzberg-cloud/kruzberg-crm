@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getRelanceUrgency, daysUntil } from '@/lib/utils';
+import { getRelanceUrgency, daysUntil, dealLabel } from '@/lib/utils';
 import { AlertTriangle, Clock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -71,7 +71,7 @@ export function RelanceAlerts() {
                 >
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">
-                      {deal.venue?.name || 'Lieu inconnu'}
+                      {dealLabel(deal, 'Lieu inconnu')}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {urgency === 'overdue'

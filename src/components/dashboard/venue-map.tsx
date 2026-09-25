@@ -63,6 +63,7 @@ export function VenueMap() {
     const upcoming = new Set<string>();
     const past = new Set<string>();
     (deals || []).forEach((d) => {
+      if (!d.venue_id) return;
       if (d.stage === 'confirme') {
         if (d.concert_date && d.concert_date < today) past.add(d.venue_id);
         else upcoming.add(d.venue_id);

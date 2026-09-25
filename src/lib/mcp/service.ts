@@ -240,15 +240,21 @@ export async function findOpportunity(deps: ServiceDeps, input: FindOpportunityI
   const name = input.name ? normalizeName(input.name) : null;
 
   const matches = deals.filter((d) => {
-    const v = venueById.get(d.venue_id);
+    const v = d.venue_id ? venueById.get(d.venue_id) : undefined;
     const c = d.contact_id ? contactById.get(d.contact_id) : undefined;
     if (input.external_id && d.external_id !== input.external_id) return false;
     if (email) {
-      const venueContacts = contacts.filter((x) => x.venue_id === d.venue_id);
+      const venueContacts = d.venue_id ? contacts.filter((x) => x.venue_id === d.venue_id) : [];
       const known = [v?.email, c?.email, ...venueContacts.map((x) => x.email)].map(normalizeEmail);
       if (!known.includes(email)) return false;
     }
-    if (name && !normalizeName(v?.name).includes(name) && !normalizeName(c?.name).includes(name)) return false;
+    if (
+      name &&
+      !normalizeName(d.title).includes(name) &&
+      !normalizeName(v?.name).includes(name) &&
+      !normalizeName(c?.name).includes(name)
+    )
+      return false;
     return true;
   });
 
@@ -257,10 +263,11 @@ export async function findOpportunity(deps: ServiceDeps, input: FindOpportunityI
       .sort(byMostRecent)
       .slice(0, 10)
       .map((d) => {
-        const v = venueById.get(d.venue_id);
+        const v = d.venue_id ? venueById.get(d.venue_id) : undefined;
+        const c = d.contact_id ? contactById.get(d.contact_id) : undefined;
         return {
           id: d.id,
-          name: v?.name ?? '(structure inconnue)',
+          name: d.title?.trim() || v?.name || c?.name || '(structure inconnue)',
           city: v?.city ?? '',
           stage: d.stage,
           external_id: d.external_id,

@@ -15,13 +15,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { STAGES, PRIORITIES, RELANCE_METHODS, type DealStage, type DealPriority, type RelanceMethod } from '@/types/database';
-import { formatDate, formatRelativeDate, cn } from '@/lib/utils';
+import { formatDate, formatRelativeDate, cn, dealLabel } from '@/lib/utils';
+import { useVenues } from '@/hooks/use-venues';
+import { useContacts } from '@/hooks/use-contacts';
 import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send, CheckCircle2, Circle, Plus, Trash2, ListTodo, Route, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { SendEmailDialog } from '@/components/shared/send-email-dialog';
 import { AddToTourDialog } from '@/components/tours/add-to-tour-dialog';
 import { useDealTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks';
+
+const NONE = '__none__';
 
 interface DealSidePanelProps {
   dealId: string;
@@ -32,6 +36,8 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const { data: deal, isLoading } = useDeal(dealId);
   const { data: activities } = useActivities(50);
   const { data: dealTasks } = useDealTasks(dealId);
+  const { data: venues } = useVenues();
+  const { data: contacts } = useContacts();
   const updateDeal = useUpdateDeal();
   const deleteDeal = useDeleteDeal();
   const createActivity = useCreateActivity();
@@ -39,6 +45,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
   const [notes, setNotes] = useState('');
+  const [title, setTitle] = useState('');
   const [newNote, setNewNote] = useState('');
   const [emailOpen, setEmailOpen] = useState(false);
   const [addToTourOpen, setAddToTourOpen] = useState(false);
@@ -57,6 +64,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
     if (loadedDealIdRef.current === deal.id) return;
     loadedDealIdRef.current = deal.id;
     setNotes(deal.notes ?? '');
+    setTitle(deal.title ?? '');
     setNewNote('');
     setNewTaskTitle('');
     setNewTaskDue('');
@@ -75,6 +83,50 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
     }, 800);
     return () => clearTimeout(timer);
   }, [notes, deal, dealId, updateDeal]);
+
+  const handleTitleSave = () => {
+    if (!deal) return;
+    const value = title.trim() || null;
+    if (value === (deal.title ?? null)) return;
+    updateDeal.mutate({ id: deal.id, title: value }, {
+      onSuccess: () => toast.success(value ? 'Opportunité renommée' : 'Nom par défaut rétabli'),
+      onError: () => toast.error('Échec du renommage'),
+    });
+  };
+
+  // A deal must stay tied to a venue OR a contact (DB check constraint).
+  const handleVenueChange = (value: string) => {
+    if (!deal) return;
+    const venueId = value === NONE ? null : value;
+    if (!venueId && !deal.contact_id) {
+      toast.error('Choisissez d\'abord un contact : une opportunité doit avoir un lieu ou un contact');
+      return;
+    }
+    updateDeal.mutate({ id: deal.id, venue_id: venueId }, {
+      onSuccess: () => toast.success('Lieu mis à jour'),
+      onError: () => toast.error('Échec de la mise à jour du lieu'),
+    });
+  };
+
+  const handleContactChange = (value: string) => {
+    if (!deal) return;
+    const contactId = value === NONE ? null : value;
+    if (!contactId && !deal.venue_id) {
+      toast.error('Choisissez d\'abord un lieu : une opportunité doit avoir un lieu ou un contact');
+      return;
+    }
+    updateDeal.mutate({ id: deal.id, contact_id: contactId }, {
+      onSuccess: () => toast.success('Contact mis à jour'),
+      onError: () => toast.error('Échec de la mise à jour du contact'),
+    });
+  };
+
+  // Contacts of the deal's venue first, then everyone else.
+  const contactOptions = [...(contacts || [])].sort((a, b) => {
+    const aMine = deal?.venue_id != null && a.venue_id === deal.venue_id ? 0 : 1;
+    const bMine = deal?.venue_id != null && b.venue_id === deal.venue_id ? 0 : 1;
+    return aMine - bMine || a.name.localeCompare(b.name, 'fr');
+  });
 
   const handleStageChange = (stage: DealStage) => {
     if (!deal) return;
@@ -138,7 +190,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
     >
       <div className="flex items-center justify-between p-4 border-b">
         <h2 className="text-lg font-semibold truncate">
-          {isLoading ? <Skeleton className="h-6 w-32" /> : deal?.venue?.name || 'Deal'}
+          {isLoading ? <Skeleton className="h-6 w-32" /> : dealLabel(deal)}
         </h2>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-4 w-4" />
@@ -155,12 +207,14 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
         <ScrollArea className="h-[calc(100vh-57px)]">
           <div className="p-4 space-y-5">
             {/* Venue info */}
-            {deal.venue && (
+            {(deal.venue || deal.concert_date) && (
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {deal.venue.city}, {deal.venue.country}
-                </div>
+                {deal.venue && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {deal.venue.city}, {deal.venue.country}
+                  </div>
+                )}
                 {deal.concert_date && (
                   <div className="flex items-center gap-2 text-sm text-primary">
                     <Calendar className="h-3.5 w-3.5" />
@@ -169,6 +223,57 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                 )}
               </div>
             )}
+
+            {/* Nom + rattachement (lieu ou contact) */}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label className="text-xs">Nom de l&apos;opportunité</Label>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onBlur={handleTitleSave}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.currentTarget.blur();
+                  }}
+                  placeholder={deal.venue?.name || deal.contact?.name || 'Ex. Première partie'}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs">Lieu</Label>
+                  <Select value={deal.venue_id ?? NONE} onValueChange={handleVenueChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Aucun lieu" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>Aucun lieu</SelectItem>
+                      {venues?.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.name} — {v.city}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Contact</Label>
+                  <Select value={deal.contact_id ?? NONE} onValueChange={handleContactChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Aucun contact" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>Aucun contact</SelectItem>
+                      {contactOptions.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                          {c.venue?.name && c.venue_id !== deal.venue_id ? ` — ${c.venue.name}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
 
             {/* Send Email */}
             <Button
@@ -574,7 +679,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
               <DialogHeader>
                 <DialogTitle>Supprimer l&apos;opportunité ?</DialogTitle>
                 <DialogDescription>
-                  L&apos;opportunité « {deal.venue?.name || 'Sans lieu'} » sera supprimée définitivement du pipeline, ainsi que toutes ses activités et tâches liées. Cette action ne peut pas être annulée.
+                  L&apos;opportunité « {dealLabel(deal, 'Sans lieu')} » sera supprimée définitivement du pipeline, ainsi que toutes ses activités et tâches liées. Cette action ne peut pas être annulée.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex justify-end gap-2 mt-4">

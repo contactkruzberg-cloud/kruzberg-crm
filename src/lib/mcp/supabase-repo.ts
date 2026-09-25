@@ -3,7 +3,7 @@ import { UniqueViolationError, type ContactRow, type CrmRepo, type DealRow, type
 
 const VENUE_COLS = 'id, name, type, city, country, capacity, email, instagram, website';
 const CONTACT_COLS = 'id, venue_id, name, email, notes';
-const DEAL_COLS = 'id, venue_id, contact_id, stage, priority, concert_date, tags, external_source, external_id, updated_at';
+const DEAL_COLS = 'id, title, venue_id, contact_id, stage, priority, concert_date, tags, external_source, external_id, updated_at';
 const TASK_COLS = 'id, deal_id, title, due_date, completed_at';
 const PAGE = 1000;
 

@@ -25,7 +25,8 @@ export interface ContactRow {
 
 export interface DealRow {
   id: string;
-  venue_id: string;
+  title: string | null;
+  venue_id: string | null;
   contact_id: string | null;
   stage: DealStage;
   priority: DealPriority;
@@ -46,7 +47,7 @@ export interface TaskRow {
 
 export type NewVenue = Omit<VenueRow, 'id'> & { fit_score: number };
 export type NewContact = Omit<ContactRow, 'id'>;
-export type NewDeal = Omit<DealRow, 'id' | 'updated_at'>;
+export type NewDeal = Omit<DealRow, 'id' | 'updated_at' | 'title'> & { title?: string | null };
 
 /** Thrown by insertDeal when (external_source, external_id) already exists. */
 export class UniqueViolationError extends Error {

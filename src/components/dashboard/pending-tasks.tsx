@@ -105,8 +105,8 @@ export function PendingTasks() {
           <div className="space-y-1.5">
             {pending.map((task) => {
               const isOverdue = task.due_date && new Date(task.due_date) < new Date();
-              const venueName = task.deal?.venue
-                ? (task.deal.venue as { name: string }).name
+              const venueName = task.deal
+                ? task.deal.title?.trim() || task.deal.venue?.name
                 : task.venue?.name;
 
               return (

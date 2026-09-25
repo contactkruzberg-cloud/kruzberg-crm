@@ -97,7 +97,8 @@ export interface Contact {
 export interface Deal {
   id: string;
   user_id: string;
-  venue_id: string;
+  title: string | null;
+  venue_id: string | null;
   contact_id: string | null;
   stage: DealStage;
   priority: DealPriority;
