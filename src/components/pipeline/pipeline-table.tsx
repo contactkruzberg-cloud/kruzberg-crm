@@ -3,20 +3,20 @@
 import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cn, formatDate, getRelanceUrgency, daysUntil, dealLabel } from '@/lib/utils';
 import { STAGES, type Deal, type DealStage } from '@/types/database';
-import { ArrowUpDown, Search, Clock } from 'lucide-react';
+import { ArrowUpDown, Clock } from 'lucide-react';
 
 interface PipelineTableProps {
   deals: Deal[];
   onDealClick: (id: string) => void;
+  /** Why a deal matched the search, when not visible in the row. */
+  hints?: Map<string, string>;
 }
 
 type SortField = 'venue' | 'city' | 'stage' | 'priority' | 'next_relance' | 'last_message';
 
-export function PipelineTable({ deals, onDealClick }: PipelineTableProps) {
-  const [search, setSearch] = useState('');
+export function PipelineTable({ deals, onDealClick, hints }: PipelineTableProps) {
   const [sortField, setSortField] = useState<SortField>('next_relance');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [stageFilter, setStageFilter] = useState<DealStage | 'all'>('all');
@@ -35,18 +35,6 @@ export function PipelineTable({ deals, onDealClick }: PipelineTableProps) {
 
     if (stageFilter !== 'all') {
       result = result.filter((d) => d.stage === stageFilter);
-    }
-
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (d) =>
-          d.title?.toLowerCase().includes(q) ||
-          d.venue?.name?.toLowerCase().includes(q) ||
-          d.contact?.name?.toLowerCase().includes(q) ||
-          d.venue?.city?.toLowerCase().includes(q) ||
-          d.tags?.some((t) => t.toLowerCase().includes(q))
-      );
     }
 
     result.sort((a, b) => {
@@ -70,7 +58,7 @@ export function PipelineTable({ deals, onDealClick }: PipelineTableProps) {
     });
 
     return result;
-  }, [deals, search, stageFilter, sortField, sortDir]);
+  }, [deals, stageFilter, sortField, sortDir]);
 
   const SortHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button
@@ -86,15 +74,6 @@ export function PipelineTable({ deals, onDealClick }: PipelineTableProps) {
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
         <div className="flex gap-1.5 flex-wrap">
           <Button
             size="sm"
@@ -146,6 +125,11 @@ export function PipelineTable({ deals, onDealClick }: PipelineTableProps) {
                       {deal.title?.trim() && (deal.venue || deal.contact) && (
                         <span className="block text-xs font-normal text-muted-foreground">
                           {deal.venue?.name || deal.contact?.name}
+                        </span>
+                      )}
+                      {hints?.get(deal.id) && (
+                        <span className="block text-xs font-normal text-primary/80 truncate max-w-xs">
+                          ↳ {hints.get(deal.id)}
                         </span>
                       )}
                     </td>

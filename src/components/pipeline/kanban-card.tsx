@@ -11,9 +11,11 @@ interface KanbanCardProps {
   deal: Deal;
   onClick: () => void;
   isDragging?: boolean;
+  /** Why this deal matched the search ("Contact : Jean Dupont"). */
+  hint?: string;
 }
 
-export function KanbanCard({ deal, onClick, isDragging }: KanbanCardProps) {
+export function KanbanCard({ deal, onClick, isDragging, hint }: KanbanCardProps) {
   const {
     attributes,
     listeners,
@@ -63,6 +65,12 @@ export function KanbanCard({ deal, onClick, isDragging }: KanbanCardProps) {
               .join(' · ')}
           </span>
         </div>
+      )}
+
+      {hint && (
+        <p className="mt-1 text-[11px] text-primary/80 truncate" title={hint}>
+          ↳ {hint}
+        </p>
       )}
 
       <div className="flex items-center gap-2 mt-2 flex-wrap">

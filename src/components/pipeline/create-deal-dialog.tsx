@@ -17,15 +17,21 @@ const NONE = '__none__';
 interface CreateDealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Prefill from the pipeline search ("no opportunity yet for this venue / contact"). */
+  initialVenueId?: string | null;
+  initialContactId?: string | null;
 }
 
-export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) {
+export function CreateDealDialog({ open, onOpenChange, initialVenueId, initialContactId }: CreateDealDialogProps) {
   const { data: venues } = useVenues();
   const { data: contacts } = useContacts();
   const createDeal = useCreateDeal();
   const [title, setTitle] = useState('');
-  const [venueId, setVenueId] = useState(NONE);
-  const [contactId, setContactId] = useState(NONE);
+  // Prefill is read once: the parent remounts the dialog (key) for each new prefill.
+  const [venueId, setVenueId] = useState(
+    () => initialVenueId || contacts?.find((c) => c.id === initialContactId)?.venue_id || NONE
+  );
+  const [contactId, setContactId] = useState(initialContactId || NONE);
   const [stage, setStage] = useState<DealStage>('a_contacter');
   const [priority, setPriority] = useState<DealPriority>('medium');
   const [concertDate, setConcertDate] = useState('');

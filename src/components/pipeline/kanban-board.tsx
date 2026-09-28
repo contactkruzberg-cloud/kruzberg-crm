@@ -24,9 +24,13 @@ import { toast } from 'sonner';
 interface KanbanBoardProps {
   deals: Deal[];
   onDealClick: (id: string) => void;
+  /** Why a deal matched the search, when not visible on the card. */
+  hints?: Map<string, string>;
+  /** While searching, only show the stages that have results. */
+  hideEmptyColumns?: boolean;
 }
 
-export function KanbanBoard({ deals, onDealClick }: KanbanBoardProps) {
+export function KanbanBoard({ deals, onDealClick, hints, hideEmptyColumns }: KanbanBoardProps) {
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
   const updateDeal = useUpdateDeal();
 
@@ -81,6 +85,7 @@ export function KanbanBoard({ deals, onDealClick }: KanbanBoardProps) {
       <div className="flex gap-4 overflow-x-auto pb-4">
         {STAGES.map((stage) => {
           const stageDeals = deals.filter((d) => d.stage === stage.key);
+          if (hideEmptyColumns && stageDeals.length === 0) return null;
           return (
             <KanbanColumn
               key={stage.key}
@@ -95,6 +100,7 @@ export function KanbanBoard({ deals, onDealClick }: KanbanBoardProps) {
                   <KanbanCard
                     key={deal.id}
                     deal={deal}
+                    hint={hints?.get(deal.id)}
                     onClick={() => onDealClick(deal.id)}
                   />
                 ))}
