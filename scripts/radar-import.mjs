@@ -2,7 +2,8 @@
 // One-off import of the Booking Radar database (exported from the claude.ai
 // artifact as JSON files: <dir>/<collection>/<id>.json) into the CRM, through
 // the OAuth MCP connector (tool radar_batch). Safe to re-run: existing
-// documents are replaced, pinned to their current version.
+// documents are replaced, pinned to their current version. Then initialises
+// the two-way sync state (radar_sync_baseline).
 //
 //   node scripts/radar-import.mjs <export dir> [base URL]
 //
@@ -97,6 +98,15 @@ try {
       process.stdout.write(`\r${collection} : ${Math.min(i + 40, docs.length)}/${docs.length}   `);
     }
     console.log();
+  }
+  // Common starting point for the two-way sync with the artifact.
+  for (const collection of ['config', 'runs', 'outbox', 'leads']) {
+    try {
+      const b = await tool('radar_sync_baseline', { collection });
+      console.log(`Synchro initialisée : ${collection} (${b.baselined})`);
+    } catch (err) {
+      console.log(`Synchro ${collection} : ${err.message}`);
+    }
   }
   const check = await tool('radar_list', { collection: 'leads', fields: ['name'], limit: 1 });
   console.log(`✅ ${total} documents importés. Pistes dans le CRM : ${check.total}.`);

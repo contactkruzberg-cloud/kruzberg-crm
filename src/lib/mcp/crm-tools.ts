@@ -47,6 +47,7 @@ import {
 } from './entities';
 import { depsFor, runTool, takeFor, type McpContext } from './tools';
 import { MAX_RADAR_BATCH, radarBatch, radarGet, radarList, RADAR_COLLECTIONS } from './radar';
+import { radarSyncAck, radarSyncBaseline, radarSyncPush, radarSyncStatus } from './radar-sync';
 import type { Row } from './store';
 
 // Full read/write access to the CRM for Claude (OAuth endpoint only).
@@ -604,5 +605,74 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
       annotations: WRITE,
     },
     run('radar_batch', (deps, a: Parameters<typeof radarBatch>[1]) => radarBatch(deps, a)),
+  );
+
+  // ---------------- Synchro radar artifact claude.ai ⇄ CRM (tâche horaire)
+
+  const SYNC_NOTE = ' Utilisé par la tâche horaire de synchronisation avec le radar de l\'artifact claude.ai.';
+
+  server.registerTool(
+    'radar_sync_status',
+    {
+      title: 'Synchro radar : comparer les versions',
+      description:
+        'Étape 1 de la synchro radar artifact ⇄ CRM. artifact_versions = {id: version} de TOUS les documents de la collection dans l\'artifact. ' +
+        'Renvoie fetch (ids dont il faut envoyer le contenu avec radar_sync_push) et artifact_writes (écritures à appliquer telles quelles à l\'artifact avec ArtifactData batch : op, collection, doc_id, data, if_version).' +
+        SYNC_NOTE,
+      inputSchema: z.strictObject({
+        collection: radarCollection,
+        artifact_versions: z.record(radarId, z.number().int().min(1)),
+      }),
+      annotations: WRITE,
+    },
+    run('radar_sync_status', (deps, a: Parameters<typeof radarSyncStatus>[1]) => radarSyncStatus(deps, a)),
+  );
+
+  server.registerTool(
+    'radar_sync_push',
+    {
+      title: 'Synchro radar : envoyer des documents de l\'artifact',
+      description:
+        'Étape 2. Envoie (25 maximum par appel) le contenu exact des documents demandés par radar_sync_status : {id, version, data}. ' +
+        'Le CRM fusionne champ par champ avec sa copie, met la sienne à jour et renvoie les artifact_writes à appliquer à l\'artifact.' +
+        SYNC_NOTE,
+      inputSchema: z.strictObject({
+        collection: radarCollection,
+        docs: z
+          .array(z.strictObject({ id: radarId, version: z.number().int().min(1), data: z.record(z.string(), z.unknown()) }))
+          .min(1)
+          .max(25, '25 documents maximum par appel.'),
+      }),
+      annotations: WRITE,
+    },
+    run('radar_sync_push', (deps, a: Parameters<typeof radarSyncPush>[1]) => radarSyncPush(deps, a)),
+  );
+
+  server.registerTool(
+    'radar_sync_ack',
+    {
+      title: 'Synchro radar : confirmer les écritures dans l\'artifact',
+      description:
+        'Étape 3. Après ArtifactData batch, renvoie pour chaque écriture RÉUSSIE la nouvelle version du document dans l\'artifact : results = [{id, version}]. ' +
+        'N\'inclus pas les écritures refusées (conflit) : elles seront refaites au prochain passage.' +
+        SYNC_NOTE,
+      inputSchema: z.strictObject({
+        collection: radarCollection,
+        results: z.array(z.strictObject({ id: radarId, version: z.number().int().min(1) })).max(500),
+      }),
+      annotations: IDEMPOTENT_WRITE,
+    },
+    run('radar_sync_ack', (deps, a: Parameters<typeof radarSyncAck>[1]) => radarSyncAck(deps, a)),
+  );
+
+  server.registerTool(
+    'radar_sync_baseline',
+    {
+      title: 'Synchro radar : initialiser après import',
+      description: 'Une seule fois, juste après l\'import initial du radar dans le CRM : prend la copie du CRM comme état commun de départ.' + SYNC_NOTE,
+      inputSchema: z.strictObject({ collection: radarCollection }),
+      annotations: WRITE,
+    },
+    run('radar_sync_baseline', (deps, a: Parameters<typeof radarSyncBaseline>[1]) => radarSyncBaseline(deps, a)),
   );
 }

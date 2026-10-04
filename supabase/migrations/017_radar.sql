@@ -40,3 +40,25 @@ CREATE POLICY "Users can insert own radar docs" ON radar_docs FOR INSERT WITH CH
 DROP POLICY IF EXISTS "Users can update own radar docs" ON radar_docs;
 CREATE POLICY "Users can update own radar docs" ON radar_docs FOR UPDATE USING (auth.uid() = user_id);
 -- Pas de DELETE : une piste n'est jamais effacée, elle est « écartée » (dismissed).
+
+-- ---------------------------------------------
+-- Synchronisation avec l'artifact claude.ai (dans les deux sens)
+-- ---------------------------------------------
+-- Pour chaque document : dernier état fusionné (base), version vue dans
+-- l'artifact et dans le CRM au moment de la synchro. Une tâche horaire
+-- compare les versions, le CRM fusionne champ par champ (3 voies) et
+-- renvoie les écritures à appliquer à l'artifact ; « pending » attend la
+-- confirmation que l'artifact les a bien reçues.
+CREATE TABLE IF NOT EXISTS radar_sync (
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  collection TEXT NOT NULL,
+  id TEXT NOT NULL,
+  base JSONB NOT NULL DEFAULT '{}'::jsonb,
+  artifact_version INTEGER,          -- NULL : à adopter au prochain passage (état initial = import)
+  crm_version INTEGER,
+  pending JSONB,                     -- {base, crm_version} en attente d'accusé de réception
+  synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, collection, id)
+);
+ALTER TABLE radar_sync ENABLE ROW LEVEL SECURITY;
+-- Utilisée uniquement par le serveur (clé service) : aucune politique.

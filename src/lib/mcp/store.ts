@@ -19,6 +19,7 @@ export type Table =
   | 'deal_bands'
   | 'briefings'
   | 'radar_docs'
+  | 'radar_sync'
   | 'mcp_audit_log';
 
 export type Filter =
