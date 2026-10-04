@@ -127,6 +127,10 @@ export function createMemoryStore() {
       return structuredClone(row);
     },
 
+    async insertMany(table, rows) {
+      for (const r of rows) await store.insert(table, r);
+    },
+
     async update(table, filters, patch) {
       const rows = db[table].filter((r) => r.user_id === OWNER && filters.every((f) => matches(r, f)));
       const out: Row[] = [];

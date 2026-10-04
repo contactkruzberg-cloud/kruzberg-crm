@@ -152,8 +152,19 @@ describe('radar sync artifact ⇄ CRM', () => {
     expect(art.docs.get('b')!.data).toMatchObject(expected);
   });
 
-  it('refuses to baseline twice', async () => {
-    await expect(radarSyncBaseline(deps(), { collection: 'leads' })).rejects.toThrow('déjà initialisée');
+  it('baseline is resumable (only missing states are added)', async () => {
+    expect(await radarSyncBaseline(deps(), { collection: 'leads' })).toMatchObject({ baselined: 0, already: 2 });
+  });
+
+  it('without any baseline, the first pass adopts docs present on both sides (interrupted initialisation)', async () => {
+    mem = createMemoryStore();
+    await radarBatch(deps(), { writes: [...art.docs].map(([id, d]) => ({ op: 'set' as const, collection: 'leads' as const, id, data: structuredClone(d.data) })) });
+    const status = await radarSyncStatus(deps(), { collection: 'leads', artifact_versions: art.versions() });
+    expect(status).toMatchObject({ initialised: 2, fetch: [], artifact_writes: [] });
+    expect(await syncPass()).toEqual({ fetched: 0, written: 0, acked: 0 });
+    art.patch('a', { email: 'x@a.fr' });
+    expect(await syncPass()).toMatchObject({ fetched: 1 });
+    expect(await crm('a')).toMatchObject({ email: 'x@a.fr' });
   });
 });
 

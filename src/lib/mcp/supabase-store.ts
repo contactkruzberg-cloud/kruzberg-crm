@@ -85,6 +85,13 @@ export function createSupabaseStore(url: string, serviceRoleKey: string, ownerId
       return data as Row;
     },
 
+    async insertMany(table, rows) {
+      for (let i = 0; i < rows.length; i += 500) {
+        const { error } = await db.from(table).insert(rows.slice(i, i + 500).map((r) => ({ ...r, user_id: ownerId })));
+        if (error) fail(error);
+      }
+    },
+
     async update(table, filters, patch) {
       const { user_id: _ignored, ...safe } = patch;
       void _ignored;

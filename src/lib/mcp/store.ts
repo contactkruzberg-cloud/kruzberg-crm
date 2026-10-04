@@ -44,6 +44,8 @@ export interface Store {
   /** Rows of the owner matching the query (archived rows included unless filtered). */
   select(table: Table, query?: Query): Promise<Row[]>;
   insert(table: Table, row: Row): Promise<Row>;
+  /** Inserts many rows in one round trip. */
+  insertMany(table: Table, rows: Row[]): Promise<void>;
   /** Updates the owner's rows matching the filters; returns the updated rows (empty if none matched). */
   update(table: Table, filters: Filter[], patch: Row): Promise<Row[]>;
 }

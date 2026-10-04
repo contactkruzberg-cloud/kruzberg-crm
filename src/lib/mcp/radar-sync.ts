@@ -81,16 +81,39 @@ export async function radarSyncStatus(deps: Deps, args: { collection: RadarColle
   const { collection } = args;
   const av = args.artifact_versions;
   const { docs, states } = await load(deps, collection);
+  const now = new Date().toISOString();
+
+  // Starting point after the initial import (or an interrupted baseline): a
+  // document present on both sides without sync state is taken as identical,
+  // with the artifact version seen now. Done in bulk, so it can resume.
+  const adopt: Row[] = [];
+  for (const [id, doc] of docs) {
+    if (!states.has(id) && av[id] != null) {
+      const s = { collection, id, base: doc.data ?? {}, artifact_version: av[id], crm_version: Number(doc.version), pending: null, synced_at: now };
+      adopt.push(s);
+      states.set(id, s);
+    }
+  }
+  if (adopt.length) await deps.store.insertMany('radar_sync', adopt);
+
   const fetch: string[] = [];
   const writes: ArtifactWrite[] = [];
-
+  // Per-document state writes are bounded per call to stay within the request time limit.
+  const MAX_STATE_WRITES = 150;
+  let stateWrites = 0;
+  let incomplete = false;
   for (const id of new Set([...Object.keys(av), ...docs.keys()])) {
+    if (stateWrites >= MAX_STATE_WRITES) {
+      incomplete = true;
+      break;
+    }
     const a = av[id];
     const doc = docs.get(id);
     let state = states.get(id);
     // Baseline after the initial import: adopt the artifact version seen now.
     if (state && a != null && state.artifact_version == null) {
       await saveState(deps, collection, id, state, { artifact_version: a });
+      stateWrites++;
       state = { ...state, artifact_version: a };
     }
     const artifactChanged = a != null && (!state || Number(state.artifact_version) !== a);
@@ -107,13 +130,18 @@ export async function radarSyncStatus(deps: Deps, args: { collection: RadarColle
           : { op: 'set', collection, doc_id: id, data },
       );
       await saveState(deps, collection, id, state, { pending: { base: data, crm_version: Number(doc.version) } });
+      stateWrites++;
     }
   }
   return {
     collection,
+    ...(adopt.length ? { initialised: adopt.length } : {}),
     fetch,
     artifact_writes: writes.filter((w) => w.op === 'set' || Object.keys(w.data).length > 0),
-    next_step: fetch.length
+    ...(incomplete ? { incomplete: true } : {}),
+    next_step: incomplete
+      ? 'Traitement partiel : applique ce qui est renvoyé (push, writes, ack) puis rappelle radar_sync_status pour la suite.'
+      : fetch.length
       ? 'Envoie le contenu des documents listés dans fetch avec radar_sync_push (25 maximum par appel), puis applique toutes les artifact_writes.'
       : 'Applique les artifact_writes (ArtifactData batch), puis confirme avec radar_sync_ack.',
   };
@@ -190,9 +218,10 @@ export async function radarSyncAck(deps: Deps, args: { collection: RadarCollecti
 /** After the initial import: the CRM copy is the common base, artifact versions adopted at the first sync. */
 export async function radarSyncBaseline(deps: Deps, args: { collection: RadarCollection }) {
   const { docs, states } = await load(deps, args.collection);
-  if (states.size) throw new ToolError(`La synchro de ${args.collection} est déjà initialisée (${states.size} documents).`);
-  for (const [id, doc] of docs) {
-    await saveState(deps, args.collection, id, undefined, { base: doc.data ?? {}, artifact_version: null, crm_version: Number(doc.version), pending: null });
-  }
-  return { collection: args.collection, baselined: docs.size };
+  const now = new Date().toISOString();
+  const rows = [...docs]
+    .filter(([id]) => !states.has(id))
+    .map(([id, doc]) => ({ collection: args.collection, id, base: doc.data ?? {}, artifact_version: null, crm_version: Number(doc.version), pending: null, synced_at: now }));
+  if (rows.length) await deps.store.insertMany('radar_sync', rows);
+  return { collection: args.collection, baselined: rows.length, already: states.size };
 }
