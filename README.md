@@ -150,7 +150,7 @@ Aucun secret ni jeton n'est stocké en clair : la base ne garde que des empreint
 ### Tests
 
 - Unitaires et intégration : `npm test`.
-- De bout en bout : `npx @modelcontextprotocol/inspector`, transport « Streamable HTTP »,
+- De bout en bout (OAuth + MCP Inspector, sur la prod) : `node scripts/mcp-oauth-e2e.mjs` — ou à la main : `npx @modelcontextprotocol/inspector`, transport « Streamable HTTP »,
   URL `https://kruzberg-crm.vercel.app/api/mcp`, bouton « Open Auth Settings » → « Quick OAuth Flow ».
 - Radar (URL secrète) : `node scripts/mcp-smoke.mjs`.
 
