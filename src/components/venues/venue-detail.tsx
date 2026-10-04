@@ -13,10 +13,11 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { VENUE_TYPES, STAGES, type Venue, type Contact, type VenueType } from '@/types/database';
+import { VENUE_TYPES, STAGES, STYLE_FITS, type Venue, type Contact, type VenueType } from '@/types/database';
+import { applicationWindow, formatMonthDay, parseMonthDay } from '@/lib/application-dates';
 import { cn, formatDate, formatRelativeDate } from '@/lib/utils';
 import { geocodeAddress } from '@/lib/geocode';
-import { MapPin, Globe, AtSign, Phone, Mail, Star, Trash2, ExternalLink, User, Plus, Send, History, ArrowRightLeft, StickyNote, Music, Locate } from 'lucide-react';
+import { MapPin, Globe, AtSign, Phone, Mail, Star, Trash2, ExternalLink, User, Plus, Send, History, ArrowRightLeft, StickyNote, Music, Locate, Target, CalendarClock, Ban } from 'lucide-react';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 
@@ -66,6 +67,19 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
     }, 800);
     return () => clearTimeout(timer);
   }, [notes, venue.notes, saveField]);
+
+  const appWindow = applicationWindow(venue.application_opens, venue.application_deadline);
+  const blockedUntil =
+    venue.do_not_contact_until && venue.do_not_contact_until > new Date().toISOString().slice(0, 10) ? venue.do_not_contact_until : null;
+
+  const saveMonthDay = (field: 'application_opens' | 'application_deadline', input: string) => {
+    const value = parseMonthDay(input);
+    if (value === undefined) {
+      toast.error('Date attendue au format JJ/MM, ex. 15/01');
+      return;
+    }
+    if (value !== (venue[field] ?? null)) saveField(field, value);
+  };
 
   const hasActiveDeal = venueDeals.some((d) => !['confirme', 'termine', 'refuse'].includes(d.stage));
 
@@ -201,6 +215,103 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
                   />
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Prospection */}
+        <div className="space-y-3 rounded-lg border p-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <Label className="text-xs flex items-center gap-1">
+              <Target className="h-3 w-3" /> Prospection & candidatures
+            </Label>
+            <div className="flex gap-1.5 flex-wrap">
+              {blockedUntil && (
+                <Badge variant="destructive" className="text-[10px] gap-1">
+                  <Ban className="h-3 w-3" /> Ne pas recontacter avant le {formatDate(blockedUntil)}
+                </Badge>
+              )}
+              {appWindow && appWindow.days_left <= 60 && (
+                <Badge variant={appWindow.status === 'open' ? 'warning' : 'secondary'} className="text-[10px] gap-1">
+                  <CalendarClock className="h-3 w-3" />
+                  {appWindow.status === 'open'
+                    ? `Candidatures ouvertes — clôture dans ${appWindow.days_left} j`
+                    : `Ouverture le ${formatDate(appWindow.opens!)}`}
+                </Badge>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Notre style ?</Label>
+              <Select value={venue.style_fit ?? 'unknown'} onValueChange={(v) => saveField('style_fit', v === 'unknown' ? null : v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unknown">Non évalué</SelectItem>
+                  {STYLE_FITS.map((f) => (
+                    <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Programme à l&apos;avance (mois)</Label>
+              <Input
+                key={`${venue.id}-lead`}
+                type="number"
+                min={0}
+                max={24}
+                defaultValue={venue.booking_lead_months ?? ''}
+                onBlur={(e) => saveField('booking_lead_months', e.target.value ? Math.min(24, Math.max(0, parseInt(e.target.value))) : null)}
+                placeholder="6"
+              />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-xs">Groupes similaires déjà programmés</Label>
+              <Input
+                key={`${venue.id}-similar`}
+                defaultValue={venue.similar_bands ?? ''}
+                onBlur={(e) => e.target.value !== (venue.similar_bands ?? '') && saveField('similar_bands', e.target.value || null)}
+                placeholder="Lebanon Hanover, Rendez-Vous…"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Ne pas recontacter avant</Label>
+              <Input
+                key={`${venue.id}-dnc`}
+                type="date"
+                defaultValue={venue.do_not_contact_until ?? ''}
+                onBlur={(e) => e.target.value !== (venue.do_not_contact_until ?? '') && saveField('do_not_contact_until', e.target.value || null)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Lien de candidature</Label>
+              <Input
+                key={`${venue.id}-appurl`}
+                defaultValue={venue.application_url ?? ''}
+                onBlur={(e) => e.target.value !== (venue.application_url ?? '') && saveField('application_url', e.target.value || null)}
+                placeholder="https://…"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Candidatures : ouverture (JJ/MM, chaque année)</Label>
+              <Input
+                key={`${venue.id}-opens-${venue.application_opens}`}
+                defaultValue={formatMonthDay(venue.application_opens)}
+                onBlur={(e) => saveMonthDay('application_opens', e.target.value)}
+                placeholder="01/10"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Candidatures : clôture (JJ/MM, chaque année)</Label>
+              <Input
+                key={`${venue.id}-deadline-${venue.application_deadline}`}
+                defaultValue={formatMonthDay(venue.application_deadline)}
+                onBlur={(e) => saveMonthDay('application_deadline', e.target.value)}
+                placeholder="15/01"
+              />
             </div>
           </div>
         </div>

@@ -1,9 +1,12 @@
 import { z } from 'zod';
 import {
+  BAND_ROLES,
+  EXCHANGE_STATUSES,
   EXPENSE_CATEGORIES,
   PRIORITIES,
   RELANCE_METHODS,
   STAGES,
+  STYLE_FITS,
   TEMPLATE_CATEGORIES,
   TOUR_STATUSES,
   STOP_TYPES,
@@ -23,7 +26,8 @@ export type EntityKey =
   | 'tour'
   | 'tour_stop'
   | 'tour_expense'
-  | 'template';
+  | 'template'
+  | 'band';
 
 const keys = <T extends string>(list: readonly { key: T }[]) => list.map((x) => x.key) as [T, ...T[]];
 
@@ -35,6 +39,9 @@ export const TOUR_STATUS_IDS = keys(TOUR_STATUSES);
 export const TOUR_STOP_TYPE_IDS = keys(STOP_TYPES);
 export const EXPENSE_CATEGORY_IDS = keys(EXPENSE_CATEGORIES);
 export const TEMPLATE_CATEGORY_IDS = keys(TEMPLATE_CATEGORIES);
+export const STYLE_FIT_IDS = keys(STYLE_FITS);
+export const EXCHANGE_STATUS_IDS = keys(EXCHANGE_STATUSES);
+export const BAND_ROLE_IDS = keys(BAND_ROLES);
 export const CONTACT_METHOD_IDS = ['email', 'phone', 'instagram', 'other'] as const;
 export const TONE_IDS = ['tu', 'vous'] as const;
 /** Activity types that can be logged by hand (status_change is written by the database). */
@@ -59,6 +66,9 @@ export const dateOrDateTime = z
     error: 'Date attendue : YYYY-MM-DD ou date-heure ISO 8601 (ex. 2026-10-04T14:00:00Z).',
   })
   .describe('YYYY-MM-DD ou date-heure ISO 8601.');
+export const monthDay = z
+  .string()
+  .regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, 'Format attendu : MM-DD (ex. "01-15" pour le 15 janvier), date annuelle.');
 const time = z.string().regex(/^\d{2}:\d{2}$/, 'Heure attendue : HH:MM');
 const uuid = (what: string) => z.uuid(`Id ${what} invalide (UUID attendu)`);
 const email = z.email('Email invalide').max(254);
@@ -104,6 +114,13 @@ const venueShape = {
   notes: opt(str(20000)),
   latitude: opt(z.number().min(-90).max(90)),
   longitude: opt(z.number().min(-180).max(180)),
+  application_opens: opt(monthDay).describe('Ouverture annuelle des candidatures (festivals, tremplins), MM-DD.'),
+  application_deadline: opt(monthDay).describe('Clôture annuelle des candidatures, MM-DD. Alimente list_application_deadlines.'),
+  application_url: opt(str(500)).describe('Lien du formulaire de candidature.'),
+  style_fit: opt(enumOf(STYLE_FIT_IDS, 'Style')).describe('Programme notre style (post-punk / cold wave) : yes, maybe, no.'),
+  similar_bands: opt(str(2000)).describe('Groupes proches déjà programmés ici.'),
+  booking_lead_months: opt(z.number().int().min(0).max(24)).describe('Programme combien de mois à l’avance.'),
+  do_not_contact_until: opt(isoDate).describe('Ne pas recontacter avant cette date.'),
 };
 
 const contactShape = {
@@ -204,6 +221,21 @@ const templateShape = {
   body: str(50000),
 };
 
+const bandShape = {
+  name: str(200).min(1),
+  city: opt(str(100)),
+  genre: opt(str(100)),
+  contact_name: opt(str(200)),
+  email: opt(email),
+  phone: opt(str(50)),
+  instagram: opt(str(300)),
+  website: opt(str(500)),
+  exchange_status: enumOf(EXCHANGE_STATUS_IDS, "Statut d'échange").describe(
+    'none ; we_owe = on leur doit une date (chez nous) ; they_owe = ils nous doivent une date (chez eux).',
+  ),
+  notes: opt(str(20000)),
+};
+
 const activityPatch = z.strictObject({
   content: str(20000).optional(),
   type: enumOf(LOGGABLE_ACTIVITY_TYPES, "Type d'activité").optional(),
@@ -235,7 +267,7 @@ export const ENTITIES: Record<EntityKey, EntityDef> = {
     create: createSchema(venueShape, ['name']),
     patch: makePatch(venueShape),
     refs: [],
-    searchCols: ['name', 'city', 'email', 'phone', 'website', 'instagram', 'notes', 'address'],
+    searchCols: ['name', 'city', 'email', 'phone', 'website', 'instagram', 'notes', 'address', 'similar_bands'],
     defaultSort: 'name',
     sortable: ['name', 'city', 'created_at', 'updated_at', 'fit_score', 'capacity'],
     name: nameOr('name'),
@@ -371,6 +403,20 @@ export const ENTITIES: Record<EntityKey, EntityDef> = {
     sortable: ['name', 'category', 'created_at', 'updated_at'],
     name: nameOr('name'),
   },
+  band: {
+    key: 'band',
+    table: 'bands',
+    plural: 'bands',
+    label: 'groupe ami',
+    description: 'Groupe de la scène : plateaux partagés, échanges de dates (on vous fait jouer chez nous, vous chez vous).',
+    create: createSchema(bandShape, ['name']),
+    patch: makePatch(bandShape),
+    refs: [],
+    searchCols: ['name', 'city', 'genre', 'contact_name', 'email', 'notes'],
+    defaultSort: 'name',
+    sortable: ['name', 'city', 'created_at', 'updated_at'],
+    name: nameOr('name'),
+  },
 };
 
 export const ENTITY_KEYS = Object.keys(ENTITIES) as [EntityKey, ...EntityKey[]];
@@ -395,6 +441,7 @@ export const CASCADES: Record<EntityKey, { entity: EntityKey; col: string; extra
   tour_stop: [{ entity: 'tour_expense', col: 'stop_id' }],
   tour_expense: [],
   template: [],
+  band: [],
 };
 
 export function entityUrl(baseUrl: string, entity: EntityKey, row: Row): string | null {
@@ -411,6 +458,8 @@ export function entityUrl(baseUrl: string, entity: EntityKey, row: Row): string 
       return `${base}/tours/${row.tour_id}`;
     case 'template':
       return `${base}/templates`;
+    case 'band':
+      return `${base}/groupes`;
     default:
       return null;
   }

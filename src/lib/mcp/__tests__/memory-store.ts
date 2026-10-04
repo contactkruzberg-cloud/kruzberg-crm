@@ -18,6 +18,9 @@ const DEFAULTS: Record<Table, Row> = {
   tour_stops: { deal_id: null, venue_id: null, type: 'show', order_index: 0, fee: null, city: null, latitude: null, longitude: null, arrival_time: null, load_in_time: null, soundcheck_time: null, doors_time: null, set_time: null, hotel_name: null, hotel_address: null, hotel_cost: null, hotel_rooms: null, hotel_booked: false, on_site_contact: null, on_site_phone: null, notes: null },
   tour_expenses: { stop_id: null, category: 'misc', label: '', expense_date: null },
   templates: { category: 'first_contact', subject: '', body: '' },
+  bands: { city: null, genre: null, contact_name: null, email: null, phone: null, instagram: null, website: null, exchange_status: 'none', notes: null },
+  deal_bands: { role: 'co_bill' },
+  briefings: { title: '', content: '' },
   mcp_audit_log: {},
 };
 
@@ -46,6 +49,8 @@ function matches(row: Row, f: Filter): boolean {
       return v != null && String(v).toLowerCase().includes(f.value.toLowerCase());
     case 'has':
       return Array.isArray(v) && v.includes(f.value);
+    case 'null_or_lte':
+      return v == null || String(v).localeCompare(f.value) <= 0;
   }
 }
 
@@ -104,7 +109,7 @@ export function createMemoryStore() {
       const row: Row = {
         id: randomUUID(),
         ...DEFAULTS[table],
-        ...(table === 'mcp_audit_log' ? {} : { deleted_at: null, deleted_batch: null, updated_at: now }),
+        ...(table === 'mcp_audit_log' ? {} : table === 'deal_bands' ? { deleted_at: null } : table === 'briefings' ? { updated_at: now } : { deleted_at: null, deleted_batch: null, updated_at: now }),
         created_at: now,
         ...structuredClone(input),
         user_id: OWNER,
@@ -113,6 +118,9 @@ export function createMemoryStore() {
         checkDeal(row);
         nextRelance(row, null, input);
       }
+      const uniqueBy: Partial<Record<Table, string[]>> = { deal_bands: ['deal_id', 'band_id'], briefings: ['week_start'] };
+      const cols = uniqueBy[table];
+      if (cols && db[table].some((r) => cols.every((c) => r[c] === row[c]))) throw new UniqueViolationError();
       db[table].push(row);
       return structuredClone(row);
     },

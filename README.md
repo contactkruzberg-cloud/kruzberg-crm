@@ -69,7 +69,7 @@ Le CRM expose un serveur MCP distant (transport Streamable HTTP) sur deux adress
 
 | Adresse | Auth | Outils | Usage |
 |---|---|---|---|
-| `/api/mcp` | OAuth 2.1 (DCR + PKCE) | tous (53) | Connecteur personnalisé claude.ai / Cowork : lire et écrire tout le CRM |
+| `/api/mcp` | OAuth 2.1 (DCR + PKCE) | tous (63) | Connecteur personnalisé claude.ai / Cowork : lire et écrire tout le CRM |
 | `/api/mcp/<MCP_SECRET>` | secret dans l'URL | les 4 outils radar | Artifact **KRUZBERG Booking Radar** (inchangé) |
 
 L'URL secrète est volontairement limitée aux 4 outils du radar : si elle fuit,
@@ -77,7 +77,7 @@ elle ne permet ni de lire ni de modifier le reste du CRM.
 
 - Routes : `src/app/api/mcp/route.ts`, `src/app/api/mcp/[secret]/route.ts`, `src/app/api/oauth/*`, `src/app/.well-known/*`, page de consentement `src/app/oauth/authorize/page.tsx`
 - Logique : `src/lib/mcp/` (outils, service, audit), `src/lib/oauth/` (serveur d'autorisation) — tests : `npm test`
-- Migrations requises : `012_add_deal_external_ref.sql`, `014_mcp_full_crm.sql`
+- Migrations requises : `012_add_deal_external_ref.sql`, `014_mcp_full_crm.sql`, `015_prospection_bands_briefings.sql`
 
 ### Outils
 
@@ -87,14 +87,17 @@ Lecture (`readOnlyHint: true`) :
 |---|---|
 | `get_schema` | — (entités, champs modifiables en JSON Schema, étapes, catégories, canaux, conventions) |
 | `search` | `query`, `entities?`, `limit?` — plein texte sans accents, toutes entités |
-| `list_venues` | `type`, `city`, `country`, `min_fit_score`, `has_email` + communs |
+| `list_venues` | `type`, `city`, `country`, `min_fit_score`, `has_email`, `style_fit`, `contactable`, `has_application_deadline` + communs |
+| `list_bands` | `city`, `exchange_status` + communs |
+| `list_application_deadlines` | `within_days?` (défaut 60), `include_in_pipeline?` — candidatures annuelles festivals/tremplins |
+| `get_briefing` | `week_start?` — briefing de la semaine (ou le dernier) |
 | `list_contacts` | `venue_id`, `has_email` + communs |
 | `list_deals` | `stage`, `priority`, `venue_type`, `city`, `venue_id`, `contact_id`, `tag`, `external_source`, `external_id`, `follow_up_before/after`, `concert_after/before`, `show_on_website` + communs |
 | `list_tasks` | `status` (open/done/all), `deal_id`, `venue_id`, `due_before/after` + communs |
 | `list_activities` | `deal_id`, `venue_id`, `contact_id`, `type`, `channel`, `after`, `before` + communs |
 | `list_tours` | `status`, `start_after/before` + communs |
 | `list_templates` | `category` + communs |
-| `get_venue` / `get_contact` / `get_deal` / `get_task` / `get_tour` / `get_template` | `id` — avec relations (contacts, opportunités, historique d'étapes, notes, tâches, étapes de tournée, totaux) |
+| `get_venue` / `get_contact` / `get_deal` / `get_task` / `get_tour` / `get_template` / `get_band` | `id` — avec relations (contacts, opportunités, historique d'étapes, notes, tâches, étapes de tournée, totaux) |
 | `find_duplicates` | `entity` (venue/contact/deal), `by` (name, name_city, email, domain) |
 | `get_audit_log` | `entity?`, `entity_id?`, `tool?`, `since?`, `until?`, `cursor?`, `limit?` |
 | `find_opportunity`, `list_pipeline_stages` | outils radar (inchangés) |
@@ -106,7 +109,7 @@ Paramètres communs des `list_*` : `archived` (exclude/only/include), `updated_a
 
 | Outil | Paramètres | Notes |
 |---|---|---|
-| `create_venue` / `_contact` / `_deal` / `_task` / `_tour` / `_tour_stop` / `_tour_expense` / `_template` | champs de l'entité | Renvoie l'objet complet |
+| `create_venue` / `_contact` / `_deal` / `_task` / `_tour` / `_tour_stop` / `_tour_expense` / `_template` / `_band` | champs de l'entité | Renvoie l'objet complet |
 | `update_<entité>` (les 8 ci-dessus + `activity`) | `id`, `expected_updated_at`, `patch` | Patch partiel ; conflit de version si l'objet a changé |
 | `archive_<entité>` (idem) | `id`, `expected_updated_at?` | `destructiveHint` ; soft delete en cascade, restaurable |
 | `restore` | `entity`, `id` | Restaure tout ce qui a été archivé ensemble |
@@ -115,6 +118,8 @@ Paramètres communs des `list_*` : `archived` (exclude/only/include), `updated_a
 | `move_stage` | `id`, `stage`, `note?`, `expected_updated_at?` | Alias propre de `update_stage` |
 | `set_follow_up` | `deal_id`, `date` (ou null) | Refusé aux étapes confirme/termine/refuse |
 | `bulk_update` | `entity`, `items[≤50]` (`id`, `patch`, `expected_updated_at?`), `dry_run` (défaut **true**) | `destructiveHint` ; tout ou rien |
+| `link_band_to_deal` / `unlink_band_from_deal` | `deal_id`, `band_id`, `role?` (headliner, support, co_bill) | Plateau d'une date ; retrait réversible |
+| `save_briefing` | `title`, `content` (Markdown), `week_start?` | Un briefing par semaine, affiché sur le tableau de bord |
 | `add_to_pipeline`, `update_stage` | outils radar (inchangés) | |
 
 Garde-fous : chaque écriture renvoie l'objet complet ; chaque ligne écrite

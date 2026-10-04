@@ -18,12 +18,14 @@ import {
   User,
   FileText,
   Search,
+  Users,
 } from 'lucide-react';
 
 const PAGES = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Pipeline', href: '/pipeline', icon: Kanban },
   { name: 'Lieux & Contacts', href: '/venues', icon: Building2 },
+  { name: 'Groupes amis', href: '/groupes', icon: Users },
   { name: 'Templates', href: '/templates', icon: Mail },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];

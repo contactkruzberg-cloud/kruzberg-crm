@@ -21,6 +21,7 @@ interface Filterable<T> {
   not(col: string, op: string, v: unknown): T;
   ilike(col: string, pattern: string): T;
   contains(col: string, v: unknown): T;
+  or(filters: string): T;
 }
 
 function applyFilters<T extends Filterable<T>>(q: T, filters: Filter[]): T {
@@ -48,6 +49,10 @@ function applyFilters<T extends Filterable<T>>(q: T, filters: Filter[]): T {
         break;
       case 'has':
         q = q.contains(f.col, [f.value]);
+        break;
+      case 'null_or_lte':
+        if (!/^[\w:.+-]+$/.test(f.value)) throw new DbError(`valeur de filtre invalide : ${f.value}`);
+        q = q.or(`${f.col}.is.null,${f.col}.lte.${f.value}`);
         break;
     }
   }

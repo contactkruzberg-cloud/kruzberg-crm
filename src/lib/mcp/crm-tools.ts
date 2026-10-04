@@ -5,6 +5,11 @@ import {
   archiveEntity,
   bulkUpdate,
   createEntity,
+  getBriefing,
+  linkBandToDeal,
+  listApplicationDeadlines,
+  saveBriefing,
+  unlinkBandFromDeal,
   findDuplicates,
   getAuditLog,
   getEntity,
@@ -20,10 +25,14 @@ import {
   updateEntity,
 } from './crm-service';
 import {
+  BAND_ROLE_IDS,
   CHANNEL_IDS,
+  EXCHANGE_STATUS_IDS,
+  STYLE_FIT_IDS,
   channelEnum,
   dateOrDateTime,
   ENTITIES,
+  ENTITY_KEYS,
   entityEnum,
   enumOf,
   isoDate,
@@ -83,6 +92,13 @@ const LIST_FILTERS: Partial<Record<EntityKey, z.ZodRawShape>> = {
     country: z.string().trim().min(1).max(100).optional(),
     min_fit_score: z.number().int().min(1).max(5).optional(),
     has_email: z.boolean().optional(),
+    style_fit: oneOrMany(STYLE_FIT_IDS, 'Style').optional().describe('yes = programme notre style, maybe, no.'),
+    contactable: z.boolean().optional().describe('true = pas de « ne pas recontacter avant » en cours.'),
+    has_application_deadline: z.boolean().optional().describe('true = structures avec une échéance de candidature annuelle.'),
+  },
+  band: {
+    city: z.string().trim().min(1).max(100).optional(),
+    exchange_status: oneOrMany(EXCHANGE_STATUS_IDS, "Statut d'échange").optional().describe('we_owe = on leur doit une date ; they_owe = ils nous en doivent une.'),
   },
   contact: {
     venue_id: id('de structure').optional(),
@@ -131,7 +147,9 @@ const LIST_FILTERS: Partial<Record<EntityKey, z.ZodRawShape>> = {
 };
 
 const LIST_DESCRIPTIONS: Partial<Record<EntityKey, string>> = {
-  venue: 'Liste les structures (lieux, festivals, organisateurs, médias…). Filtres : type (catégorie), ville, pays, pertinence, email présent.',
+  venue:
+    'Liste les structures (lieux, festivals, organisateurs, médias…). Filtres : type (catégorie), ville, pays, pertinence, email présent, style (programme notre style), contactable (pas de « ne pas recontacter avant » en cours), échéance de candidature.',
+  band: 'Liste les groupes amis (plateaux partagés, échanges de dates). Filtres : ville, statut d’échange.',
   contact: 'Liste les contacts. Filtres : structure, email présent.',
   deal:
     'Liste les opportunités du pipeline. Filtres : étape(s), priorité, catégorie et ville de la structure, tag, external_id radar, date de relance (follow_up_before = relances dues), date de concert. Chaque élément inclut venue_name/venue_city.',
@@ -148,6 +166,7 @@ const GET_DESCRIPTIONS: Partial<Record<EntityKey, string>> = {
   task: 'Détail d’une tâche avec son opportunité et sa structure.',
   tour: 'Détail d’une tournée avec ses étapes (jours), dépenses et totaux (cachets, hôtels, dépenses).',
   template: 'Détail d’un modèle de mail (sujet, corps).',
+  band: 'Fiche d’un groupe ami avec les dates faites ensemble (deals_together).',
 };
 
 const CREATE_NOTES: Partial<Record<EntityKey, string>> = {
@@ -191,7 +210,7 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
     run('search', (deps, a: { query: string; entities?: EntityKey[]; limit?: number }) => search(deps, a.query, a.entities, a.limit ?? 20)),
   );
 
-  for (const entity of ['venue', 'contact', 'deal', 'task', 'activity', 'tour', 'template'] as EntityKey[]) {
+  for (const entity of ['venue', 'contact', 'deal', 'task', 'activity', 'tour', 'template', 'band'] as EntityKey[]) {
     const d = ENTITIES[entity];
     server.registerTool(
       `list_${d.plural}`,
@@ -205,7 +224,7 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
     );
   }
 
-  for (const entity of ['venue', 'contact', 'deal', 'task', 'tour', 'template'] as EntityKey[]) {
+  for (const entity of ['venue', 'contact', 'deal', 'task', 'tour', 'template', 'band'] as EntityKey[]) {
     const d = ENTITIES[entity];
     server.registerTool(
       `get_${entity}`,
@@ -249,7 +268,7 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
       description:
         'Historique des écritures faites via le connecteur (Claude et Booking Radar) : qui (actor), quand, quel outil, action (create, update, archive, restore), état avant/après. Plus récent d’abord.',
       inputSchema: z.strictObject({
-        entity: entityEnum.optional(),
+        entity: enumOf([...ENTITY_KEYS, 'deal_band', 'briefing'], 'Entité').optional(),
         entity_id: z.uuid().optional(),
         tool: z.string().trim().min(1).max(50).optional().describe('Nom d’outil, ex. update_deal.'),
         since: dateOrDateTime.optional(),
@@ -264,7 +283,7 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
 
   // ---------------- Écriture
 
-  for (const entity of ['venue', 'contact', 'deal', 'task', 'tour', 'tour_stop', 'tour_expense', 'template'] as EntityKey[]) {
+  for (const entity of ['venue', 'contact', 'deal', 'task', 'tour', 'tour_stop', 'tour_expense', 'template', 'band'] as EntityKey[]) {
     const d = ENTITIES[entity];
     server.registerTool(
       `create_${entity}`,
@@ -278,7 +297,7 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
     );
   }
 
-  for (const entity of ['venue', 'contact', 'deal', 'task', 'activity', 'tour', 'tour_stop', 'tour_expense', 'template'] as EntityKey[]) {
+  for (const entity of ['venue', 'contact', 'deal', 'task', 'activity', 'tour', 'tour_stop', 'tour_expense', 'template', 'band'] as EntityKey[]) {
     const d = ENTITIES[entity];
     server.registerTool(
       `update_${entity}`,
@@ -427,7 +446,7 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
         'Chaque élément est revérifié contre la version vue dans l’aperçu (conflit de version).',
       inputSchema: z.strictObject({
         entity: enumOf(
-          ['venue', 'contact', 'deal', 'task', 'activity', 'tour', 'tour_stop', 'tour_expense', 'template'],
+          ['venue', 'contact', 'deal', 'task', 'activity', 'tour', 'tour_stop', 'tour_expense', 'template', 'band'],
           'Entité',
         ),
         items: z
@@ -445,5 +464,79 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
       annotations: DESTRUCTIVE,
     },
     run('bulk_update', (deps, a: Parameters<typeof bulkUpdate>[1]) => bulkUpdate(deps, a)),
+  );
+
+  // ---------------- Prospection : échéances, groupes amis, briefing
+
+  server.registerTool(
+    'list_application_deadlines',
+    {
+      title: 'Échéances de candidature',
+      description:
+        'Festivals, tremplins et autres structures dont la candidature annuelle ferme dans les within_days prochains jours (défaut 60), triés par urgence. ' +
+        'status : open (candidatures ouvertes) ou upcoming (ouverture à venir). in_pipeline indique si une opportunité est déjà ouverte.',
+      inputSchema: z.strictObject({
+        within_days: z.number().int().min(1).max(366).optional(),
+        include_in_pipeline: z.boolean().optional().describe('false pour masquer celles déjà dans le pipeline. Défaut true.'),
+      }),
+      annotations: READ,
+    },
+    run('list_application_deadlines', (deps, a: Parameters<typeof listApplicationDeadlines>[1]) => listApplicationDeadlines(deps, a)),
+  );
+
+  server.registerTool(
+    'link_band_to_deal',
+    {
+      title: 'Ajouter un groupe au plateau',
+      description:
+        'Associe un groupe ami à une opportunité (plateau partagé, échange de date). role : headliner, support (première partie) ou co_bill. ' +
+        'Idempotent : relancer avec un autre role le met à jour. Renvoie la liste des groupes du plateau.',
+      inputSchema: z.strictObject({
+        deal_id: id("d'opportunité"),
+        band_id: id('de groupe'),
+        role: enumOf(BAND_ROLE_IDS, 'Rôle').optional().describe('Défaut co_bill.'),
+      }),
+      annotations: IDEMPOTENT_WRITE,
+    },
+    run('link_band_to_deal', (deps, a: Parameters<typeof linkBandToDeal>[1]) => linkBandToDeal(deps, a)),
+  );
+
+  server.registerTool(
+    'unlink_band_from_deal',
+    {
+      title: 'Retirer un groupe du plateau',
+      description: 'Retire un groupe ami d’une opportunité (réversible avec link_band_to_deal). Renvoie la liste des groupes restants.',
+      inputSchema: z.strictObject({ deal_id: id("d'opportunité"), band_id: id('de groupe') }),
+      annotations: WRITE,
+    },
+    run('unlink_band_from_deal', (deps, a: Parameters<typeof unlinkBandFromDeal>[1]) => unlinkBandFromDeal(deps, a)),
+  );
+
+  server.registerTool(
+    'save_briefing',
+    {
+      title: 'Enregistrer le briefing de la semaine',
+      description:
+        'Enregistre le briefing de prospection de la semaine (Markdown simple : titres #, listes -, **gras**) ; il s’affiche en haut du tableau de bord du CRM. ' +
+        'Un seul briefing par semaine (lundi = week_start, défaut : semaine en cours) : un nouvel appel le remplace. Renvoie le briefing enregistré.',
+      inputSchema: z.strictObject({
+        week_start: isoDate.optional().describe('Un jour de la semaine visée (ramené au lundi). Défaut : semaine en cours.'),
+        title: z.string().trim().min(1).max(200),
+        content: z.string().trim().min(1).max(20000),
+      }),
+      annotations: IDEMPOTENT_WRITE,
+    },
+    run('save_briefing', (deps, a: Parameters<typeof saveBriefing>[1]) => saveBriefing(deps, a)),
+  );
+
+  server.registerTool(
+    'get_briefing',
+    {
+      title: 'Lire un briefing',
+      description: 'Renvoie le briefing de la semaine demandée (week_start), ou le plus récent.',
+      inputSchema: z.strictObject({ week_start: isoDate.optional() }),
+      annotations: READ,
+    },
+    run('get_briefing', (deps, a: { week_start?: string }) => getBriefing(deps, a)),
   );
 }

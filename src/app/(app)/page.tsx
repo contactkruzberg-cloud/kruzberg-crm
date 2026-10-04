@@ -10,6 +10,8 @@ import { VenueMap } from '@/components/dashboard/venue-map';
 import { WeeklySparklines } from '@/components/dashboard/weekly-sparklines';
 import { PendingTasks } from '@/components/dashboard/pending-tasks';
 import { NextTour } from '@/components/dashboard/next-tour';
+import { BriefingCard } from '@/components/dashboard/briefing-card';
+import { ApplicationDeadlines } from '@/components/dashboard/application-deadlines';
 
 const container = {
   hidden: { opacity: 0 },
@@ -45,6 +47,11 @@ export default function DashboardPage() {
         <p className="text-muted-foreground mt-1 capitalize">{dateStr}</p>
       </motion.div>
 
+      {/* Weekly briefing by Claude */}
+      <motion.div variants={item}>
+        <BriefingCard />
+      </motion.div>
+
       {/* KPIs */}
       <motion.div variants={item}>
         <KpiCards />
@@ -64,6 +71,11 @@ export default function DashboardPage() {
           <PendingTasks />
         </motion.div>
       </div>
+
+      {/* Festival / tremplin applications */}
+      <motion.div variants={item}>
+        <ApplicationDeadlines />
+      </motion.div>
 
       {/* Concerts + Next tour */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

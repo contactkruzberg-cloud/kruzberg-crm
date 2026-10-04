@@ -1,10 +1,14 @@
 import { createHash, randomUUID } from 'node:crypto';
+import { applicationWindow } from '@/lib/application-dates';
 import {
+  BAND_ROLES,
+  EXCHANGE_STATUSES,
   EXPENSE_CATEGORIES,
   PRIORITIES,
   RELANCE_METHODS,
   STAGES,
   STOP_TYPES,
+  STYLE_FITS,
   TEMPLATE_CATEGORIES,
   TOUR_STATUSES,
   VENUE_TYPES,
@@ -168,6 +172,8 @@ async function venueIdsFor(deps: CrmDeps, type: unknown, city: unknown): Promise
   return (await selectAll(deps.store, 'venues', { filters })).map((v) => String(v.id));
 }
 
+const todayIso = () => new Date().toISOString().slice(0, 10);
+
 const oneOrMany = (col: string, v: unknown): Filter =>
   Array.isArray(v) ? { col, op: 'in', value: v as string[] } : eq(col, v as string);
 
@@ -191,6 +197,14 @@ export async function listEntities(deps: CrmDeps, entity: EntityKey, args: ListA
       if (has('min_fit_score')) filters.push({ col: 'fit_score', op: 'gte', value: Number(a.min_fit_score) });
       if (a.has_email === true) filters.push({ col: 'email', op: 'not_null' });
       if (a.has_email === false) filters.push({ col: 'email', op: 'is_null' });
+      if (has('style_fit')) filters.push(oneOrMany('style_fit', a.style_fit));
+      if (a.contactable === true) filters.push({ col: 'do_not_contact_until', op: 'null_or_lte', value: todayIso() });
+      if (a.contactable === false) filters.push({ col: 'do_not_contact_until', op: 'gt', value: todayIso() });
+      if (a.has_application_deadline === true) filters.push({ col: 'application_deadline', op: 'not_null' });
+      break;
+    case 'band':
+      if (has('city')) filters.push({ col: 'city', op: 'ilike', value: String(a.city) });
+      if (has('exchange_status')) filters.push(oneOrMany('exchange_status', a.exchange_status));
       break;
     case 'contact':
       if (has('venue_id')) filters.push(eq('venue_id', String(a.venue_id)));
@@ -316,6 +330,7 @@ export async function getEntity(deps: CrmDeps, entity: EntityKey, id: string) {
     case 'venue':
       return {
         ...base,
+        application_window: applicationWindow(row.application_opens as string, row.application_deadline as string),
         contacts: await related(deps, 'contact', [eq('venue_id', id)], 'name'),
         deals: await related(deps, 'deal', [eq('venue_id', id)], 'updated_at', true),
         tasks: await related(deps, 'task', [eq('venue_id', id)], 'due_date'),
@@ -342,7 +357,17 @@ export async function getEntity(deps: CrmDeps, entity: EntityKey, id: string) {
         notes_and_activities: activities.filter((a) => a.type !== 'status_change'),
         tasks: await related(deps, 'task', [eq('deal_id', id)], 'due_date'),
         tour_stops: await related(deps, 'tour_stop', [eq('deal_id', id)], 'stop_date'),
+        bands: await dealBands(deps, id),
       };
+    }
+    case 'band': {
+      const links = await selectAll(deps.store, 'deal_bands', { filters: [eq('band_id', id), ACTIVE] });
+      const deals = [];
+      for (const l of links) {
+        const d = await findRow(deps, 'deal', String(l.deal_id));
+        if (d && d.deleted_at == null) deals.push({ role: l.role, deal: present(deps, 'deal', d) });
+      }
+      return { ...base, deals_together: deals };
     }
     case 'task':
       return {
@@ -545,7 +570,7 @@ export async function search(deps: CrmDeps, query: string, entities: EntityKey[]
   const q = normalizeName(query);
   if (q.length < 2) throw new ToolError('query doit contenir au moins 2 caractères significatifs.');
   const terms = q.split(' ');
-  const targets = entities?.length ? entities : (['venue', 'contact', 'deal', 'task', 'activity', 'tour', 'template'] as EntityKey[]);
+  const targets = entities?.length ? entities : (['venue', 'contact', 'deal', 'task', 'activity', 'tour', 'template', 'band'] as EntityKey[]);
   const venues = await selectAll(deps.store, 'venues', { filters: [ACTIVE] });
   const venueById = new Map(venues.map((v) => [v.id, v]));
 
@@ -894,7 +919,7 @@ export function formatZodError(error: z.ZodError) {
 
 export async function getAuditLog(
   deps: CrmDeps,
-  args: { entity?: EntityKey; entity_id?: string; tool?: string; since?: string; until?: string; cursor?: string; limit?: number },
+  args: { entity?: string; entity_id?: string; tool?: string; since?: string; until?: string; cursor?: string; limit?: number },
 ) {
   const filters: Filter[] = [];
   if (args.entity) filters.push(eq('entity', args.entity));
@@ -923,6 +948,104 @@ export async function getAuditLog(
   };
 }
 
+// ---------------------------------------------------------------- bands on deals
+
+async function dealBands(deps: CrmDeps, dealId: string) {
+  const links = await selectAll(deps.store, 'deal_bands', { filters: [eq('deal_id', dealId), ACTIVE] });
+  const out = [];
+  for (const l of links) {
+    const band = await findRow(deps, 'band', String(l.band_id));
+    if (band && band.deleted_at == null) out.push({ role: l.role, band: present(deps, 'band', band) });
+  }
+  return out;
+}
+
+export async function linkBandToDeal(deps: CrmDeps, args: { deal_id: string; band_id: string; role?: string }) {
+  await mustGet(deps, 'deal', args.deal_id);
+  await mustGet(deps, 'band', args.band_id);
+  const [existing] = await deps.store.select('deal_bands', {
+    filters: [eq('deal_id', args.deal_id), eq('band_id', args.band_id)],
+    limit: 1,
+  });
+  const role = args.role ?? (existing?.role as string | undefined) ?? 'co_bill';
+  if (!existing) {
+    await deps.store.insert('deal_bands', { deal_id: args.deal_id, band_id: args.band_id, role });
+  } else if (existing.deleted_at != null || existing.role !== role) {
+    await deps.store.update('deal_bands', [eq('id', String(existing.id))], { role, deleted_at: null });
+  }
+  return { deal_id: args.deal_id, bands: await dealBands(deps, args.deal_id) };
+}
+
+export async function unlinkBandFromDeal(deps: CrmDeps, args: { deal_id: string; band_id: string }) {
+  const updated = await deps.store.update(
+    'deal_bands',
+    [eq('deal_id', args.deal_id), eq('band_id', args.band_id), ACTIVE],
+    { deleted_at: new Date().toISOString() },
+  );
+  if (!updated.length) throw new ToolError("Ce groupe n'est pas associé à cette opportunité.");
+  return {
+    deal_id: args.deal_id,
+    bands: await dealBands(deps, args.deal_id),
+    how_to_undo: 'link_band_to_deal avec les mêmes deal_id et band_id.',
+  };
+}
+
+// ---------------------------------------------------------------- application deadlines
+
+export async function listApplicationDeadlines(deps: CrmDeps, args: { within_days?: number; include_in_pipeline?: boolean }) {
+  const within = args.within_days ?? 60;
+  const venues = await selectAll(deps.store, 'venues', { filters: [ACTIVE, { col: 'application_deadline', op: 'not_null' }] });
+  const deals = await selectAll(deps.store, 'deals', { filters: [ACTIVE] });
+  const openDealVenues = new Set(deals.filter((d) => !CLOSED_STAGES.includes(d.stage as DealStage)).map((d) => d.venue_id));
+  const items = [];
+  for (const v of venues) {
+    const w = applicationWindow(v.application_opens as string, v.application_deadline as string);
+    if (!w || w.days_left > within) continue;
+    const inPipeline = openDealVenues.has(v.id);
+    if (inPipeline && args.include_in_pipeline === false) continue;
+    items.push({
+      venue_id: v.id,
+      name: v.name,
+      type: v.type,
+      city: v.city,
+      ...w,
+      application_url: v.application_url ?? null,
+      style_fit: v.style_fit ?? null,
+      in_pipeline: inPipeline,
+      url: entityUrl(deps.baseUrl, 'venue', v),
+    });
+  }
+  items.sort((a, b) => a.days_left - b.days_left);
+  return { today: todayIso(), within_days: within, items };
+}
+
+// ---------------------------------------------------------------- briefings
+
+/** Monday of the week containing `date` (UTC), as YYYY-MM-DD. */
+export function mondayOf(date = new Date()) {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+}
+
+const presentBriefing = ({ user_id: _u, ...b }: Row) => (void _u, b);
+
+export async function saveBriefing(deps: CrmDeps, args: { week_start?: string; title: string; content: string }) {
+  const week = args.week_start ? mondayOf(new Date(`${args.week_start}T12:00:00Z`)) : mondayOf();
+  const [existing] = await deps.store.select('briefings', { filters: [eq('week_start', week)], limit: 1 });
+  const row = existing
+    ? (await deps.store.update('briefings', [eq('id', String(existing.id))], { title: args.title, content: args.content }))[0]
+    : await deps.store.insert('briefings', { week_start: week, title: args.title, content: args.content });
+  return { ...presentBriefing(row), replaced: !!existing, url: `${deps.baseUrl.replace(/\/+$/, '')}/` };
+}
+
+export async function getBriefing(deps: CrmDeps, args: { week_start?: string }) {
+  const filters: Filter[] = args.week_start ? [eq('week_start', mondayOf(new Date(`${args.week_start}T12:00:00Z`)))] : [];
+  const [row] = await deps.store.select('briefings', { filters, order: [{ col: 'week_start', asc: false }], limit: 1 });
+  if (!row) throw new ToolError(args.week_start ? `Aucun briefing pour la semaine du ${args.week_start}.` : 'Aucun briefing enregistré.');
+  return presentBriefing(row);
+}
+
 // ---------------------------------------------------------------- schema
 
 const opts = (list: { key: string; label: string }[]) => list.map((x) => ({ id: x.key, label: x.label }));
@@ -937,6 +1060,8 @@ export function getSchema() {
       archive:
         'Rien n’est jamais supprimé définitivement. archive_* masque l’objet du CRM (et ses dépendants) ; restore le fait revenir. Les list_* excluent les archives sauf archived="include"/"only".',
       pagination: `list_* renvoient au plus ${MAX_LIMIT} éléments (défaut ${DEFAULT_LIMIT}) et next_cursor ; repasse cursor avec les mêmes filtres pour la page suivante.`,
+      annual_dates:
+        'application_opens / application_deadline des structures sont des dates annuelles MM-DD ; list_application_deadlines calcule les prochaines échéances.',
       radar:
         'Le Booking Radar écrit via add_to_pipeline (external_source="radar", external_id = id de la piste). Dédoublonnage dans les deux sens via external_id.',
     },
@@ -958,6 +1083,9 @@ export function getSchema() {
       tour_stop_types: opts(STOP_TYPES),
       expense_categories: opts(EXPENSE_CATEGORIES),
       template_categories: opts(TEMPLATE_CATEGORIES),
+      style_fits: opts(STYLE_FITS),
+      exchange_statuses: opts(EXCHANGE_STATUSES),
+      band_roles: opts(BAND_ROLES),
     },
     entities: ENTITY_KEYS.map((k) => {
       const d = def(k);

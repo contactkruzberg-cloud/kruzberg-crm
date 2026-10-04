@@ -24,6 +24,7 @@ import { motion } from 'framer-motion';
 import { SendEmailDialog } from '@/components/shared/send-email-dialog';
 import { AddToTourDialog } from '@/components/tours/add-to-tour-dialog';
 import { useDealTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks';
+import { DealBill } from '@/components/pipeline/deal-bill';
 
 const NONE = '__none__';
 
@@ -478,6 +479,10 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                 </Button>
               </div>
             </div>
+
+            {/* Plateau (friend bands) */}
+            <Separator />
+            <DealBill dealId={dealId} />
 
             {/* Tasks */}
             <Separator />

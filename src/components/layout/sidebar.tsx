@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   Zap,
   Plug,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { href: '/pipeline', label: 'Pipeline', icon: Kanban },
   { href: '/tours', label: 'Tournées', icon: Route },
   { href: '/venues', label: 'Lieux & Contacts', icon: Building2 },
+  { href: '/groupes', label: 'Groupes amis', icon: Users },
   { href: '/templates', label: 'Templates', icon: Mail },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/connexions', label: 'Connexions Claude', icon: Plug },

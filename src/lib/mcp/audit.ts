@@ -1,7 +1,6 @@
-import type { EntityKey } from './entities';
 import { selectAll, type Row, type Store, type Table } from './store';
 
-const ENTITY_BY_TABLE: Partial<Record<Table, EntityKey>> = {
+const ENTITY_BY_TABLE: Partial<Record<Table, string>> = {
   venues: 'venue',
   contacts: 'contact',
   deals: 'deal',
@@ -11,6 +10,9 @@ const ENTITY_BY_TABLE: Partial<Record<Table, EntityKey>> = {
   tour_stops: 'tour_stop',
   tour_expenses: 'tour_expense',
   templates: 'template',
+  bands: 'band',
+  deal_bands: 'deal_band',
+  briefings: 'briefing',
 };
 
 const strip = (row: Row | null) => {

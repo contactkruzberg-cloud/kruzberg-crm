@@ -15,6 +15,9 @@ export type Table =
   | 'tour_stops'
   | 'tour_expenses'
   | 'templates'
+  | 'bands'
+  | 'deal_bands'
+  | 'briefings'
   | 'mcp_audit_log';
 
 export type Filter =
@@ -24,7 +27,9 @@ export type Filter =
   /** Case-insensitive substring match. */
   | { col: string; op: 'ilike'; value: string }
   /** Array column contains this element. */
-  | { col: string; op: 'has'; value: string };
+  | { col: string; op: 'has'; value: string }
+  /** NULL, or less than or equal to value. */
+  | { col: string; op: 'null_or_lte'; value: string };
 
 export interface Query {
   filters?: Filter[];

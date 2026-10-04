@@ -4,7 +4,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatRelativeDate } from '@/lib/utils';
 import type { Venue, VenueType } from '@/types/database';
-import { MapPin, Star, Building2 } from 'lucide-react';
+import { MapPin, Star, Building2, Target, Ban, CalendarClock } from 'lucide-react';
+import { applicationWindow } from '@/lib/application-dates';
 
 const TYPE_LABELS: Record<VenueType, string> = {
   bar: 'Bar',
@@ -37,7 +38,10 @@ export function VenueList({ venues, selectedId, onSelect }: VenueListProps) {
   return (
     <ScrollArea className="h-[calc(100vh-280px)]">
       <div className="space-y-2 pr-2">
-        {venues.map((venue) => (
+        {venues.map((venue) => {
+          const appWindow = applicationWindow(venue.application_opens, venue.application_deadline);
+          const blocked = !!venue.do_not_contact_until && venue.do_not_contact_until > new Date().toISOString().slice(0, 10);
+          return (
           <div
             key={venue.id}
             onClick={() => onSelect(venue.id)}
@@ -74,14 +78,29 @@ export function VenueList({ venues, selectedId, onSelect }: VenueListProps) {
                   />
                 ))}
               </div>
-              {venue.capacity && (
-                <span className="text-[10px] text-muted-foreground">
-                  {venue.capacity} pers.
-                </span>
-              )}
+              <div className="flex items-center gap-1.5">
+                {venue.style_fit === 'yes' && (
+                  <span title="Programme notre style"><Target className="h-3 w-3 text-primary" /></span>
+                )}
+                {blocked && (
+                  <span title={`Ne pas recontacter avant le ${venue.do_not_contact_until}`}><Ban className="h-3 w-3 text-destructive" /></span>
+                )}
+                {appWindow && appWindow.days_left <= 45 && (
+                  <span title={`Candidature : clôture dans ${appWindow.days_left} j`} className="flex items-center gap-0.5 text-[10px] text-orange-500">
+                    <CalendarClock className="h-3 w-3" />
+                    {appWindow.days_left} j
+                  </span>
+                )}
+                {venue.capacity && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {venue.capacity} pers.
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </ScrollArea>
   );

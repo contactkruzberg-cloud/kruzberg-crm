@@ -77,6 +77,56 @@ export interface Venue {
   notes: string | null;
   latitude: number | null;
   longitude: number | null;
+  /** Annual application window, 'MM-DD' (festivals, tremplins…). */
+  application_opens?: string | null;
+  application_deadline?: string | null;
+  application_url?: string | null;
+  style_fit?: StyleFit | null;
+  similar_bands?: string | null;
+  booking_lead_months?: number | null;
+  do_not_contact_until?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type StyleFit = 'yes' | 'maybe' | 'no';
+export type ExchangeStatus = 'none' | 'we_owe' | 'they_owe';
+export type BandRole = 'headliner' | 'support' | 'co_bill';
+
+export interface Band {
+  id: string;
+  user_id: string;
+  name: string;
+  city: string | null;
+  genre: string | null;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  instagram: string | null;
+  website: string | null;
+  exchange_status: ExchangeStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DealBand {
+  id: string;
+  user_id: string;
+  deal_id: string;
+  band_id: string;
+  role: BandRole;
+  created_at: string;
+  band?: Band | null;
+  deal?: Deal | null;
+}
+
+export interface Briefing {
+  id: string;
+  user_id: string;
+  week_start: string;
+  title: string;
+  content: string;
   created_at: string;
   updated_at: string;
 }
@@ -295,4 +345,22 @@ export const EXPENSE_CATEGORIES: { key: ExpenseCategory; label: string }[] = [
   { key: 'per_diem', label: 'Per-diem' },
   { key: 'transport', label: 'Transport' },
   { key: 'misc', label: 'Divers' },
+];
+
+export const STYLE_FITS: { key: StyleFit; label: string }[] = [
+  { key: 'yes', label: 'Programme notre style' },
+  { key: 'maybe', label: 'Peut-être' },
+  { key: 'no', label: 'Pas notre style' },
+];
+
+export const EXCHANGE_STATUSES: { key: ExchangeStatus; label: string }[] = [
+  { key: 'none', label: 'Aucun échange en cours' },
+  { key: 'we_owe', label: 'On leur doit une date' },
+  { key: 'they_owe', label: 'Ils nous doivent une date' },
+];
+
+export const BAND_ROLES: { key: BandRole; label: string }[] = [
+  { key: 'headliner', label: 'Tête d’affiche' },
+  { key: 'support', label: 'Première partie' },
+  { key: 'co_bill', label: 'Co-plateau' },
 ];

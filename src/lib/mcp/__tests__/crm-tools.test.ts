@@ -82,6 +82,8 @@ describe('tools/list', () => {
       'update_venue', 'update_contact', 'update_deal', 'update_task', 'update_activity', 'update_tour', 'update_tour_stop', 'update_tour_expense', 'update_template',
       'archive_venue', 'archive_contact', 'archive_deal', 'archive_task', 'archive_activity', 'archive_tour', 'archive_tour_stop', 'archive_tour_expense', 'archive_template',
       'restore', 'add_note', 'log_activity', 'move_stage', 'set_follow_up', 'bulk_update',
+      'list_bands', 'get_band', 'create_band', 'update_band', 'archive_band',
+      'list_application_deadlines', 'link_band_to_deal', 'unlink_band_from_deal', 'save_briefing', 'get_briefing',
     ];
     expect(Object.keys(tools).sort()).toEqual([...expected].sort());
     for (const name of expected) {
@@ -104,7 +106,8 @@ describe('get_schema', () => {
   it('lists entities, real stage ids, enums and conventions', async () => {
     const s = await ok('get_schema');
     expect(s.pipeline.stages.map((x: any) => x.id)).toEqual(['a_contacter', 'contacte', 'relance', 'repondu', 'a_suivre', 'confirme', 'termine', 'refuse']);
-    expect(s.entities.map((e: any) => e.entity)).toEqual(['venue', 'contact', 'deal', 'task', 'activity', 'tour', 'tour_stop', 'tour_expense', 'template']);
+    expect(s.entities.map((e: any) => e.entity)).toEqual(['venue', 'contact', 'deal', 'task', 'activity', 'tour', 'tour_stop', 'tour_expense', 'template', 'band']);
+    expect(s.enums.style_fits.map((x: any) => x.id)).toEqual(['yes', 'maybe', 'no']);
     const deal = s.entities.find((e: any) => e.entity === 'deal');
     expect(deal.writable_fields.properties.stage.enum).toContain('a_suivre');
     expect(deal.writable_fields.properties.external_id).toBeDefined();
@@ -288,6 +291,7 @@ const CASES: { entity: string; plural: string; create: (ids: any) => Record<stri
   { entity: 'tour_stop', plural: 'tour_stops', create: (i) => ({ tour_id: i.tour.id, stop_date: '2027-03-01' }), patch: { set_time: '21:30' }, bad: { set_time: '9h30' } },
   { entity: 'tour_expense', plural: 'tour_expenses', create: (i) => ({ tour_id: i.tour.id, amount: 10 }), patch: { category: 'toll' }, bad: { category: 'peage' } },
   { entity: 'template', plural: 'templates', create: () => ({ name: 'Tpl' }), patch: { subject: 'Hello' }, bad: { category: 'spam' } },
+  { entity: 'band', plural: 'bands', create: () => ({ name: 'Rendez-Vous' }), patch: { exchange_status: 'we_owe' }, bad: { exchange_status: 'maybe' } },
 ];
 
 describe.each(CASES)('create/update/archive/restore $entity', ({ entity, create, patch, bad }) => {
@@ -340,7 +344,7 @@ describe.each(CASES)('create/update/archive/restore $entity', ({ entity, create,
     expect(archived.archived).toMatchObject({ id: row.id, archived: true });
     expect(archived.how_to_undo).toContain('restore');
     const plural = CASES.find((c) => c.entity === entity)!.plural;
-    if (['venues', 'deals', 'tasks', 'tours', 'templates', 'contacts'].includes(plural)) {
+    if (['venues', 'deals', 'tasks', 'tours', 'templates', 'contacts', 'bands'].includes(plural)) {
       expect((await ok(`list_${plural}`, {})).items.map((x: any) => x.id)).not.toContain(row.id);
       expect((await ok(`list_${plural}`, { archived: 'only' })).items.map((x: any) => x.id)).toEqual([row.id]);
     }
@@ -576,5 +580,94 @@ describe('radar compatibility', () => {
     expect(u).toEqual({ id: r.id, previous_stage: 'a_contacter', stage: 'contacte', url: `${BASE}/pipeline?deal=${r.id}` });
     const audit = await ok('get_audit_log', { tool: 'update_stage' });
     expect(audit.items[0]).toMatchObject({ entity: 'deal', entity_id: r.id, action: 'update' });
+  });
+});
+
+// ------------------------------------------------------------------ prospection
+
+describe('venue qualification fields', () => {
+  it('stores style, similar bands, lead time and do-not-contact date; list_venues filters on them', async () => {
+    const a = await ok('create_venue', { name: 'Le Sonic', style_fit: 'yes', similar_bands: 'Lebanon Hanover, Rendez-Vous', booking_lead_months: 6 });
+    const b = await ok('create_venue', { name: 'Bar Rock', style_fit: 'no', do_not_contact_until: '2099-01-01' });
+    await ok('create_venue', { name: 'Pas évalué' });
+    expect((await ok('list_venues', { style_fit: 'yes' })).items.map((v: any) => v.id)).toEqual([a.id]);
+    expect((await ok('list_venues', { style_fit: ['yes', 'maybe'] })).items).toHaveLength(1);
+    expect((await ok('list_venues', { contactable: false })).items.map((v: any) => v.id)).toEqual([b.id]);
+    expect((await ok('list_venues', { contactable: true })).items.map((v: any) => v.id)).not.toContain(b.id);
+    expect(await fails('create_venue', { name: 'X', style_fit: 'oui' })).toContain('yes, maybe, no');
+    expect(await fails('create_venue', { name: 'X', application_deadline: '15/01' })).toContain('MM-DD');
+    expect((await ok('search', { query: 'lebanon hanover' })).results[0].id).toBe(a.id);
+  });
+});
+
+describe('list_application_deadlines', () => {
+  const md = (offsetDays: number) => new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(5, 10);
+
+  it('lists the next annual deadlines within the window, most urgent first, with the pipeline flag', async () => {
+    const soon = await ok('create_venue', { name: 'Fest Soon', type: 'festival', application_deadline: md(10), application_url: 'https://fest.example/apply' });
+    const later = await ok('create_venue', { name: 'Fest Later', type: 'festival', application_opens: md(20), application_deadline: md(40) });
+    await ok('create_venue', { name: 'Fest Far', type: 'festival', application_deadline: md(200) });
+    await ok('create_deal', { venue_id: later.id });
+    const r = await ok('list_application_deadlines', {});
+    expect(r.items.map((i: any) => i.name)).toEqual(['Fest Soon', 'Fest Later']);
+    expect(r.items[0]).toMatchObject({ venue_id: soon.id, status: 'open', days_left: 10, application_url: 'https://fest.example/apply', in_pipeline: false });
+    expect(r.items[1]).toMatchObject({ status: 'upcoming', in_pipeline: true });
+    expect((await ok('list_application_deadlines', { include_in_pipeline: false })).items.map((i: any) => i.name)).toEqual(['Fest Soon']);
+    expect((await ok('list_application_deadlines', { within_days: 365 })).items).toHaveLength(3);
+    expect((await ok('get_venue', { id: soon.id })).application_window).toMatchObject({ days_left: 10 });
+  });
+
+  it('rejects an out-of-range window', async () => {
+    expect(await fails('list_application_deadlines', { within_days: 0 })).toMatch(/within_days|>=|1/);
+  });
+});
+
+describe('groupes amis on deals', () => {
+  it('link_band_to_deal / unlink_band_from_deal manage the bill, reversibly, and show on both sides', async () => {
+    const { deal } = await seed();
+    const band = await ok('create_band', { name: 'Rendez-Vous', city: 'Paris', exchange_status: 'they_owe' });
+    let r = await ok('link_band_to_deal', { deal_id: deal.id, band_id: band.id, role: 'support' });
+    expect(r.bands).toEqual([expect.objectContaining({ role: 'support', band: expect.objectContaining({ id: band.id }) })]);
+    r = await ok('link_band_to_deal', { deal_id: deal.id, band_id: band.id, role: 'co_bill' });
+    expect(r.bands).toHaveLength(1);
+    expect(r.bands[0].role).toBe('co_bill');
+    expect((await ok('get_deal', { id: deal.id })).bands).toHaveLength(1);
+    expect((await ok('get_band', { id: band.id })).deals_together[0].deal.id).toBe(deal.id);
+    expect((await ok('list_bands', { exchange_status: 'they_owe' })).items.map((b: any) => b.id)).toEqual([band.id]);
+
+    const un = await ok('unlink_band_from_deal', { deal_id: deal.id, band_id: band.id });
+    expect(un.bands).toEqual([]);
+    expect(mem.db.deal_bands[0].deleted_at).not.toBeNull(); // soft: never deleted
+    expect(await fails('unlink_band_from_deal', { deal_id: deal.id, band_id: band.id })).toContain("n'est pas associé");
+    r = await ok('link_band_to_deal', { deal_id: deal.id, band_id: band.id });
+    expect(r.bands[0].role).toBe('co_bill');
+    expect(mem.db.deal_bands).toHaveLength(1);
+  });
+
+  it('refuses unknown or archived bands and unknown roles', async () => {
+    const { deal } = await seed();
+    expect(await fails('link_band_to_deal', { deal_id: deal.id, band_id: MISSING })).toContain('introuvable');
+    const band = await ok('create_band', { name: 'X' });
+    expect(await fails('link_band_to_deal', { deal_id: deal.id, band_id: band.id, role: 'opener' })).toContain('headliner, support, co_bill');
+    await ok('archive_band', { id: band.id });
+    expect(await fails('link_band_to_deal', { deal_id: deal.id, band_id: band.id })).toContain('archivé');
+  });
+});
+
+describe('briefings', () => {
+  it('save_briefing stores one briefing per week (replacing it) and get_briefing returns the latest', async () => {
+    const a = await ok('save_briefing', { title: 'Semaine 41', content: '# Relances\n- Le Périscope', week_start: '2026-10-07' });
+    expect(a).toMatchObject({ week_start: '2026-10-05', replaced: false, title: 'Semaine 41' });
+    const b = await ok('save_briefing', { title: 'Semaine 41 (v2)', content: 'maj', week_start: '2026-10-05' });
+    expect(b).toMatchObject({ id: a.id, replaced: true });
+    await ok('save_briefing', { title: 'Semaine 40', content: 'old', week_start: '2026-09-28' });
+    expect((await ok('get_briefing')).title).toBe('Semaine 41 (v2)');
+    expect((await ok('get_briefing', { week_start: '2026-09-30' })).title).toBe('Semaine 40');
+    expect(await fails('get_briefing', { week_start: '2020-01-01' })).toContain('Aucun briefing');
+    expect((await ok('get_audit_log', { entity: 'briefing' })).items.length).toBeGreaterThan(0);
+  });
+
+  it('rejects an empty briefing', async () => {
+    expect(await fails('save_briefing', { title: 'x', content: '' })).toMatch(/content/);
   });
 });

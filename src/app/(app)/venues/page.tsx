@@ -77,6 +77,8 @@ export default function VenuesPage() {
   const [cityFilter, setCityFilter] = useState<string>('all');
   const [fitFilter, setFitFilter] = useState<number | 'all'>('all');
   const [pipelineFilter, setPipelineFilter] = useState<'all' | 'not_contacted' | 'in_pipeline'>('all');
+  const [styleFilter, setStyleFilter] = useState<'all' | 'yes' | 'yes_maybe' | 'unknown'>('all');
+  const [contactableOnly, setContactableOnly] = useState(false);
   const [venueSort, setVenueSort] = useState<VenueSortKey>('fit_score');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -158,6 +160,8 @@ export default function VenuesPage() {
     cityFilter !== 'all',
     fitFilter !== 'all',
     pipelineFilter !== 'all',
+    styleFilter !== 'all',
+    contactableOnly,
   ].filter(Boolean).length;
 
   // Filtered & sorted venues
@@ -172,8 +176,20 @@ export default function VenuesPage() {
         v.city.toLowerCase().includes(q) ||
         v.type.toLowerCase().includes(q) ||
         v.email?.toLowerCase().includes(q) ||
-        v.notes?.toLowerCase().includes(q)
+        v.notes?.toLowerCase().includes(q) ||
+        v.similar_bands?.toLowerCase().includes(q)
       );
+    }
+
+    // Style filter
+    if (styleFilter === 'yes') result = result.filter((v) => v.style_fit === 'yes');
+    if (styleFilter === 'yes_maybe') result = result.filter((v) => v.style_fit === 'yes' || v.style_fit === 'maybe');
+    if (styleFilter === 'unknown') result = result.filter((v) => !v.style_fit);
+
+    // Contactable now (no "ne pas recontacter avant" in the future)
+    if (contactableOnly) {
+      const today = new Date().toISOString().slice(0, 10);
+      result = result.filter((v) => !v.do_not_contact_until || v.do_not_contact_until <= today);
     }
 
     // Type filter
@@ -227,7 +243,7 @@ export default function VenuesPage() {
     });
 
     return result;
-  }, [venues, search, typeFilter, regionFilter, deptFilter, cityFilter, fitFilter, pipelineFilter, venueIdsContacted, venueSort, venueGeo]);
+  }, [venues, search, typeFilter, regionFilter, deptFilter, cityFilter, fitFilter, pipelineFilter, styleFilter, contactableOnly, venueIdsContacted, venueSort, venueGeo]);
 
   // Filtered & sorted contacts
   const filteredContacts = useMemo(() => {
@@ -273,6 +289,8 @@ export default function VenuesPage() {
     setCityFilter('all');
     setFitFilter('all');
     setPipelineFilter('all');
+    setStyleFilter('all');
+    setContactableOnly(false);
     setSearch('');
     setContactRoleFilter('all');
   };
@@ -560,6 +578,40 @@ export default function VenuesPage() {
                   {score}★+
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Style + contactable */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Notre style</p>
+            <div className="flex gap-1 flex-wrap">
+              {([
+                { key: 'all', label: 'Tous' },
+                { key: 'yes', label: 'Oui' },
+                { key: 'yes_maybe', label: 'Oui + peut-être' },
+                { key: 'unknown', label: 'Non évalués' },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setStyleFilter(opt.key)}
+                  className={cn(
+                    'px-2 py-1 rounded text-xs border transition-all',
+                    styleFilter === opt.key ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground'
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+              <button
+                onClick={() => setContactableOnly(!contactableOnly)}
+                className={cn(
+                  'px-2 py-1 rounded text-xs border transition-all',
+                  contactableOnly ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground'
+                )}
+                title="Masque les lieux marqués « ne pas recontacter avant » une date future"
+              >
+                Contactables maintenant
+              </button>
             </div>
           </div>
 
