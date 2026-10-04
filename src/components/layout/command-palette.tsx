@@ -14,7 +14,6 @@ import {
   Kanban,
   Building2,
   Mail,
-  Target,
   BarChart3,
   User,
   FileText,
@@ -26,7 +25,6 @@ const PAGES = [
   { name: 'Pipeline', href: '/pipeline', icon: Kanban },
   { name: 'Lieux & Contacts', href: '/venues', icon: Building2 },
   { name: 'Templates', href: '/templates', icon: Mail },
-  { name: 'Focus Mode', href: '/focus', icon: Target },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 

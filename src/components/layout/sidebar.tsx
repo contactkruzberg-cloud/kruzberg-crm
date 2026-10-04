@@ -11,7 +11,6 @@ import {
   Route,
   Building2,
   Mail,
-  Target,
   BarChart3,
   Moon,
   Sun,
@@ -30,7 +29,6 @@ const NAV_ITEMS = [
   { href: '/tours', label: 'Tournées', icon: Route },
   { href: '/venues', label: 'Lieux & Contacts', icon: Building2 },
   { href: '/templates', label: 'Templates', icon: Mail },
-  { href: '/focus', label: 'Focus Mode', icon: Target },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/connexions', label: 'Connexions Claude', icon: Plug },
 ];

@@ -8,7 +8,6 @@ Professional booking pipeline CRM for KRUZBERG — an independent rock/metal ban
 - **Pipeline** — Kanban + table views with drag-and-drop, filters, side panel, email generation
 - **Venues & Contacts** — Split view management, linked contacts, fit scoring, import/export
 - **Templates** — Email template editor with variables, live preview, copy-to-clipboard
-- **Focus Mode** — Distraction-free relance workflow with progress tracking
 - **Analytics** — Conversion funnel, response rates, city performance, email volume
 
 ## Tech Stack

@@ -199,12 +199,6 @@ body {
   transform: rotate(2deg);
 }
 
-/* ===== Focus mode overlay ===== */
-.focus-overlay {
-  background: hsl(var(--background) / 0.95);
-  backdrop-filter: blur(20px);
-}
-
 /* ===== Leaflet overrides ===== */
 .leaflet-container {
   background: hsl(var(--card)) !important;
