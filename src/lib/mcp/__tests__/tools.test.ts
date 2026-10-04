@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- JSON-RPC payloads in tests */
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createMcpHandler } from 'mcp-handler';
-import { registerCrmTools, runTool } from '../tools';
+import { registerRadarTools, runTool } from '../tools';
 import { RADAR_NOTE_PREFIX } from '../service';
-import { createMemoryRepo } from './memory-repo';
+import { createMemoryStore } from './memory-store';
 
 const BASE = 'https://crm.test';
-let mem: ReturnType<typeof createMemoryRepo>;
+let mem: ReturnType<typeof createMemoryStore>;
 let handler: (req: Request) => Promise<Response>;
 let rpcId = 0;
 
@@ -57,8 +57,8 @@ const lead = (over: Record<string, unknown> = {}) => ({
 });
 
 beforeEach(() => {
-  mem = createMemoryRepo();
-  handler = createMcpHandler((s) => registerCrmTools(s, { repo: mem.repo, baseUrl: BASE }), {
+  mem = createMemoryStore();
+  handler = createMcpHandler((s) => registerRadarTools(s, { store: mem.store, baseUrl: BASE, actor: 'test', take: () => 0 }), {
     serverInfo: { name: 'kruzberg-crm', version: 'test' },
   });
 });
@@ -117,7 +117,7 @@ describe('add_to_pipeline', () => {
       venue_id: venue.id, contact_id: mem.db.contacts[0].id, priority: 'high', concert_date: '2027-03-14',
       tags: ['radar', 'booking_fr'], external_source: 'radar', external_id: 'sp-013',
     });
-    const note = mem.db.activities.find((a) => a.type === 'note')!.content;
+    const note = String(mem.db.activities.find((a) => a.type === 'note')!.content);
     expect(note.startsWith(`${RADAR_NOTE_PREFIX} — sp-013`)).toBe(true);
     expect(note).toContain('Pourquoi : Programmation stoner/metal régulière');
     expect(note).toContain('Action : Envoyer le kit promo');

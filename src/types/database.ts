@@ -33,7 +33,10 @@ export type ActivityType =
   | 'reply_received'
   | 'status_change'
   | 'note'
-  | 'concert_played';
+  | 'concert_played'
+  | 'relance'
+  | 'call'
+  | 'message';
 
 export type TemplateCategory =
   | 'first_contact'
@@ -125,6 +128,7 @@ export interface Activity {
   venue_id: string | null;
   contact_id: string | null;
   type: ActivityType;
+  channel?: RelanceMethod | null;
   content: string;
   created_at: string;
   venue?: Venue;

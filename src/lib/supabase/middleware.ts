@@ -40,6 +40,11 @@ export async function updateSession(request: NextRequest) {
   ) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
+    redirectUrl.search = '';
+    // Come back to the OAuth consent screen after logging in.
+    if (request.nextUrl.pathname.startsWith('/oauth/')) {
+      redirectUrl.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search);
+    }
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -49,7 +54,10 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname.startsWith('/signup'))
   ) {
     const redirectUrl = request.nextUrl.clone();
+    const next = request.nextUrl.searchParams.get('next');
     redirectUrl.pathname = '/';
+    redirectUrl.search = '';
+    if (next?.startsWith('/oauth/')) return NextResponse.redirect(new URL(next, request.url));
     return NextResponse.redirect(redirectUrl);
   }
 

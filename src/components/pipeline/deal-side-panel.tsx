@@ -18,7 +18,7 @@ import { STAGES, PRIORITIES, RELANCE_METHODS, type DealStage, type DealPriority,
 import { formatDate, formatRelativeDate, cn, dealLabel } from '@/lib/utils';
 import { useVenues } from '@/hooks/use-venues';
 import { useContacts } from '@/hooks/use-contacts';
-import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send, CheckCircle2, Circle, Plus, Trash2, ListTodo, Route, Globe } from 'lucide-react';
+import { X, Calendar, MapPin, Mail, ArrowRightLeft, StickyNote, Send, CheckCircle2, Circle, Plus, Trash2, ListTodo, Route, Globe, Repeat, Phone, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { SendEmailDialog } from '@/components/shared/send-email-dialog';
@@ -178,6 +178,9 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
     reply_received: Mail,
     status_change: ArrowRightLeft,
     note: StickyNote,
+    relance: Repeat,
+    call: Phone,
+    message: MessageCircle,
   };
 
   return (

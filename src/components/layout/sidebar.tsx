@@ -18,6 +18,7 @@ import {
   LogOut,
   ChevronLeft,
   Zap,
+  Plug,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { href: '/templates', label: 'Templates', icon: Mail },
   { href: '/focus', label: 'Focus Mode', icon: Target },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/connexions', label: 'Connexions Claude', icon: Plug },
 ];
 
 export function Sidebar() {

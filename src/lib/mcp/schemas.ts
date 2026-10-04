@@ -85,6 +85,7 @@ export const addToPipelineOutput = z.object({
   stage: z.string(),
   url: z.string(),
   matched_by: z.enum(['external_id', 'email', 'name_city']).nullable(),
+  restored: z.boolean().optional().describe("true si l'opportunité était archivée et vient d'être restaurée."),
 });
 
 const opportunitySummary = z.object({

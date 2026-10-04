@@ -28,7 +28,9 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push('/');
+      // After the OAuth consent redirect only (never an external URL).
+      const next = new URLSearchParams(window.location.search).get('next');
+      router.push(next?.startsWith('/oauth/') ? next : '/');
       router.refresh();
     }
   };

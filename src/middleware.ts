@@ -1,17 +1,19 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
-// Avant d'ajouter un connecteur personnalisé, claude.ai sonde les URL de
-// découverte OAuth. Sans elles, le middleware les redirigeait vers /login : le
-// client y voyait un serveur d'autorisation, tentait un Dynamic Client
-// Registration sur /register et échouait sur du HTML. Un 404 franc lui dit que
-// le connecteur ne demande pas d'OAuth (auth v1 = secret dans le chemin).
-const OAUTH_DISCOVERY = /^\/(?:\.well-known\/(?:oauth-|openid-)|register$|authorize$|token$)/;
+// Endpoints of the MCP connector and its OAuth 2.1 server: called by Claude's
+// servers (no CRM session), they handle their own authentication.
+const MCP_PUBLIC = /^\/(?:api\/mcp(?:\/|$)|api\/oauth\/|\.well-known\/oauth-(?:protected-resource|authorization-server)(?:\/|$))/;
+
+// Other discovery URLs that do not exist here (OpenID, root-level /register…):
+// a plain 404 rather than a redirect to /login, which OAuth clients would
+// otherwise try to parse as an authorization server.
+const OAUTH_NOT_HERE = /^\/(?:\.well-known\/(?:oauth-|openid-)|register$|authorize$|token$)/;
 
 export async function middleware(request: NextRequest) {
-  if (OAUTH_DISCOVERY.test(request.nextUrl.pathname)) {
-    return new NextResponse('Not Found', { status: 404 });
-  }
+  const { pathname } = request.nextUrl;
+  if (MCP_PUBLIC.test(pathname)) return NextResponse.next();
+  if (OAUTH_NOT_HERE.test(pathname)) return new NextResponse('Not Found', { status: 404 });
   return await updateSession(request);
 }
 

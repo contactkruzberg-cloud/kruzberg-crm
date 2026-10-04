@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatRelativeDate } from '@/lib/utils';
-import { Mail, MessageSquare, ArrowRightLeft, StickyNote, Music, Activity } from 'lucide-react';
+import { Mail, MessageSquare, ArrowRightLeft, StickyNote, Music, Activity, Repeat, Phone, MessageCircle } from 'lucide-react';
 import type { ActivityType } from '@/types/database';
 
 const ACTIVITY_ICONS: Record<ActivityType, typeof Mail> = {
@@ -14,6 +14,9 @@ const ACTIVITY_ICONS: Record<ActivityType, typeof Mail> = {
   status_change: ArrowRightLeft,
   note: StickyNote,
   concert_played: Music,
+  relance: Repeat,
+  call: Phone,
+  message: MessageCircle,
 };
 
 const ACTIVITY_COLORS: Record<ActivityType, string> = {
@@ -22,6 +25,9 @@ const ACTIVITY_COLORS: Record<ActivityType, string> = {
   status_change: 'text-purple-500 bg-purple-500/10',
   note: 'text-yellow-500 bg-yellow-500/10',
   concert_played: 'text-primary bg-primary/10',
+  relance: 'text-orange-500 bg-orange-500/10',
+  call: 'text-cyan-500 bg-cyan-500/10',
+  message: 'text-pink-500 bg-pink-500/10',
 };
 
 export function ActivityFeed() {

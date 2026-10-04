@@ -64,70 +64,95 @@ src/
 
 Schema and migrations are in `supabase/migrations/`. Seed data in `supabase/seed.sql`.
 
-## Connecteur MCP (Booking Radar → claude.ai)
+## Connecteur MCP (Claude ↔ CRM)
 
-Le CRM expose un serveur MCP distant (transport Streamable HTTP) pour que le
-**KRUZBERG Booking Radar** (artifact claude.ai) puisse créer ou mettre à jour
-des opportunités via un bouton « Add to pipeline ».
+Le CRM expose un serveur MCP distant (transport Streamable HTTP) sur deux adresses :
 
-- Route : `src/app/api/mcp/[secret]/route.ts` (`mcp-handler` 2 + `@modelcontextprotocol/server` 2 + zod 4)
-- Logique : `src/lib/mcp/` — tests : `npm test`
-- Migration requise : `supabase/migrations/012_add_deal_external_ref.sql`
+| Adresse | Auth | Outils | Usage |
+|---|---|---|---|
+| `/api/mcp` | OAuth 2.1 (DCR + PKCE) | tous (53) | Connecteur personnalisé claude.ai / Cowork : lire et écrire tout le CRM |
+| `/api/mcp/<MCP_SECRET>` | secret dans l'URL | les 4 outils radar | Artifact **KRUZBERG Booking Radar** (inchangé) |
+
+L'URL secrète est volontairement limitée aux 4 outils du radar : si elle fuit,
+elle ne permet ni de lire ni de modifier le reste du CRM.
+
+- Routes : `src/app/api/mcp/route.ts`, `src/app/api/mcp/[secret]/route.ts`, `src/app/api/oauth/*`, `src/app/.well-known/*`, page de consentement `src/app/oauth/authorize/page.tsx`
+- Logique : `src/lib/mcp/` (outils, service, audit), `src/lib/oauth/` (serveur d'autorisation) — tests : `npm test`
+- Migrations requises : `012_add_deal_external_ref.sql`, `014_mcp_full_crm.sql`
 
 ### Outils
 
-| Outil | Lecture seule | Rôle |
-|---|---|---|
-| `add_to_pipeline` | non | Crée ou met à jour (idempotent) l'opportunité d'une piste radar. Dédoublonnage : `external_id` → email → nom normalisé + ville. Renvoie `{ id, created, stage, url, matched_by }`. |
-| `find_opportunity` | oui | Recherche par `external_id`, `email` ou `name`. Renvoie `{ results: [{ id, name, city, stage, external_id, url }] }`. |
-| `list_pipeline_stages` | oui | Étapes dans l'ordre `{ entry_stage, stages: [{ id, label }] }`. |
-| `update_stage` | non | `{ id, stage, note? }` : change l'étape, ajoute une note. |
+Lecture (`readOnlyHint: true`) :
 
-Limite : 60 appels d'outil par minute (en mémoire, par instance de fonction).
+| Outil | Paramètres principaux |
+|---|---|
+| `get_schema` | — (entités, champs modifiables en JSON Schema, étapes, catégories, canaux, conventions) |
+| `search` | `query`, `entities?`, `limit?` — plein texte sans accents, toutes entités |
+| `list_venues` | `type`, `city`, `country`, `min_fit_score`, `has_email` + communs |
+| `list_contacts` | `venue_id`, `has_email` + communs |
+| `list_deals` | `stage`, `priority`, `venue_type`, `city`, `venue_id`, `contact_id`, `tag`, `external_source`, `external_id`, `follow_up_before/after`, `concert_after/before`, `show_on_website` + communs |
+| `list_tasks` | `status` (open/done/all), `deal_id`, `venue_id`, `due_before/after` + communs |
+| `list_activities` | `deal_id`, `venue_id`, `contact_id`, `type`, `channel`, `after`, `before` + communs |
+| `list_tours` | `status`, `start_after/before` + communs |
+| `list_templates` | `category` + communs |
+| `get_venue` / `get_contact` / `get_deal` / `get_task` / `get_tour` / `get_template` | `id` — avec relations (contacts, opportunités, historique d'étapes, notes, tâches, étapes de tournée, totaux) |
+| `find_duplicates` | `entity` (venue/contact/deal), `by` (name, name_city, email, domain) |
+| `get_audit_log` | `entity?`, `entity_id?`, `tool?`, `since?`, `until?`, `cursor?`, `limit?` |
+| `find_opportunity`, `list_pipeline_stages` | outils radar (inchangés) |
+
+Paramètres communs des `list_*` : `archived` (exclude/only/include), `updated_after/before`,
+`sort`, `order`, `cursor`, `limit` (≤ 200, défaut 50).
+
+Écriture :
+
+| Outil | Paramètres | Notes |
+|---|---|---|
+| `create_venue` / `_contact` / `_deal` / `_task` / `_tour` / `_tour_stop` / `_tour_expense` / `_template` | champs de l'entité | Renvoie l'objet complet |
+| `update_<entité>` (les 8 ci-dessus + `activity`) | `id`, `expected_updated_at`, `patch` | Patch partiel ; conflit de version si l'objet a changé |
+| `archive_<entité>` (idem) | `id`, `expected_updated_at?` | `destructiveHint` ; soft delete en cascade, restaurable |
+| `restore` | `entity`, `id` | Restaure tout ce qui a été archivé ensemble |
+| `add_note` | `deal_id`/`venue_id`/`contact_id`, `content`, `date?` | |
+| `log_activity` | cible, `kind` (email_sent, relance, call, message, reply_received, concert_played), `channel`, `date`, `content?`, `stage?`, `update_deal?` | Met à jour dernier message / premier contact / canal |
+| `move_stage` | `id`, `stage`, `note?`, `expected_updated_at?` | Alias propre de `update_stage` |
+| `set_follow_up` | `deal_id`, `date` (ou null) | Refusé aux étapes confirme/termine/refuse |
+| `bulk_update` | `entity`, `items[≤50]` (`id`, `patch`, `expected_updated_at?`), `dry_run` (défaut **true**) | `destructiveHint` ; tout ou rien |
+| `add_to_pipeline`, `update_stage` | outils radar (inchangés) | |
+
+Garde-fous : chaque écriture renvoie l'objet complet ; chaque ligne écrite
+(cascades comprises, outils radar compris) est inscrite dans `mcp_audit_log`
+(acteur, outil, action, avant/après) ; jamais de suppression définitive ;
+erreurs lisibles avec la liste des valeurs valides ; 60 appels/minute.
+
+Étapes (`stage`) : `a_contacter`, `contacte`, `relance`, `repondu`, `a_suivre`,
+`confirme`, `termine`, `refuse`. Le `crmId` du radar est l'`id` de l'opportunité ;
+`external_source = "radar"` + `external_id` = id de la piste (unique).
 
 ### Variables d'environnement (Vercel → Settings → Environment Variables)
 
 | Variable | Valeur |
 |---|---|
-| `MCP_SECRET` | `openssl rand -hex 32` (≥ 32 caractères). Vide ⇒ connecteur désactivé. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → `service_role`. **Serveur uniquement.** |
-| `MCP_OWNER_ID` | Ton User UID (Supabase → Authentication → Users). Toutes les lectures/écritures du connecteur sont filtrées sur ce `user_id`. |
-| `CRM_PUBLIC_URL` | Optionnel. Base des liens `url` renvoyés (défaut : domaine de production Vercel). |
+| `MCP_OWNER_ID` | Ton User UID (Supabase → Authentication → Users). Seul ce compte peut autoriser Claude ; toutes les lectures/écritures sont filtrées sur ce `user_id`. |
+| `MCP_SECRET` | `openssl rand -hex 32` (≥ 32 caractères). URL du radar. Vide ⇒ URL secrète désactivée. |
+| `CRM_PUBLIC_URL` | Optionnel. Base des liens `url` renvoyés. |
+| `OAUTH_EXTRA_REDIRECT_URIS` | Optionnel. URL de retour OAuth supplémentaires (séparées par des virgules). Par défaut : callbacks claude.ai / claude.com et `http://localhost:*`. |
 
-La clé service_role contourne la RLS : le code force donc `user_id = MCP_OWNER_ID`
-sur chaque requête, comme le font les politiques RLS pour l'app.
+Aucun secret ni jeton n'est stocké en clair : la base ne garde que des empreintes SHA-256.
 
-### Installation
+### Ajouter le connecteur dans Claude
 
-1. Exécuter `supabase/migrations/012_add_deal_external_ref.sql` dans le SQL Editor Supabase.
-2. Ajouter les variables ci-dessus dans Vercel, puis redéployer.
-3. URL du connecteur : `https://kruzberg-crm.vercel.app/api/mcp/<MCP_SECRET>`
-   (la valeur de `MCP_SECRET` se lit dans Vercel → Settings → Environment Variables).
-4. Dans claude.ai : **Réglages → Connecteurs → Ajouter un connecteur personnalisé**,
-   nom « KRUZBERG CRM », coller l'URL, laisser les champs OAuth vides, Ajouter.
-5. Autoriser le connecteur pour l'artifact Booking Radar.
+1. claude.ai → **Paramètres → Connecteurs → Ajouter un connecteur personnalisé**.
+2. Nom : `KRUZBERG CRM` — URL : `https://kruzberg-crm.vercel.app/api/mcp` — laisser les champs OAuth (Client ID / secret) **vides**.
+3. Cliquer **Ajouter**, puis **Se connecter** : Claude ouvre la page du CRM
+   (connexion avec ton compte si besoin), cliquer **Autoriser**.
+4. Les accès actifs se voient et se révoquent dans le CRM, menu **Connexions Claude**.
 
-Test manuel : `npx @modelcontextprotocol/inspector`, transport « Streamable HTTP »,
-URL ci-dessus. Sur une preview protégée par Vercel Authentication, ajouter
-l'en-tête `x-vercel-protection-bypass` (Settings → Deployment Protection → Protection Bypass for Automation).
+### Tests
 
-### Sécurité et évolution vers OAuth
-
-v1 : le secret dans l'URL **est** l'authentification. Toute requête avec un
-mauvais secret reçoit un 404 (comparaison en temps constant). Si l'URL fuite,
-changer `MCP_SECRET` dans Vercel, redéployer et mettre à jour le connecteur.
-
-Pour plus tard (non implémenté) : OAuth 2.1, que les connecteurs claude.ai
-supportent nativement.
-- Le CRM devient *resource server* : envelopper le handler avec `withMcpAuth`
-  (`mcp-handler`) pour vérifier le bearer token, et servir
-  `/.well-known/oauth-protected-resource` avec `protectedResourceHandler`.
-- Serveur d'autorisation : Supabase Auth (serveur OAuth 2.1) ou un fournisseur
-  externe, avec Client ID Metadata Documents (CIMD, spec MCP 2026-07-28) ou DCR.
-- Le `user_id` vient alors du token (`ctx.http?.authInfo`) au lieu de
-  `MCP_OWNER_ID`, et on peut utiliser la clé anon + le JWT de l'utilisateur
-  pour laisser la RLS faire le travail (plus besoin de la clé service_role).
-- La route passe à `/api/mcp` (sans secret).
+- Unitaires et intégration : `npm test`.
+- De bout en bout : `npx @modelcontextprotocol/inspector`, transport « Streamable HTTP »,
+  URL `https://kruzberg-crm.vercel.app/api/mcp`, bouton « Open Auth Settings » → « Quick OAuth Flow ».
+- Radar (URL secrète) : `node scripts/mcp-smoke.mjs`.
 
 ## Deployment
 

@@ -10,8 +10,33 @@ import {
   updateStageInput,
   updateStageOutput,
 } from './schemas';
+import { withAudit } from './audit';
+import { restoreEntity } from './crm-service';
+import { createStoreRepo } from './repo';
 import { addToPipeline, findOpportunity, listPipelineStages, ToolError, updateStage, type ServiceDeps } from './service';
-import { DbError } from './supabase-repo';
+import { DbError, type Store } from './store';
+
+/** What every tool needs: the owner-scoped store, the CRM URL and who is calling (for the audit log). */
+export interface McpContext {
+  store: Store;
+  baseUrl: string;
+  /** e.g. "radar (URL secrète)" or "claude.ai (OAuth : Claude)" */
+  actor: string;
+  /** Rate limiter (defaults to the shared 60 calls/minute); returns 0 or the seconds to wait. */
+  take?: () => number;
+}
+
+export const takeFor = (ctx: McpContext) => ctx.take ?? (() => limiter.take());
+
+/** Dependencies of one tool call: writes are audited under the tool name. */
+export function depsFor(ctx: McpContext, tool: string) {
+  return { store: withAudit(ctx.store, ctx.actor, tool), baseUrl: ctx.baseUrl };
+}
+
+function radarDeps(ctx: McpContext, tool: string): ServiceDeps {
+  const deps = depsFor(ctx, tool);
+  return { repo: createStoreRepo(deps.store), baseUrl: ctx.baseUrl, restoreDeal: (id) => restoreEntity(deps, 'deal', id) };
+}
 
 export const RATE_LIMIT_PER_MINUTE = 60;
 
@@ -36,7 +61,8 @@ export async function runTool<T extends Record<string, unknown>>(fn: () => T | P
   }
 }
 
-export function registerCrmTools(server: McpServer, deps: ServiceDeps) {
+/** The 4 Booking Radar tools (unchanged contract). Exposed on both endpoints. */
+export function registerRadarTools(server: McpServer, ctx: McpContext) {
   server.registerTool(
     'add_to_pipeline',
     {
@@ -51,7 +77,7 @@ export function registerCrmTools(server: McpServer, deps: ServiceDeps) {
       outputSchema: addToPipelineOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
-    (args) => runTool(() => addToPipeline(deps, args)),
+    (args) => runTool(() => addToPipeline(radarDeps(ctx, 'add_to_pipeline'), args), takeFor(ctx)),
   );
 
   server.registerTool(
@@ -65,7 +91,7 @@ export function registerCrmTools(server: McpServer, deps: ServiceDeps) {
       outputSchema: findOpportunityOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    (args) => runTool(() => findOpportunity(deps, args)),
+    (args) => runTool(() => findOpportunity(radarDeps(ctx, 'find_opportunity'), args), takeFor(ctx)),
   );
 
   server.registerTool(
@@ -77,7 +103,7 @@ export function registerCrmTools(server: McpServer, deps: ServiceDeps) {
       outputSchema: listPipelineStagesOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    () => runTool(() => listPipelineStages()),
+    () => runTool(() => listPipelineStages(), takeFor(ctx)),
   );
 
   server.registerTool(
@@ -91,6 +117,6 @@ export function registerCrmTools(server: McpServer, deps: ServiceDeps) {
       outputSchema: updateStageOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
-    (args) => runTool(() => updateStage(deps, args)),
+    (args) => runTool(() => updateStage(radarDeps(ctx, 'update_stage'), args), takeFor(ctx)),
   );
 }

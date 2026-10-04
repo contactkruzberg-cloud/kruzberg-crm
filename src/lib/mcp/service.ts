@@ -25,6 +25,8 @@ export interface ServiceDeps {
   repo: CrmRepo;
   /** Public base URL of the CRM, e.g. https://kruzberg-crm.vercel.app */
   baseUrl: string;
+  /** Restores an archived deal and everything archived with it (see crm-service). */
+  restoreDeal?: (id: string) => Promise<unknown>;
 }
 
 type MatchedBy = 'external_id' | 'email' | 'name_city' | null;
@@ -66,6 +68,16 @@ export async function addToPipeline(deps: ServiceDeps, input: AddToPipelineInput
   const links = input.links ?? [];
   const instagram = links.find((l) => /instagram\.com/i.test(l.url))?.url ?? null;
   const website = links.find((l) => !/instagram\.com|facebook\.com/i.test(l.url))?.url ?? null;
+
+  // A lead whose deal was archived comes back: restore it (with its venue/contact if
+  // they were archived together) rather than creating a duplicate.
+  let restored = false;
+  const archivedId = await repo.findArchivedDeal(EXTERNAL_SOURCE, input.external_id);
+  if (archivedId) {
+    if (!deps.restoreDeal) throw new ToolError(`L'opportunité ${archivedId} liée à ${input.external_id} est archivée.`);
+    await deps.restoreDeal(archivedId);
+    restored = true;
+  }
 
   const [venues, contacts, deals] = await Promise.all([repo.listVenues(), repo.listContacts(), repo.listDeals()]);
 
@@ -225,6 +237,7 @@ export async function addToPipeline(deps: ServiceDeps, input: AddToPipelineInput
     stage: deal.stage,
     url: dealUrl(deps.baseUrl, deal.id),
     matched_by: matchedBy,
+    ...(restored ? { restored } : {}),
   };
 }
 
