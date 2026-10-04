@@ -46,6 +46,7 @@ import {
   type EntityKey,
 } from './entities';
 import { depsFor, runTool, takeFor, type McpContext } from './tools';
+import { MAX_RADAR_BATCH, radarBatch, radarGet, radarList, RADAR_COLLECTIONS } from './radar';
 import type { Row } from './store';
 
 // Full read/write access to the CRM for Claude (OAuth endpoint only).
@@ -538,5 +539,70 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
       annotations: READ,
     },
     run('get_briefing', (deps, a: { week_start?: string }) => getBriefing(deps, a)),
+  );
+
+  // ---------------- Booking Radar (veille quotidienne, page /radar du CRM)
+
+  const radarCollection = z.enum(RADAR_COLLECTIONS, { error: `Collection inconnue. Valeurs possibles : ${RADAR_COLLECTIONS.join(', ')}.` });
+  const radarId = z.string().regex(/^[A-Za-z0-9_.~:@+-]{1,200}$/, 'Id de document invalide (lettres, chiffres, _ . ~ : @ + -).');
+
+  server.registerTool(
+    'radar_list',
+    {
+      title: 'Radar : lister des documents',
+      description:
+        'Lit le Booking Radar (pistes de prospection de la veille). Collections : leads (une piste par document), config (scope = réglages de veille, meta = dernière veille), runs (journal), outbox (brouillons en attente). ' +
+        'fields limite les champs renvoyés (recommandé pour leads, ex. ["name","city","cat","dismissed","dismissReason","status","email","contactForm","fit"]). ' +
+        'where filtre sur des champs du document : [champ, "eq"|"ne"|"exists"|"missing", valeur]. Pagination : limit (≤ 1000, défaut 200) + next_cursor. Chaque document renvoie sa version.',
+      inputSchema: z.strictObject({
+        collection: radarCollection,
+        fields: z.array(z.string().min(1).max(60)).max(40).optional(),
+        where: z.array(z.tuple([z.string().min(1).max(60), z.enum(['eq', 'ne', 'exists', 'missing']), z.unknown()])).max(10).optional(),
+        limit: z.number().int().min(1).max(1000).optional(),
+        cursor: z.string().max(20).optional(),
+      }),
+      annotations: READ,
+    },
+    run('radar_list', (deps, a: Parameters<typeof radarList>[1]) => radarList(deps, a)),
+  );
+
+  server.registerTool(
+    'radar_get',
+    {
+      title: 'Radar : lire un document',
+      description: 'Lit un document du Booking Radar en entier, avec sa version (ex. collection "config", id "scope").',
+      inputSchema: z.strictObject({ collection: radarCollection, id: radarId }),
+      annotations: READ,
+    },
+    run('radar_get', (deps, a: Parameters<typeof radarGet>[1]) => radarGet(deps, a)),
+  );
+
+  server.registerTool(
+    'radar_batch',
+    {
+      title: 'Radar : écrire des documents',
+      description:
+        `Écrit jusqu'à ${MAX_RADAR_BATCH} documents du Booking Radar en un appel. op "set" crée ou remplace, op "update" fusionne des champs (un champ {"__delete__": true} est supprimé). ` +
+        'Toute écriture sur un document existant exige if_version = la version lue ; si une version manque ou a changé, RIEN n\'est écrit et l\'erreur indique quoi relire. ' +
+        'Sur leads, un update ne peut pas toucher les champs de Greg (status, notes, dismissed*, addedAt, draft*, crm*, contactedAt, contactChannel, chanceAdj) sauf allow_owner_fields=true (uniquement à la demande explicite de Greg). ' +
+        'Aucune suppression de document possible : une piste se retire en la marquant dismissed (côté Greg).',
+      inputSchema: z.strictObject({
+        writes: z
+          .array(
+            z.strictObject({
+              op: z.enum(['set', 'update'], { error: 'op : "set" ou "update".' }),
+              collection: radarCollection,
+              id: radarId,
+              data: z.record(z.string(), z.unknown()),
+              if_version: z.number().int().min(1).optional(),
+            }),
+          )
+          .min(1)
+          .max(MAX_RADAR_BATCH, `${MAX_RADAR_BATCH} écritures maximum par appel.`),
+        allow_owner_fields: z.boolean().optional(),
+      }),
+      annotations: WRITE,
+    },
+    run('radar_batch', (deps, a: Parameters<typeof radarBatch>[1]) => radarBatch(deps, a)),
   );
 }

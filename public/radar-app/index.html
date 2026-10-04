@@ -1,0 +1,1204 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>🔥 Kruzberg Booking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#ECEAE5; --surface:#F7F6F2; --surface2:#E2DFD8; --ink:#16171A; --ink2:#4A4C52; --ink3:#7B7D84;
+  --line:#CFCBC2; --accent:#2F46D8; --accent-ink:#FFFFFF; --accent-soft:#DCE0FA;
+  --ok:#1E7A4C; --ok-soft:#D6EEDF; --warn:#A35A00; --warn-soft:#F6E4C8; --bad:#B3261E; --bad-soft:#F6D9D6;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--bg:#111215;--surface:#1A1C20;--surface2:#24262C;--ink:#ECEBE7;--ink2:#B5B6BB;--ink3:#80828A;
+  --line:#33363D;--accent:#7F90FF;--accent-ink:#0D0F1A;--accent-soft:#252B52;
+  --ok:#5CC98E;--ok-soft:#173326;--warn:#E7A04A;--warn-soft:#3A2A14;--bad:#F07A70;--bad-soft:#3D1D1A;}}
+:root[data-theme="dark"]{
+  color-scheme:dark;--bg:#111215;--surface:#1A1C20;--surface2:#24262C;--ink:#ECEBE7;--ink2:#B5B6BB;--ink3:#80828A;
+  --line:#33363D;--accent:#7F90FF;--accent-ink:#0D0F1A;--accent-soft:#252B52;
+  --ok:#5CC98E;--ok-soft:#173326;--warn:#E7A04A;--warn-soft:#3A2A14;--bad:#F07A70;--bad-soft:#3D1D1A;}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:22px 60px}
+a{color:var(--accent)}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;border-bottom:3px solid var(--ink);padding-bottom:14px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,6vw,56px);line-height:.9;letter-spacing:.01em;margin:0;text-transform:uppercase}
+h1 small{display:block;font-family:var(--mono);font-weight:400;font-size:12px;letter-spacing:.14em;color:var(--ink3);margin-top:8px}
+.runinfo{font-family:var(--mono);font-size:12px;color:var(--ink2);text-align:right;max-width:460px}
+.runinfo b{color:var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:18px}
+.kpi{background:var(--surface);padding:12px 14px}
+.kpi .n{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:4px}
+.kpi.hot .n{color:var(--bad)}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+section.dl{margin-top:22px}
+.sech{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+.sech h2{font-family:var(--display);font-weight:600;font-size:22px;text-transform:uppercase;letter-spacing:.03em;margin:0}
+.sech span{font-family:var(--mono);font-size:12px;color:var(--ink3)}
+.strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.chipd{flex:0 0 auto;background:var(--surface);border:1px solid var(--line);padding:8px 10px;min-width:170px;max-width:230px;cursor:pointer;text-align:left}
+.chipd:hover{border-color:var(--ink)}
+.chipd .d{font-family:var(--mono);font-size:12px;font-weight:500}
+.chipd .t{font-weight:600;font-size:13px;line-height:1.25;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chipd .c{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em}
+.chipd.urg .d{color:var(--bad)}
+nav.tabs{display:flex;gap:0;overflow-x:auto;margin-top:26px;border-bottom:1px solid var(--line)}
+nav.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px 9px;cursor:pointer;white-space:nowrap;font-weight:500;color:var(--ink2)}
+nav.tabs button .ct{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-left:6px}
+nav.tabs button .nw{font-family:var(--mono);font-size:10px;background:var(--accent);color:var(--accent-ink);padding:1px 5px;margin-left:5px}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ink)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 0}
+.filters input[type=search]{flex:1 1 220px;min-width:0;padding:8px 10px;border:1px solid var(--line);background:var(--surface)}
+.filters select{padding:7px 8px;border:1px solid var(--line);background:var(--surface)}
+.tog{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2);cursor:pointer}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--line)}
+.row.f3{border-left-color:var(--accent)}
+.row.f2{border-left-color:var(--ink3)}
+.row.isnew{box-shadow:inset 0 0 0 1px var(--accent)}
+.rh{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;padding:12px 14px;cursor:pointer}
+.rt{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.rt .nm{font-weight:600;font-size:15.5px}
+.meta{font-size:12.5px;color:var(--ink2)}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.tag{font-family:var(--mono);font-size:11px;padding:1px 6px;background:var(--surface2);color:var(--ink2);white-space:nowrap}
+.tag.new{background:var(--accent);color:var(--accent-ink)}
+.tag.dl{background:var(--warn-soft);color:var(--warn)}
+.tag.dl.urg{background:var(--bad-soft);color:var(--bad)}
+.tag.past{background:var(--surface2);color:var(--ink3);text-decoration:line-through}
+.tag.st-contacté,.tag.st-relancé,.tag.st-en_discussion{background:var(--accent-soft);color:var(--accent)}
+.tag.st-booké{background:var(--ok-soft);color:var(--ok)}
+.tag.st-refusé{background:var(--bad-soft);color:var(--bad)}
+.side{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.fit{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--accent)}
+.fit i{font-style:normal;color:var(--line)}
+.rb{border-top:1px dashed var(--line);padding:12px 14px 14px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px 22px}
+@media (max-width:760px){.rb{grid-template-columns:minmax(0,1fr)}.rh{grid-template-columns:minmax(0,1fr)}.side{align-items:flex-start;flex-direction:row;flex-wrap:wrap}}
+.kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:4px 10px;font-size:13px}
+.kv dt{color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding-top:2px}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.mail{font-family:var(--mono);font-size:12.5px}
+.btn{border:1px solid var(--ink);background:var(--surface);padding:5px 10px;cursor:pointer;font-size:12.5px;font-weight:500}
+.btn:hover{background:var(--surface2)}
+.btn.pri{background:var(--ink);color:var(--bg)}
+.btn.sm{padding:2px 7px;font-size:11.5px}
+.btn.ghost{border-color:var(--line)}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.links{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px}
+.work{display:flex;flex-direction:column;gap:8px}
+.work label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3)}
+.work select,.work textarea,.work input{width:100%;border:1px solid var(--line);background:var(--bg);padding:6px 8px}
+.work textarea{min-height:60px;resize:vertical}
+.dismiss{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dismiss input{flex:1 1 140px}
+.why{font-size:13.5px}
+.act{font-size:13.5px;background:var(--surface2);padding:8px 10px;margin-top:8px}
+.act b{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);display:block}
+.empty{padding:28px;text-align:center;color:var(--ink3);border:1px dashed var(--line)}
+details.scope{margin-top:30px;background:var(--surface);border:1px solid var(--ink)}
+details.scope summary{cursor:pointer;padding:12px 16px;font-family:var(--display);font-weight:600;font-size:20px;text-transform:uppercase;letter-spacing:.03em;list-style:none;display:flex;justify-content:space-between;gap:10px}
+details.scope summary span{font-family:var(--mono);font-size:12px;text-transform:none;letter-spacing:0;color:var(--ink3);align-self:center}
+.sc{padding:4px 16px 18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px}
+@media (max-width:760px){.sc{grid-template-columns:minmax(0,1fr)}}
+.sc .full{grid-column:1/-1}
+.sc label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:4px}
+.sc textarea{width:100%;min-height:84px;border:1px solid var(--line);background:var(--bg);padding:8px;resize:vertical}
+.sc .hint{font-size:12px;color:var(--ink3);margin-top:3px}
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 14px}
+.cats div{display:flex;align-items:center;gap:8px;font-size:13px}
+.cats input[type=number]{width:52px;border:1px solid var(--line);background:var(--bg);padding:3px 5px}
+.saved{font-family:var(--mono);font-size:12px;color:var(--ok)}
+.log{font-family:var(--mono);font-size:12px;color:var(--ink2);max-height:220px;overflow:auto;border-top:1px solid var(--line);padding-top:8px}
+.log div{padding:3px 0;border-bottom:1px dotted var(--line)}
+.addf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.addf input,.addf select{border:1px solid var(--line);background:var(--bg);padding:6px 8px;min-width:0}
+@media (max-width:640px){.addf{grid-template-columns:minmax(0,1fr)}}
+.banner{padding:12px 14px;background:var(--warn-soft);color:var(--warn);margin-top:14px}
+.mailbox{grid-column:1/-1;border:1px solid var(--ink);background:var(--bg);padding:12px;display:flex;flex-direction:column;gap:8px}
+.mailbox .mh{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.mailbox .mh b{font-family:var(--display);font-weight:600;font-size:17px;text-transform:uppercase;letter-spacing:.03em}
+.mailbox label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3)}
+.mailbox input,.mailbox select,.mailbox textarea{width:100%;border:1px solid var(--line);background:var(--surface);padding:6px 8px}
+.mailbox textarea{min-height:340px;font-family:var(--mono);font-size:12.5px;line-height:1.55;resize:vertical}
+.mailbox .row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+@media (max-width:640px){.mailbox .row2{grid-template-columns:minmax(0,1fr)}}
+.mailbox .foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mailbox .msg{font-size:12.5px}
+.mailbox .msg.err{color:var(--bad)}.mailbox .msg.ok{color:var(--ok)}.mailbox .msg.warn{color:var(--warn)}
+.tag.draft{background:var(--ok-soft);color:var(--ok)}
+.tag.crm{background:var(--accent);color:var(--accent-ink)}
+.btn.crm{border-color:var(--accent);color:var(--accent)}
+a.btn{text-decoration:none;color:inherit;display:inline-flex;align-items:center;gap:4px}
+a.btn.form{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+a.btn.form:hover{filter:brightness(1.08);background:var(--accent)}
+.sel{width:17px;height:17px;margin:2px 4px 0 0;accent-color:var(--accent);cursor:pointer;flex:0 0 auto}
+.row.picked{outline:2px solid var(--accent);outline-offset:-2px}
+.bulk{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--ink);color:var(--bg);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:center;box-shadow:0 -4px 18px rgba(0,0,0,.25)}
+.bulk b{font-family:var(--mono)}
+.bulk select,.bulk .btn{background:var(--bg);color:var(--ink);border-color:var(--bg)}
+.bulk .btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bulk .lnk{background:none;border:0;color:var(--bg);text-decoration:underline;cursor:pointer;font-size:13px;padding:0}
+.bulk .prog{font-family:var(--mono);font-size:12px;opacity:.85}
+.selall{font-size:13px;color:var(--ink2);display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+body.hasbulk .wrap{padding-bottom:120px}
+.reach{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 14px;font-size:13px;z-index:9}
+@media (prefers-reduced-motion:no-preference){.row{transition:border-color .15s}}
+.kpi[data-tab]{cursor:pointer}.kpi[data-tab]:hover{background:var(--surface2)}
+.flow{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;font-family:var(--mono);font-size:11.5px;color:var(--ink3);margin-top:10px}
+.flow b{color:var(--ink2);font-weight:500;background:var(--surface);border:1px solid var(--line);padding:1px 6px}
+.todo{margin-top:6px;display:flex;flex-direction:column;gap:2px}
+.todo div{font-size:12.5px;color:var(--ink);padding-left:10px;border-left:3px solid var(--bad)}
+.todo div.soft{border-left-color:var(--accent)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.tag.link{cursor:pointer;text-decoration:underline dotted}
+.nb{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;font-size:12px;color:var(--ink3);align-items:center}
+.nb button{border:1px solid var(--line);background:var(--bg);padding:1px 7px;font-size:12px;cursor:pointer}
+.nb button:hover{border-color:var(--ink)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:0 0 10px}
+.tools .hint{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-left:auto}
+.tools kbd,.tri kbd{font-family:var(--mono);font-size:10.5px;border:1px solid var(--line);padding:0 4px;background:var(--surface)}
+.rh:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.toast .undo{background:none;border:0;color:var(--bg);text-decoration:underline;cursor:pointer;margin-left:10px;font-weight:600}
+.tri{position:fixed;inset:0;z-index:10;background:rgba(10,10,12,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.tri .card{background:var(--surface);border:2px solid var(--ink);max-width:640px;width:100%;max-height:92vh;overflow:auto;padding:18px 18px 14px}
+.tri .top{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:12px;color:var(--ink3)}
+.tri h3{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;text-transform:uppercase;margin:10px 0 4px}
+.tri .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.tri .acts .btn{padding:7px 12px;font-size:13px}
+.tri .rs{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.banner .btn{margin-left:8px}
+.chance{font-family:var(--mono);font-size:11.5px;padding:2px 7px;white-space:nowrap;border:1px solid currentColor}
+.chance b{font-size:13px}
+.chance.hi{color:var(--ok);background:var(--ok-soft)}.chance.mid{color:var(--accent);background:var(--accent-soft)}
+.chance.lo{color:var(--warn);background:var(--warn-soft)}.chance.vlo{color:var(--ink3);background:var(--surface2)}
+.row.c-hi{border-left-color:var(--ok)}.row.c-mid{border-left-color:var(--accent)}.row.c-lo{border-left-color:var(--warn)}.row.c-vlo{border-left-color:var(--line)}
+.chx{border:1px solid var(--line);background:var(--bg);padding:9px 10px}
+.chh{display:flex;justify-content:space-between;gap:8px;font-size:13px}.chh span{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.chw{font-size:13px;margin-top:4px}
+.bars{display:grid;gap:3px;margin-top:8px}
+.bars div{display:grid;grid-template-columns:minmax(0,1fr) 90px 44px;gap:8px;align-items:center;font-size:12px;color:var(--ink2)}
+.bars i{display:block;height:6px;background:var(--surface2);position:relative}
+.bars i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--accent)}
+.bars em{font-style:normal;font-family:var(--mono);font-size:11px;text-align:right}
+.chf{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:6px}
+.chadj{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;font-size:12px;color:var(--ink3)}
+.btn.pri kbd{background:transparent;color:inherit;border-color:currentColor}
+@media (max-width:760px){.tools .hint{display:none}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Kruzberg<br>Booking Radar<small>POST-PUNK · COLD-WAVE · LYON → EUROPE</small></h1>
+    <div class="runinfo" id="runinfo">Chargement…</div>
+  </header>
+  <div id="banner" class="banner" hidden></div>
+  <div id="obx" class="banner" hidden style="background:var(--accent-soft);color:var(--ink)"></div>
+  <div id="crmq" class="banner" hidden></div>
+
+  <div class="kpis">
+    <div class="kpi hot" data-tab="todo"><div class="n" id="k-todo">–</div><div class="l">À faire maintenant</div></div>
+    <div class="kpi" data-tab="all"><div class="n" id="k-active">–</div><div class="l">Pistes à exploiter · <span id="k-new">–</span> nouvelles</div></div>
+    <div class="kpi" data-tab="drafts"><div class="n" id="k-draft">–</div><div class="l">Brouillons à envoyer</div></div>
+    <div class="kpi" data-tab="crm"><div class="n" id="k-crm">–</div><div class="l">Passées au CRM</div></div>
+  </div>
+  <div class="flow"><span>Circuit :</span><b>1 Trier</b>›<b>2 ✉ Email → « Ouvrir dans Mail »</b>›<b>3 Envoyer depuis Mail</b>›<b>4 Marquer contacté</b>›<b>→ la piste part au CRM et quitte le radar</b></div>
+
+  <section class="dl">
+    <div class="sech"><h2>Échéances à venir</h2><span>deadlines de candidature et dates de concert, 60 jours</span></div>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+
+  <div class="filters">
+    <input type="search" id="q" placeholder="Chercher un lieu, une ville, un contact…">
+    <select id="f-zone" aria-label="Zone"><option value="">Toutes zones</option><option>Lyon / AURA</option><option>France</option><option>Europe</option></select>
+    <select id="f-city" aria-label="Ville"><option value="">Toutes villes</option></select>
+    <select id="f-fit" aria-label="Chances"><option value="0">Toutes chances</option><option value="58">Réelles et fortes</option><option value="75">Fortes seulement</option></select>
+    <select id="f-status" aria-label="Statut"><option value="">Tous statuts</option></select>
+    <select id="f-sort" aria-label="Tri"><option value="smart">Tri : priorité (chances + urgence)</option><option value="chance">Tri : chances</option><option value="deadline">Tri : échéance</option><option value="added">Tri : ajout récent</option><option value="name">Tri : A→Z</option></select>
+    <label class="tog"><input type="checkbox" id="f-new"> Nouveautés</label>
+    <label class="tog"><input type="checkbox" id="f-mail"> Avec email</label>
+    <label class="tog" title="Pistes avec un email ciblé jamais utilisé : ni brouillon, ni contact, ni partagé avec une piste déjà sollicitée ou passée au CRM"><input type="checkbox" id="f-fresh"> Adresses pas encore sollicitées</label>
+    <label class="selall"><input type="checkbox" id="selall" class="sel"> Sélectionner la vue</label>
+  </div>
+  <div class="tools">
+    <button class="btn pri" type="button" id="tri-go">Trier les nouvelles pistes</button>
+    <button class="btn ghost" type="button" id="pick-sent" hidden>Sélectionner les brouillons créés</button>
+    <button class="btn ghost" type="button" id="copyview">Copier la vue (tableur)</button>
+    <span class="hint">Raccourcis : <kbd>/</kbd> chercher · <kbd>j</kbd><kbd>k</kbd> naviguer · <kbd>↵</kbd> ouvrir · <kbd>e</kbd> email · <kbd>p</kbd> CRM · <kbd>x</kbd> écarter · <kbd>t</kbd> trier</span>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <details class="scope" id="scope">
+    <summary>Réglages de la veille quotidienne <span id="scope-state">lus chaque matin par la recherche automatique</span></summary>
+    <div class="sc">
+      <div>
+        <label for="s-focus">Priorités / élargir le scope</label>
+        <textarea id="s-focus" placeholder="Ex : plus de bars-concerts à Grenoble et Saint-Étienne ; collectifs DIY à Genève ; webzines cold-wave belges…"></textarea>
+      </div>
+      <div>
+        <label for="s-exclude">À exclure</label>
+        <textarea id="s-exclude" placeholder="Ex : lieux > 500 places ; tremplins payants ; metal ; Groover…"></textarea>
+      </div>
+      <div class="full">
+        <label for="s-next">Consigne pour la prochaine recherche (effacée une fois traitée)</label>
+        <textarea id="s-next" placeholder="Ex : trouve les dates de tournée européenne de Gurriers et Sprints au printemps 2027."></textarea>
+      </div>
+      <div class="full">
+        <label>Rubriques suivies · nombre max de nouvelles pistes par jour</label>
+        <div class="cats" id="s-cats"></div>
+      </div>
+      <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <button class="btn pri" id="s-save" type="button">Enregistrer les réglages</button>
+        <span class="saved" id="s-saved"></span>
+      </div>
+      <div class="full">
+        <label>Ajouter une piste à la main</label>
+        <form class="addf" id="addf">
+          <select id="a-cat" aria-label="Rubrique"></select>
+          <input id="a-name" placeholder="Nom *" required>
+          <input id="a-city" placeholder="Ville">
+          <input id="a-email" placeholder="Email">
+          <input id="a-url" placeholder="Lien (https://…)">
+          <button class="btn" type="submit">Ajouter</button>
+        </form>
+      </div>
+      <div class="full">
+        <label>Journal des veilles</label>
+        <div class="log" id="log">Aucune veille enregistrée.</div>
+      </div>
+    </div>
+  </details>
+</div>
+<div class="bulk" id="bulk" hidden></div>
+<div class="tri" id="tri" hidden role="dialog" aria-modal="true" aria-label="Tri des nouvelles pistes"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="/radar-app/crm-bridge.js"></script>
+<script>
+const CATS=[
+  {id:"festivals",label:"Festivals"},
+  {id:"tremplins",label:"Tremplins & concours"},
+  {id:"booking_fr",label:"Booking France"},
+  {id:"booking_eu",label:"Booking Europe"},
+  {id:"support",label:"Premières parties"},
+  {id:"pros",label:"Labels · bookers · promoteurs"},
+  {id:"presse",label:"Presse"}
+];
+const CATL=Object.fromEntries(CATS.map(c=>[c.id,c.label]));
+const STATUSES=["nouveau","à contacter","contacté","relancé","en discussion","booké","refusé"];
+const REASONS=["Pas le style","Trop gros","Trop loin","Payant","Déjà fait","Info fausse"];
+const AURA=/lyon|villeurbanne|feyzin|bron|vénissieux|venissieux|saint-étienne|saint-etienne|grenoble|clermont|annecy|chambéry|chambery|valence|bourgoin|vienne|pérouges|perouges|roanne|villefontaine|aix-les-bains|montluçon|vichy|le puy|aurillac|échirolles|fontaine|oullins|décines|caluire|givors|mâcon|thonon|annemasse|ambérieu|bourg-en-bresse/i;
+
+/* ---------- Emails : modèles de Greg ---------- */
+const K={
+  epk:"https://kruzberg.com/wp-content/uploads/2026/05/KRUZBERG_EPK_2026.pdf",
+  epkEn:"https://kruzberg.com/wp-content/uploads/2026/05/KRUZBERG_EPK_2026_EN.pdf",
+  live:"https://youtu.be/PIi2OHkTvxw", done:"https://youtu.be/9FpWn3T5hnA", one:"https://youtu.be/OcihZpw6CjM",
+  site:"kruzberg.com", insta:"instagram.com/kruzberg_noise", listen:"music.imusician.pro/a/vmQMhGso"
+};
+const KINDS={festival:"Festival",tremplin:"Tremplin / concours",venue:"Salle / bar (date)",support:"Première partie",booker:"Agence de booking",label:"Label",promoteur:"Promoteur / collectif",presse:"Presse / webzine",radio:"Radio"};
+const FRANCO=/genève|geneve|lausanne|fribourg|neuchâtel|neuchatel|sion|delémont|bienne|bruxelles|brussels|liège|liege|namur|charleroi|mons|tournai|louvain-la-neuve|luxembourg|esch|montréal|montreal|québec|quebec/i;
+function langOf(l){ const c=(l.country||"FR").toUpperCase(); if(c==="FR") return "fr"; if(["CH","BE","LU","CA"].includes(c)&&FRANCO.test(l.city||"")) return "fr"; return "en"; }
+function kindOf(l){
+  const t=(l.type||"").toLowerCase();
+  switch(l.cat){
+    case "festivals": return "festival";
+    case "tremplins": return "tremplin";
+    case "booking_fr": case "booking_eu": return /collectif|promoteur/.test(t)?"promoteur":"venue";
+    case "support": return "support";
+    case "pros": return /label/.test(t)?"label":/book|tourn|agen/.test(t)?"booker":"promoteur";
+    case "presse": return /radio/.test(t)?"radio":"presse";
+  }
+  return "venue";
+}
+function emailsOf(s){ return [...new Set((String(s||"").match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi)||[]).map(x=>x.toLowerCase()))]; }
+function firstNames(contact){
+  const c=String(contact||"").split(/\s+[—–-]\s+/)[0].trim();
+  if(!c||c.length>60||/[@–—()\/:;]|http|programm|accueil|équipe|team|rédaction|redaction|contact|booking|info/i.test(c)) return [];
+  const people=c.split(/\s*(?:,|&|\bet\b|\band\b)\s*/i).filter(Boolean);
+  const out=[];
+  for(const p of people){ const w=p.trim().split(/\s+/)[0]; if(/^[A-ZÀ-Ý][a-zà-ÿ'-]{1,}$/.test(w)) out.push(w); else return []; }
+  return out.slice(0,3);
+}
+function greet(l,lang){
+  const n=firstNames(l.contact);
+  if(lang==="en") return n.length?`Hi ${n.join(", hi ")},`:"Hi,";
+  return n.length?`Bonjour ${n.join(", bonjour ")},`:"Bonjour,";
+}
+function auNom(name){ // "au Brin de Zinc", "à la Bobine", "à l'Ampérage", "aux Abattoirs"
+  const n=String(name||"").replace(/\s*\([^)]*\)\s*/g," ").trim();
+  let m;
+  if((m=n.match(/^Le\s+(.*)/))) return "au "+m[1];
+  if((m=n.match(/^Les\s+(.*)/))) return "aux "+m[1];
+  if((m=n.match(/^La\s+(.*)/))) return "à la "+m[1];
+  if((m=n.match(/^L['’]\s*(.*)/))) return "à l'"+m[1];
+  return "à "+n;
+}
+function yearOf(l){
+  const s=[l.deadline,l.eventDate].filter(Boolean).join(" ");
+  const ys=(s.match(/20\d\d/g)||[]).map(Number).filter(y=>y>=new Date().getFullYear());
+  if(ys.length) return Math.max(...ys);
+  const d=new Date(); return d.getMonth()>=7?d.getFullYear()+1:d.getFullYear();
+}
+function dateFR(d){ if(!/^\d{4}-\d{2}-\d{2}/.test(d||"")) return d||""; return new Date(d.slice(0,10)).toLocaleDateString("fr-FR",{day:"numeric",month:"long"}); }
+function dateEN(d){ if(!/^\d{4}-\d{2}-\d{2}/.test(d||"")) return d||""; return new Date(d.slice(0,10)).toLocaleDateString("en-GB",{day:"numeric",month:"long"}); }
+
+function presentFR(intro){ return `${intro} au sujet de notre groupe KRUZBERG (dossier de presse : ${K.epk}) :
+
+• Style : Post-Punk
+• Localisation : Lyon
+• Influences : Fontaines D.C., Idles, Shame
+• Structure accompagnement pro : Le Labo du Conservatoire (Lyon)
+
+Notre dernière live session : ${K.live}
+
+Quelques démos supplémentaires :
+• Done Trying : ${K.done}
+• 1, 2, 3, 4 ! : ${K.one}
+
+Écoute et informations : ${K.site} / ${K.insta} / ${K.listen}`; }
+function presentEN(){ return `I'm reaching out about our band KRUZBERG (EPK: ${K.epkEn}):
+
+• Style: Post-Punk
+• Based in: Lyon, France
+• Influences: Fontaines D.C., Idles, Shame
+• Professional development support: Le Labo du Conservatoire (Lyon)
+
+Our latest live session: ${K.live}
+
+A few more demos:
+• Done Trying: ${K.done}
+• 1, 2, 3, 4 !: ${K.one}
+
+Listen & info: ${K.site} / ${K.insta} / ${K.listen}`; }
+const SIG_FR=`Merci d'avance pour votre retour et à bientôt,
+Cordialement,
+Greg
+
+Grégoire Paillas — KRUZBERG
+booking@kruzberg.com · 07 60 08 64 13
+AV117 Production · The Blend Corp`;
+const SIG_EN=`Thanks in advance, hope to hear from you soon.
+Best,
+Greg
+
+Grégoire Paillas — KRUZBERG
+booking@kruzberg.com · +33 7 60 08 64 13
+AV117 Production · The Blend Corp`;
+
+function buildMail(l,kind,lang){
+  const N=l.name, Y=yearOf(l), fr=lang!=="en";
+  const V=l.venue||N;
+  let subj, ask, intro="Je me permets de vous contacter";
+  if(fr){
+    switch(kind){
+      case "festival": subj="Programmation - Kruzberg - Post-Punk";
+        ask=`On aimerait beaucoup défendre notre musique sur la scène de ${N} pour l'édition ${Y}.
+
+Est-ce que la programmation est encore ouverte ? Passez-vous par un appel à candidatures ou par contact direct, et à quelle période traitez-vous les propositions ?`; break;
+      case "tremplin": subj=`Candidature ${N} - Kruzberg - Post-Punk`;
+        ask=`On aimerait beaucoup candidater à ${N} pour l'édition ${Y}.
+
+Est-ce que les candidatures sont ouvertes ? Quelles sont les modalités et la date limite ?`; break;
+      case "venue": subj="Programmation - Kruzberg - Post-Punk";
+        ask=`On aimerait beaucoup venir jouer ${auNom(N)} un de ces quatre, est-ce que vous auriez une date à nous proposer ? Si oui, à quel moment ?
+
+Comment procédez-vous habituellement ?`; break;
+      case "support": subj=`Première partie ${N}${l.eventDate?" "+fmtD(l.eventDate):""} - Kruzberg - Post-Punk`;
+        ask=`J'ai vu que ${N} joue ${auNom(V)} le ${dateFR(l.eventDate)}, et on aimerait beaucoup assurer la première partie.
+
+Est-ce que le créneau est encore ouvert ? Si c'est le tourneur du groupe qui gère, pourriez-vous m'indiquer le bon contact ?`; break;
+      case "booker": subj="Booking - Kruzberg - Post-Punk";
+        ask=`Nous travaillons actuellement sur un EP pour 2027 et en parallèle on aimerait beaucoup travailler avec une agence de booking plutôt que de tout gérer en interne.
+Actuellement en développement et en forte croissance, nous avons de grosses ambitions de tournées.
+
+Est-ce que votre roster est ouvert en ce moment ? Et comment travaillez-vous habituellement avec un groupe à notre stade ?`; break;
+      case "label": subj="Démo - Kruzberg - Post-Punk";
+        ask=`Nous travaillons actuellement sur un EP pour 2027 et on cherche un label pour nous accompagner sur cette sortie.
+
+Est-ce que vous écoutez des démos en ce moment ? Et comment travaillez-vous habituellement avec un groupe à notre stade ?`; break;
+      case "promoteur": subj="Programmation - Kruzberg - Post-Punk";
+        ask=`On aimerait beaucoup jouer sur une de vos soirées, est-ce que vous auriez une date à nous proposer ? Si oui, à quel moment ?
+
+Comment procédez-vous habituellement ?`; break;
+      case "presse": subj="Presse - Kruzberg - Post-Punk";
+        ask=`Notre dernier single, Where I Belong, est sorti en 2026 : ${K.listen}
+
+On serait ravis que vous puissiez l'écouter et, pourquoi pas, en parler dans ${N}. Je peux vous envoyer les visuels, la bio et les fichiers si besoin.`; break;
+      case "radio": subj="Proposition radio - Kruzberg - Post-Punk";
+        ask=`Notre dernier single, Where I Belong, est sorti en 2026 : ${K.listen}
+
+On serait ravis qu'il puisse passer sur ${N}. Je peux vous envoyer le WAV, la bio et les visuels si besoin. Est-ce que vous passez par une adresse ou une émission en particulier pour les groupes locaux ?`; break;
+    }
+    return {subject:subj, body:`${greet(l,"fr")}
+J'espère que vous allez bien.
+
+${presentFR(intro)}
+
+${ask}
+
+${SIG_FR}`};
+  }
+  switch(kind){
+    case "festival": subj="Booking - Kruzberg - Post-Punk (Lyon, FR)";
+      ask=`We'd love to bring our music to ${N} for the ${Y} edition.
+
+Is the line-up still open? Do you work with an open call or direct contact, and when do you usually review proposals?`; break;
+    case "tremplin": subj=`Application ${N} - Kruzberg - Post-Punk`;
+      ask=`We'd love to apply to ${N} for the ${Y} edition.
+
+Are applications open to bands based in France? What are the terms and the deadline?`; break;
+    case "venue": subj="Booking - Kruzberg - Post-Punk (Lyon, FR)";
+      ask=`We'd love to come and play at ${N}. Would you have a slot for us? If so, around when? We'd be happy to share the bill with a local band.
+
+How do you usually work with bands from abroad?`; break;
+    case "support": subj=`Support ${N}${l.eventDate?" "+dateEN(l.eventDate):""} - Kruzberg - Post-Punk`;
+      ask=`I saw that ${N} is playing ${V} on ${dateEN(l.eventDate)}, and we'd love to open the show.
+
+Is the support slot still open? If it's handled by the band's agent, could you point me to the right contact?`; break;
+    case "booker": subj="Booking - Kruzberg - Post-Punk (Lyon, FR)";
+      ask=`We're currently working on an EP for 2027, and we'd love to work with a booking agency rather than handle everything ourselves.
+We're a developing band, growing fast, with big touring ambitions.
+
+Is your roster open at the moment? And how do you usually work with a band at our stage?`; break;
+    case "label": subj="Demo - Kruzberg - Post-Punk (Lyon, FR)";
+      ask=`We're currently working on an EP for 2027 and we're looking for a label to release it.
+
+Are you listening to demos at the moment? And how do you usually work with a band at our stage?`; break;
+    case "promoteur": subj="Booking - Kruzberg - Post-Punk (Lyon, FR)";
+      ask=`We'd love to play one of your nights. Would you have a date for us? If so, around when?
+
+How do you usually work with bands from abroad?`; break;
+    case "presse": subj="Press - Kruzberg - Post-Punk (Lyon, FR)";
+      ask=`Our latest single, Where I Belong, came out in 2026: ${K.listen}
+
+We'd be really happy if you could give it a listen and maybe feature it on ${N}. I can send artwork, bio and files if needed.`; break;
+    case "radio": subj="Radio submission - Kruzberg - Post-Punk (Lyon, FR)";
+      ask=`Our latest single, Where I Belong, came out in 2026: ${K.listen}
+
+We'd be really happy if it could get some airplay on ${N}. I can send the WAV, bio and artwork if needed.`; break;
+  }
+  return {subject:subj, body:`${greet(l,"en")}
+I hope you're doing well.
+
+${presentEN()}
+
+${ask}
+
+${SIG_EN}`};
+}
+let outbox=[];
+const mailOpen=new Map(); // id -> {kind,lang,to,subject,body,msg,cls,busy}
+function openMail(l){
+  const kind=kindOf(l), lang=langOf(l), m=buildMail(l,kind,lang);
+  mailOpen.set(l.id,{kind,lang,to:emailsOf(l.email).join(", "),subject:m.subject,body:m.body,msg:"",cls:""});
+}
+function mailHTML(l){
+  const d=mailOpen.get(l.id); if(!d) return "";
+  const id=esc(l.id);
+  const noMail=!emailsOf(d.to).length;
+  const form=(l.contactForm&&okUrl(l.contactForm.url))?l.contactForm:(l.links||[]).find(x=>/form|candid|soumi|submi|contact|booking|apply/i.test((x.label||"")+" "+x.url));
+  const used=addrUsers(emailsOf(d.to),l.id);
+  const warnAddr=used.length?`<div class="msg warn">⚠ Cette adresse a déjà été sollicitée pour : ${esc(used.map(x=>x.name+(x.draftAt?" ("+fmtD(x.draftAt)+")":"")).join(", "))}. Regroupe les demandes dans un seul mail ou adapte le message pour ne pas envoyer deux fois la même chose.</div>`:"";
+  const status=d.msg?`<span class="msg ${d.cls}">${esc(d.msg)}</span>`:
+    noMail?(form?`<span class="msg warn">Pas d'adresse ciblée : passe par le formulaire.</span> <button class="btn form" type="button" data-mform="${id}" data-url="${esc(form.url)}">Copier le message + ouvrir ${esc(form.label||"le formulaire")} ↗</button>`:`<span class="msg warn">Aucune adresse ciblée publiée : ${esc(l.contactRoute||"saisis une adresse")}.</span>`):
+    `<span class="msg">« Ouvrir dans Mail » ouvre tout de suite le message prêt dans Apple Mail : envoie-le, ou ferme la fenêtre et choisis « Enregistrer » pour le garder en brouillon. Vérifie que le compte expéditeur est bien booking@kruzberg.com.</span>`;
+  const mailto=mailtoOf(d);
+  return `<div class="mailbox" data-mailbox="${id}">
+    <div class="mh"><b>Brouillon email</b>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <select id="mk-${id}" data-mkind="${id}" aria-label="Modèle" style="width:auto">${Object.entries(KINDS).map(([k,v])=>`<option value="${k}" ${k===d.kind?"selected":""}>${esc(v)}</option>`).join("")}</select>
+        <select id="ml-${id}" data-mlang="${id}" aria-label="Langue" style="width:auto"><option value="fr" ${d.lang==="fr"?"selected":""}>Français</option><option value="en" ${d.lang==="en"?"selected":""}>English</option></select>
+      </div></div>
+    <div class="row2">
+      <div><label for="mt-${id}">Destinataire(s) — séparés par des virgules</label><input id="mt-${id}" data-mfield="to" data-mid="${id}" value="${esc(d.to)}" placeholder="prog@lieu.fr"></div>
+      <div><label for="ms-${id}">Objet</label><input id="ms-${id}" data-mfield="subject" data-mid="${id}" value="${esc(d.subject)}"></div>
+    </div>
+    ${warnAddr}
+    <div><label for="mb-${id}">Message</label><textarea id="mb-${id}" data-mfield="body" data-mid="${id}">${esc(d.body)}</textarea></div>
+    <div class="foot">
+      <a class="btn pri" href="${esc(mailto)}" target="_blank" rel="noopener" data-mmail="${id}" style="text-decoration:none" title="${noMail?"Ouvre le message sans destinataire : ajoute l'adresse dans Mail":"Ouvre le message prêt dans Mail"}">✉ Ouvrir dans Mail${noMail?" (sans destinataire)":""}</a>
+      <button class="btn ghost" type="button" data-mcreate="${id}" ${d.busy?"disabled":""} title="Si « Ouvrir dans Mail » ne fait rien sur ton appareil : Claude crée le brouillon quand tu lui écris « crée les brouillons en attente »">${d.busy?"Ajout…":"File pour Claude"}</button>
+      <button class="btn ghost" type="button" data-mcopy="${id}">Copier</button>
+      <button class="btn ghost" type="button" data-mclose="${id}">Fermer</button>
+      ${status}
+    </div>
+  </div>`;
+}
+function mailtoOf(d){ return `mailto:${emailsOf(d.to).join(",")}?subject=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(d.body)}`; }
+function rerenderMail(id){ const box=document.querySelector(`[data-mailbox="${CSS.escape(id)}"]`); const l=leads.find(x=>x.id===id); if(box&&l){ box.outerHTML=mailHTML(l); } }
+
+/* ---------- CRM KRUZBERG (connecteur claude.ai) ---------- */
+const CRM="KRUZBERG CRM";
+const STAGE_LABEL={a_contacter:"À contacter",contacte:"Contacté",relance:"Relancé",repondu:"Répondu",a_suivre:"À suivre",confirme:"Confirmé",termine:"Terminé",refuse:"Refusé"};
+const STATUS_TO_STAGE={"contacté":"contacte","relancé":"relance","en discussion":"a_suivre","booké":"confirme","refusé":"refuse"};
+let mcp=null; const crmBusy=new Set();
+const cut=(s,n)=>{ s=String(s??"").trim(); return s?s.slice(0,n):undefined; };
+function crmInput(l){
+  const iso=/^\d{4}-\d{2}-\d{2}$/;
+  let c=String(l.country||"FR").toUpperCase(); if(c==="UK") c="GB";
+  const cap=l.capacity!=null&&String(l.capacity).trim()?String(l.capacity).slice(0,50):undefined;
+  const links=(l.links||[]).filter(x=>x&&/^https?:\/\/\S+$/.test(x.url||"")).slice(0,20).map(x=>({label:String(x.label||"Lien").slice(0,100),url:x.url}));
+  const ev=l.eventDate?String(l.eventDate).slice(0,100):undefined;
+  const o={
+    external_id:l.id, category:l.cat, name:cut(l.name,200)||l.id,
+    type:cut(l.type,100), venue:cut(l.venue,200), city:cut(l.city,100),
+    country:/^[A-Z]{2}$/.test(c)?c:undefined, region:cut(l.region,100), capacity:cap,
+    contact_name:cut(l.contact,200), emails:emailsOf(l.email).slice(0,10),
+    links, event_date:ev, deadline:iso.test(l.deadline||"")?l.deadline:undefined,
+    fit:[1,2,3].includes(l.fit)?l.fit:undefined,
+    why:cut(l.why,2000), action:cut(l.action,2000), support:cut(l.support,2000), verified:cut(l.verified,500),
+    radar_status:cut(l.status||"nouveau",100), stage:STATUS_TO_STAGE[l.status]
+  };
+  if(l.crmId) delete o.stage; // resynchro : ne jamais faire reculer une étape avancée dans le CRM
+  if(!o.emails.length) delete o.emails; if(!o.links.length) delete o.links;
+  Object.keys(o).forEach(k=>o[k]===undefined&&delete o[k]);
+  return o;
+}
+function crmErr(e){
+  const c=e&&e.code;
+  if(c==="server_not_connected"||c==="server_not_found") return "CRM injoignable.";
+  if(c==="needs_reauth") return "Session expirée : recharge la page et reconnecte-toi au CRM.";
+  if(c==="selection_required") return "Plusieurs connecteurs « KRUZBERG CRM » : choisis lequel utiliser dans l'invite de claude.ai.";
+  if(c==="not_in_manifest"||c==="consent_required") return "Accès au CRM refusé pour cette page : autorise-le puis réessaie.";
+  if(c==="blocked_by_policy"||c==="approval_required") return "La politique de ton organisation bloque cet outil.";
+  if(c==="tool_error") return "Le CRM a refusé : "+(e.message||"erreur inconnue");
+  if(c==="server_unavailable"||c==="upstream_error"||c==="rate_limited") return "CRM injoignable pour l'instant. Tu peux réessayer sans risque de doublon (ajout idempotent).";
+  if(c==="not_granted"||c==="capability_disabled"||c==="capability_removed") return "Les connecteurs ne sont pas disponibles dans cette vue.";
+  return "Échec de l'envoi au CRM ("+(c||"erreur")+").";
+}
+function crmPayload(r){ const p=r&&r.payload; return (p&&typeof p==="object")?p:null; }
+async function sendToCrm(l){
+  if(!mcp){ toast("Connecteurs indisponibles dans cette vue"); return; }
+  crmBusy.add(l.id); renderList(true);
+  try{
+    const r=await mcp.callTool(CRM,"add_to_pipeline",crmInput(l),{cache:false});
+    const p=crmPayload(r)||{};
+    await patch(l.id,{crmId:p.id||l.crmId||"",crmUrl:p.url||"",crmStage:p.stage||"",crmAt:today()});
+    toast(p.created===false?"Resynchronisée dans le CRM ("+(STAGE_LABEL[p.stage]||p.stage||"")+")":`${l.name} → CRM (${STAGE_LABEL[p.stage]||p.stage||"À contacter"}). Elle quitte le radar : onglet « Dans le CRM ».`,null,4500);
+  }catch(e){ toast(crmErr(e),null,6000); }
+  finally{ crmBusy.delete(l.id); renderList(true); }
+}
+/* Passage de relais : dès qu'une piste est contactée (ou plus), le CRM devient la référence et la piste quitte le radar. */
+async function handoff(l,status,channel){
+  const stage=STATUS_TO_STAGE[status]; if(!stage) return;
+  const dFR=new Date().toLocaleDateString("fr-FR");
+  const note=channel?`Contacté par ${channel} le ${dFR} (radar)`:`Radar : statut → ${status} le ${dFR}`;
+  crmBusy.add(l.id); renderList(true);
+  const er=await crmApply(l,stage,note,status);
+  crmBusy.delete(l.id); renderList(true);
+  if(er) toast("Enregistré ici mais pas dans le CRM : "+er,null,6500);
+  else toast(`${l.name} → CRM (${STAGE_LABEL[stage]}). Suivi désormais dans le CRM.`,null,4500);
+}
+
+let db=null, leads=[], meta={}, scope={}, runs=[];
+let tab="todo", open=new Set();
+try{ const t=localStorage.getItem("kz_tab"); if(t) tab=t; }catch(e){}
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+function daysTo(d){ if(!d||!/^\d{4}-\d{2}-\d{2}/.test(d)) return null; return Math.round((new Date(d.slice(0,10))-new Date(today()))/864e5); }
+function fmtD(d){ if(!d) return ""; const x=new Date(d.slice(0,10)); if(isNaN(x)) return d; return x.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"2-digit"}); }
+function zone(l){ const c=(l.country||"FR").toUpperCase(); if(c!=="FR") return "Europe"; if(/AURA/i.test(l.region||"")||AURA.test(l.city||"")) return "Lyon / AURA"; return "France"; }
+function isNew(l){ return !!meta.date && (l.addedAt||"")>=meta.date; }
+function toast(m,undo,ms){
+  const t=$("#toast"); t.innerHTML=esc(m)+(undo?`<button type="button" class="undo" data-undo="1">Annuler</button>`:"");
+  t.hidden=false; toast._u=undo||null; clearTimeout(toast._t);
+  toast._t=setTimeout(()=>{ t.hidden=true; toast._u=null; },ms||(undo?7000:2600));
+}
+
+/* ---------- Logique radar ↔ CRM ---------- */
+const ADV=["contacté","relancé","en discussion","booké","refusé"];
+const inCrm=l=>!!l.crmId;
+function expired(l){
+  if(l.cat==="support"){ const e=daysTo(l.eventDate); return e!==null&&e<0; }
+  if(l.cat==="tremplins"){ const d=daysTo(l.deadline); return d!==null&&d<0; }
+  return false;
+}
+const live=l=>!inCrm(l)&&!l.dismissed&&!expired(l);            // pistes à exploiter
+const archived=l=>!inCrm(l)&&(l.dismissed||expired(l));        // écartées ou périmées
+const needsCrm=l=>!inCrm(l)&&!l.dismissed&&ADV.includes(l.status); // contactée mais pas encore au CRM
+const norm=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").replace(/^(le|la|les|l|the)\s+/,"").trim();
+const normCity=s=>norm(String(s||"").split(/[\s(,]/)[0]);
+let IDX={dup:new Map(),addr:new Map(),city:new Map()};
+function buildIndex(){
+  const dup=new Map(), addr=new Map(), city=new Map();
+  for(const l of leads){
+    const k=norm(l.name)+"|"+normCity(l.city);
+    if(!dup.has(k)) dup.set(k,[]); dup.get(k).push(l);
+    if(hasDraft(l)||inCrm(l)||ADV.includes(l.status)){
+      for(const a of emailsOf((l.draftTo||"")+" "+(l.email||""))){ if(!addr.has(a)) addr.set(a,[]); addr.get(a).push(l); }
+    }
+    if(live(l)&&l.city){ const c=normCity(l.city); if(c){ if(!city.has(c)) city.set(c,{label:String(l.city).split(/[(,]/)[0].trim(),items:[]}); city.get(c).items.push(l); } }
+  }
+  IDX={dup,addr,city};
+}
+const dupsOf=l=>(IDX.dup.get(norm(l.name)+"|"+normCity(l.city))||[]).filter(x=>x.id!==l.id);
+const addrUsers=(addrs,exceptId)=>{ const out=new Map(); for(const a of addrs) for(const x of (IDX.addr.get(a)||[])) if(x.id!==exceptId) out.set(x.id,x); return [...out.values()]; };
+function todoOf(l){
+  if(!live(l)&&!needsCrm(l)) return null;
+  const st=l.status||"nouveau", r=[]; let sc=0;
+  const add=(s,t,soft)=>{ r.push({t,soft}); sc=Math.max(sc,s); };
+  if(needsCrm(l)) add(96,`Statut « ${st} » mais pas encore dans le CRM : envoie-la (bouton ＋ Pipeline)`);
+  if(l.draftAt&&l.draftState!=="pending"&&!ADV.includes(st)){ const n=-(daysTo(l.draftAt)||0); add(n>=2?90:72,n>=2?`Brouillon créé il y a ${n} j : envoyé ? Marque-le contacté`:"Brouillon prêt dans Mail : envoie-le, puis « Marquer contacté »"); }
+  if(l.draftState==="pending") add(40,"Brouillon en file : demande à Claude « crée les brouillons en attente »",true);
+  const dl=daysTo(l.deadline);
+  if(dl!==null&&dl>=0&&dl<=14&&!ADV.includes(st)) add(100-dl,`Candidature avant le ${fmtD(l.deadline)} (J-${dl})`);
+  if(l.cat==="support"){ const ev=daysTo(l.eventDate); if(ev!==null&&ev>=0&&ev<=45&&!ADV.includes(st)&&!hasDraft(l)) add(93-ev,`Concert dans ${ev} j : demande la 1re partie maintenant`); }
+  if(st==="nouveau"&&isNew(l)) add(50+(l.fit||1)*4,"Nouvelle piste de la veille : à trier",true);
+  if(ch(l).sc>=80&&st==="à contacter"&&!hasDraft(l)&&(emailsOf(l.email).length||(l.contactForm&&l.contactForm.url))) add(60,`Chances fortes (${ch(l).sc}/100) et contact direct : écris-leur`,true);
+  return r.length?{sc,why:r}:null;
+}
+
+function keyDate(l){ // the date that matters most for action
+  const dl=daysTo(l.deadline); if(dl!==null&&dl>=0) return {d:l.deadline,kind:"Candidater avant",n:dl};
+  const ev=daysTo(l.eventDate); if(ev!==null&&ev>=0) return {d:l.eventDate,kind:"Concert",n:ev};
+  if(dl!==null) return {d:l.deadline,kind:"Clos",n:dl};
+  return null;
+}
+
+function counts(){
+  const act=leads.filter(live);
+  $("#k-todo").textContent=leads.filter(todoOf).length;
+  $("#k-active").textContent=act.length;
+  $("#k-new").textContent=act.filter(isNew).length;
+  $("#k-draft").textContent=leads.filter(l=>!inCrm(l)&&!l.dismissed&&hasDraft(l)).length;
+  $("#k-crm").textContent=leads.filter(inCrm).length;
+  const q=leads.filter(needsCrm), b=$("#crmq");
+  if(q.length||crmAllMsg){ b.hidden=false; b.innerHTML=crmAllMsg?esc(crmAllMsg):`<b>${q.length}</b> piste${q.length>1?"s":""} déjà contactée${q.length>1?"s":""} mais absente${q.length>1?"s":""} du CRM (${esc(q.slice(0,4).map(l=>l.name).join(", "))}${q.length>4?"…":""}). <button class="btn sm pri" type="button" data-crmall="1" ${crmAllRunning?"disabled":""}>Tout envoyer au CRM</button>`; }
+  else b.hidden=true;
+  const tg=$("#tri-go"); if(tg){ const n=triQueue().length; tg.textContent=n?`Trier les nouvelles pistes (${n})`:"Rien à trier"; tg.disabled=!n; }
+  const ps=$("#pick-sent"); if(ps){ const n=leads.filter(l=>!inCrm(l)&&!l.dismissed&&l.draftState==="created"&&!ADV.includes(l.status)).length; ps.hidden=!(tab==="drafts"&&n); ps.textContent=`Sélectionner les ${n} brouillons créés`; }
+}
+let crmAllRunning=false, crmAllMsg="";
+async function crmAll(){
+  const q=leads.filter(needsCrm); if(!q.length||crmAllRunning) return;
+  crmAllRunning=true; let ok=0; const errs=[];
+  for(let i=0;i<q.length;i++){ const l=q[i]; crmAllMsg=`Envoi au CRM ${i+1}/${q.length} · ${l.name}`; counts();
+    const ch=l.contactChannel; const dFR=l.contactedAt?new Date(l.contactedAt).toLocaleDateString("fr-FR"):null;
+    const er=await crmApply(l,STATUS_TO_STAGE[l.status],ch&&dFR?`Contacté par ${ch} le ${dFR} (radar)`:`Radar : statut ${l.status}`,l.status);
+    if(er) errs.push(l.name+" : "+er); else ok++; }
+  crmAllRunning=false; crmAllMsg=errs.length?`${ok}/${q.length} envoyées au CRM · erreurs : ${errs.slice(0,2).join(" | ")}`:"";
+  counts(); toast(`${ok} piste${ok>1?"s":""} passée${ok>1?"s":""} au CRM`);
+}
+
+function renderRun(){
+  const r=$("#runinfo");
+  if(!meta.date){ r.innerHTML="Aucune veille encore enregistrée."; return; }
+  const age=-(daysTo(meta.date)||0);
+  r.innerHTML=`Dernière veille : <b>${esc(fmtD(meta.date))}</b>${meta.added!=null?` · <b>${esc(meta.added)}</b> ajout(s)`:""}${age>=2?` <span style="color:var(--bad)">· ⚠ aucune veille depuis ${age} j</span>`:""}<br>${esc(meta.summary||"")}`;
+  $("#log").innerHTML=runs.length?runs.map(x=>`<div><b>${esc(x.date)}</b> · +${esc(x.added??0)} · ${esc(x.summary||"")}</div>`).join(""):"Aucune veille enregistrée.";
+}
+
+function renderStrip(){
+  const items=leads.filter(l=>live(l)&&!ADV.includes(l.status)&&ch(l).sc>=40).map(l=>({l,k:keyDate(l)})).filter(x=>x.k&&x.k.n>=0&&x.k.n<=60).sort((a,b)=>a.k.n-b.k.n);
+  $("#strip").innerHTML=items.length?items.map(({l,k})=>`<button class="chipd ${k.n<=14?"urg":""}" data-jump="${esc(l.id)}" type="button"><div class="c">${esc(CATL[l.cat]||l.cat)} · ${esc(k.kind)}</div><div class="d">${esc(fmtD(k.d))} · J-${k.n}</div><div class="t">${esc(l.name)}</div></button>`).join(""):`<div class="meta">Rien dans les 60 prochains jours.</div>`;
+}
+
+const TABS=[{id:"todo",label:"⚡ À faire"},{id:"all",label:"Tout"},...CATS,{id:"drafts",label:"✉ Brouillons"},{id:"crm",label:"→ Dans le CRM"},{id:"trash",label:"Archives"}];
+function baseSet(t){
+  if(t==="todo") return leads.filter(todoOf);
+  if(t==="crm") return leads.filter(inCrm);
+  if(t==="trash") return leads.filter(archived);
+  if(t==="drafts") return leads.filter(l=>!inCrm(l)&&!l.dismissed&&hasDraft(l));
+  if(t==="all") return leads.filter(live);
+  return leads.filter(l=>live(l)&&l.cat===t);
+}
+function renderTabs(){
+  if(!TABS.some(t=>t.id===tab)) tab="todo";
+  $("#tabs").innerHTML=TABS.map(t=>{
+    const set=baseSet(t.id);
+    const nw=(["trash","drafts","crm","todo"].includes(t.id))?0:set.filter(isNew).length;
+    return `<button role="tab" type="button" data-tab="${t.id}" aria-selected="${tab===t.id}">${esc(t.label)}<span class="ct">${set.length}</span>${nw?`<span class="nw">+${nw}</span>`:""}</button>`;
+  }).join("");
+}
+function renderCities(){
+  const sel=$("#f-city"), cur=sel.value;
+  const cs=[...IDX.city.entries()].sort((a,b)=>b[1].items.length-a[1].items.length||a[1].label.localeCompare(b[1].label));
+  sel.innerHTML=`<option value="">Toutes villes</option>`+cs.map(([k,v])=>`<option value="${esc(k)}" ${k===cur?"selected":""}>${esc(v.label)} (${v.items.length})</option>`).join("");
+}
+
+
+/* ---------- Chances réelles pour KRUZBERG (réalisme × style × contact × proximité) ---------- */
+const ASSESS={"be-001":[3,2,"Cave associative underground, ligne noise/expé pointue ; groupe étranger inconnu, jauge estimée petite"],"be-002":[3,2,"Club rock 299 pl., écoute les demandes, mais groupe étranger sans public local"],"be-003":[3,2,"Salle alternative de L'Usine, rock/punk ; viser une soirée partagée, jauge estimée moyenne"],"be-004":[2,2,"Asso historique qui programme surtout des groupes en tournée ; peu de place pour un inconnu étranger"],"be-005":[2,2,"Club majeur de Suisse romande ; petite salle émergents mais concurrence forte (estimé)"],"be-006":[2,3,"Club culte à la ligne post-punk/noise très pointue et demandée ; pas avant un vrai buzz"],"be-007":[3,2,"Club live de Bienne, rock/indé varié ; plateau partagé possible (estimé)"],"be-008":[2,2,"Club 300+ pl. qui programme surtout des groupes internationaux en tournée"],"be-009":[4,3,"Salle bénévole DIY punk/noise, très ouverte aux groupes étrangers DIY"],"be-010":[3,3,"Lieu alternatif post-punk/noise ouvert à l'émergent ; Anvers loin, public à construire"],"be-011":[3,2,"Petites salles bar/club pour émergents, mais priorité probable aux locaux (estimé)"],"be-012":[2,2,"Salles découvertes du Botanique, très sélectives ; pas avant une traction belge"],"be-013":[3,2,"Bar-club avec concerts en semaine ; plausible en date de tournée (estimé)"],"be-014":[2,2,"Lieu indé à la ligne avant-rock/expé très pointue, peu accessible à un inconnu"],"be-015":[3,2,"Orga rock/indé de Courtrai qui programme des émergents ; plateau partagé possible"],"be-016":[2,2,"Cercle ARCI mythique très demandé, surtout groupes internationaux établis"],"be-017":[3,2,"Club rock/metal/dark habitué aux groupes étrangers ; soirée partagée envisageable"],"be-018":[4,2,"Petit spazio rock/noise qui programme des groupes étrangers inconnus"],"be-019":[4,2,"Bar-concert à 3h30 de Lyon, bonne première étape italienne"],"be-020":[3,2,"Club indé des Murazzi, émergents internationaux ; via plateau partagé"],"be-021":[2,3,"Club historique sur les tournées post-punk européennes ; en direct c'est prématuré"],"be-022":[3,2,"Lieu spécialisé émergents, mais Berlin très saturé de demandes (estimé)"],"be-023":[3,3,"Club 180 pl. indie/post-punk qui mêle locaux et internationaux ; distance à amortir"],"be-024":[4,2,"Bar punk/garage, booking simple par mail"],"be-025":[2,2,"Centre autonome culte, grosse jauge estimée ; accueille surtout des groupes établis"],"be-026":[2,2,"Lieu indé reconnu de Leipzig, programmation estimée orientée groupes en tournée"],"be-027":[4,3,"Squat DIY 200 pl. punk/post-punk, groupes étrangers bienvenus"],"be-028":[3,2,"Club indé très ouvert aux émergents (Left of the Dial) ; concurrence forte"],"be-029":[3,3,"Lieu underground noise/post-punk ; ligne arty, accès via soirée partagée"],"be-030":[3,2,"Petit club garage/punk lié à des studios ; plausible en date de tournée"],"be-031":[3,2,"Salle très active via promoteurs indés punk/garage ; passer par un promoteur"],"be-032":[3,2,"Petit club indé, étape facile Lyon-Belgique ; plateau partagé possible"],"be-033":[3,2,"Petite salle Ratelach d'un centre alternatif, rock/indé (estimé)"],"be-034":[3,3,"Pub post-punk culte, 7 dates/semaine ; accessible mais Londres coûteux et saturé"],"be-035":[3,2,"Pub-concert 200 pl. punk/indé ; faisable en soirée partagée, logistique UK lourde"],"be-036":[2,3,"Lieu iconique de Dublin, scène locale très dense ; peu de place pour un inconnu"],"be-037":[2,3,"Club post-punk émergent de Dublin, priorité estimée aux groupes irlandais"],"be-20260926-01":[3,3,"Lieu alternatif cold-wave/expé, belle ligne ; viser un plateau ou le Winter Festival"],"be-20260927-01":[4,3,"Cave autogérée qui affiche elle-même des dates post-punk"],"be-20260927-02":[4,2,"Club associatif punk/garage très actif, accueille des groupes étrangers"],"be-20260927-03":[4,3,"Lieu DIY à prix doux, noise/punk/indé"],"be-20260927-04":[3,3,"Club aux soirées Dark Entries ciblées ; via une série thématique"],"be-20260927-05":[4,2,"Circolo underground, musique originale, quasi une date par soir"],"bf-001":[4,2,"Cave rock/punk/garage, concerts gratuits du vendredi avec émergents : cible n°1"],"bf-002":[4,2,"Bar culturel indé qui programme la scène locale émergente"],"bf-004":[4,3,"Péniche underground qui programme post-punk et noise ; jauge estimée petite"],"bf-005":[3,3,"Lieu DIY punk/noise de référence ; il faut un membre du collectif pour porter la date"],"bf-006":[4,1,"Bar associatif ouvert au local, bon pour roder le set ; ligne peu rock"],"bf-007":[4,2,"Brasserie-scène qui programme des locaux ; visibilité grand public, peu ciblée"],"bf-009":[3,2,"SMAC >50 % locaux ; petite salle 100 pl. en plateau local accessible"],"bf-010":[4,2,"Plateaux à 3 groupes avec locaux en ouverture, ligne rock/metal"],"bf-011":[3,2,"Salle MJC découverte avec résidences ; plateau local ou résidence"],"bf-012":[3,3,"SMAC post-punk/indé qui accompagne les émergents via open calls"],"bf-013":[4,2,"Bar-concert rock/metal avec des dates presque chaque week-end"],"bf-015":[4,2,"Petite salle, 2 concerts/mois, scène rock indé locale"],"bf-016":[3,2,"Salle asso 280 pl. punk/hardcore, ouverte au régional ; plateau partagé"],"bf-019":[3,2,"Club d'une SMAC avec pôle accompagnement ; via plateau régional"],"bf-020":[3,2,"Petite Coopé pour plateaux émergents ; SMAC sélective"],"bf-021":[4,2,"Salle asso 138 pl. qui met en avant la scène locale et régionale"],"bf-022":[4,1,"~200 groupes locaux par an, accessible, mais esthétique world/dub/jazz"],"bf-023":[4,2,"3 concerts gratuits par soir, porte d'entrée parisienne des émergents"],"bf-025":[4,2,"Bar-concert indé quasi quotidien, plateaux émergents"],"bf-027":[2,2,"Barge parisienne reconnue ; première partie seulement avec de la traction"],"bf-028":[3,2,"Friche associative, musiques alternatives/club ; ligne rock incertaine"],"bf-029":[2,2,"Salle indé parisienne demandée, festivals ; pas en direct pour un inconnu"],"bf-030":[3,2,"Club souvent loué par des orgas rock ; passer par un organisateur"],"bf-031":[3,2,"Lieu culte, dates très régulières ; loin de Lyon, public à construire"],"bf-034":[4,2,"Bar à bières rock du jeudi au dimanche, accessible"],"bf-035":[4,2,"Bar rock avec concerts, accessible pour une date de tournée"],"bf-036":[4,2,"Bar + salle orientée rock/metal, accessible"],"bf-037":[3,2,"SMAC avec tremplins et accompagnement ; le club via tremplin"],"bf-038":[3,2,"Club d'une SMAC, étape Lyon-Paris ; via plateau partagé"],"bf-039":[3,2,"SMAC avec accompagnement et festival Détonation ; via plateau ou appel"],"bf-040":[2,2,"SMAC lilloise, première partie seulement une fois le groupe identifié"],"bf-20260925-01":[4,3,"Salle asso 175 pl. qui monte des soirées sombres/cold"],"bf-20260925-02":[3,2,"SMAC qui fait des plateaux rock/punk avec premières parties régionales"],"bf-20260925-03":[3,2,"SMAC à 45 min de Lyon, soirées rock/punk en club ; plateau local"],"bf-20260925-04":[3,2,"SMAC avec petite salle Le Guingois et ligne rock/punk"],"bf-20260925-05":[4,2,"Petit lieu qui accueille des groupes rock émergents de passage"],"bf-20260925-06":[4,3,"Collectif DIY qui monte des plateaux punk/post-punk"],"bf-20260925-07":[3,3,"Club SMAC 180 pl. qui programme du post-punk"],"bf-20260925-08":[3,2,"Salle 300 pl. indie/noise ouverte à l'émergent, à 1h30 de Lyon"],"bf-20260925-09":[3,3,"Salle 400 pl. avec vraie ligne noise rock, à 1h de Lyon ; plateau partagé"],"bf-20260925-10":[3,2,"Club qui reçoit rock indé/garage ; plateau partagé"],"bf-20260925-11":[2,3,"SMAC post-punk/cold mais têtes d'affiche établies ; 1re partie difficile"],"bf-20260925-12":[3,2,"SMAC ouverte au rock indé exigeant ; plateau partagé"],"bf-20260925-13":[2,2,"Salle surtout tournée vers des têtes d'affiche établies"],"bf-20260925-14":[3,3,"Salle qui programme coldwave/krautwave ; plateau partagé"],"bf-20260925-15":[2,2,"Grosse SMAC tournée têtes d'affiche, loin de Lyon ; petits espaces à viser plus tard"],"bf-20260925-16":[3,2,"Club SMAC 150 pl. avec plateaux émergents rock/métal, loin de Lyon, ligne peu post-punk"],"bf-20260925-17":[3,3,"Salle 330 pl., Hiéro y programme cold wave (Hermetic Delight) : plateau partagé crédible"],"bf-20260925-18":[4,2,"Lieu DIY punk/hardcore historique, plateaux locaux multiples, réseau DIY à activer"],"bf-20260925-19":[3,2,"Salle asso 299 pl. rock/punk dans la Métropole, plateau local ou 1re partie jouable"],"bf-20260925-20":[3,2,"Salle MJC rock/indé avec plateaux mixtes, Métropole de Lyon ; locaux programmés (estimé)"],"bf-20260925-21":[4,2,"Local asso prix libre Guillotière, concerts punk via réseau lyonnais DIY (Ratcharge)"],"bf-20260925-22":[3,2,"Péniche 200 pl. à Lyon, surtout électro ; dates rock en tournée, 1re partie possible"],"bf-20260925-23":[3,2,"Cave 200 pl. qui cale des 1res parties locales/nationales, mais loin de Lyon"],"bf-20260925-24":[2,2,"SMAC rock indé réputée, 1res parties très demandées, loin de Lyon (estimé)"],"bf-20260925-25":[3,3,"Club SMAC 200 pl. qui accueille la scène sombre émergente (post-punk électronique)"],"bf-20260925-26":[3,3,"Lieu rock avec plateaux post-punk et soirées scène rock ; 1re partie possible, loin"],"bf-20260925-27":[2,2,"SMAC rock 1re partie de groupes en tournée, décidée par la salle/tournée, loin de Lyon"],"bf-20260925-28":[3,2,"Petite salle 200 pl. avec série rock « Secousses » à 3 groupes, loin de Lyon"],"bf-20260925-29":[2,1,"SMAC généraliste, rock indé peu présent, 1res parties plutôt régionales (estimé)"],"bf-20260925-30":[2,3,"SMAC très rock (Frustration, Gwendoline) mais 1res parties sur dates établies, loin"],"bf-20260925-31":[3,2,"SMAC Essonne avec procédure ouverte aux groupes, programmation éclectique"],"bf-20260925-32":[4,3,"Lieu alternatif parisien, nombreuses soirées post-punk DIY à plateaux partagés"],"bf-20260925-33":[2,2,"Salle 650 pl. surtout en coprod/location, répond lentement : peu accessible seul"],"bf-20260925-34":[4,3,"Pub rock de référence d'Angers, programme post-punk et cold wave, lieu accessible"],"bf-20260925-35":[2,3,"SMAC Angers rock indé/noise, 1re partie possible mais concurrence forte (estimé)"],"bf-20260925-36":[3,3,"Scène de Blois qui programme darkwave/post-punk ; 1re partie jouable (estimé)"],"bf-20260925-37":[2,2,"SMAC rock grand public, un seul programmeur très sollicité (salle + gros festival)"],"bf-20260925-38":[2,1,"SMAC surtout électro/hip-hop, 1res parties rock rares et loin de Lyon"],"bf-20260925-39":[3,2,"Soirées gratuites au bar MEZZA adaptées aux émergents ; SMAC 550 pl. loin de Lyon"],"bf-20260925-40":[2,2,"SMAC rock/garage, 1res parties sur têtes d'affiche (Doherty, Razorlight) : difficile"],"bf-20260925-41":[3,2,"Club 198 pl. dédié aux émergents dans une SMAC récente, rock à l'affiche, loin"],"bf-20260925-42":[3,3,"SMAC multi-lieux avec petit Scarron, programme punk/post-punk émergent"],"bf-20260925-43":[3,3,"Club SMAC 120 pl. qui programme indé/cold (Revnoir), loin de Lyon"],"bf-20260925-44":[3,3,"SMAC tradition noise/rock, soirées TACKT à plateaux ; aides réservées à la région"],"bf-20260925-45":[4,3,"Lieu DIY de référence à Marseille, programme post-punk et cold-wave"],"bf-20260925-46":[3,2,"Lieu asso rock lourd/alternatif qui lance des appels à 1res parties, près d'Avignon"],"bf-20260925-47":[3,3,"Club 262 pl. tourné émergence (MAGMA), programme cold-wave ; aides plutôt régionales"],"bf-20260925-48":[4,2,"Café-concert 180 pl., « scène-école » pour émergents, public post-punk sur la grande salle"],"bf-20260925-49":[3,2,"Salle 350 pl. mêlant découvertes et renommées, saison rock ; plateau partagé jouable"],"bf-20260925-50":[2,3,"SMAC rock lourd/post-punk, 1re partie crédible mais loin et concurrence (estimé)"],"bf-20260925-51":[3,3,"Plateaux à 3 groupes cold-wave (Gwendoline) : esthétique pile, mais loin de Lyon"],"bf-20260925-52":[2,3,"SMAC rock indé avec son festival post-punk SWIM ; 1re partie concurrentielle"],"bf-20260925-53":[2,2,"Grande salle 700 pl. : 1res parties rock régulières mais jauge importante"],"bf-20260925-54":[4,2,"Salle 150 pl. dédiée aux émergents rock/punk/garage, ~80 concerts/an"],"bf-20260925-55":[3,2,"Café-concert 150 pl. pour émergents dans une SMAC, rock à l'affiche, loin"],"bf-20260925-56":[3,1,"SMAC éclectique avec rendez-vous émergence « Primeurs », peu post-punk"],"bf-20260925-57":[2,2,"SMAC rock avec 1res parties sur dates établies, petite scène au Pari ; loin"],"bf-20260925-58":[3,2,"Club historique punk/noise avec série DIY ; plateau partagé jouable (estimé)"],"bf-20260925-59":[3,1,"Tiers-lieu ouvert aux propositions spontanées, part rock/post-punk non confirmée"],"bf-20260925-60":[4,2,"Lieu asso rock/noise avec soirées « Local Access » ; accessible en plateau (estimé)"],"bf-20260925-61":[3,2,"Club SMAC 200 pl. qui place des 1res parties rock, sur l'axe Lyon-Paris"],"bf-20260925-62":[3,2,"Salle asso rock/indé, résidences fréquentes ; plateaux partagés possibles (estimé)"],"bf-20260925-63":[4,1,"Salle à 1 h de Lyon montant des soirées groupes locaux, programmation peu post-punk"],"bf-20260925-64":[3,2,"SMAC qui met des 1res parties sur toutes ses dates, créneaux rock possibles"],"bf-20260925-65":[3,2,"Salles 400/150 rock dur/metal avec plateaux à 3 groupes, un peu trop metal"],"bf-20260925-66":[4,2,"Lieu asso breton avec bar et « Live au bar », indé éclectique : étape de tournée"],"bf-20260925-67":[3,1,"SMAC municipale avec café-concert, rock minoritaire face world/reggae"],"bf-20260925-68":[3,2,"Salle Yvelines avec 1res parties rock, plutôt sur têtes d'affiche (estimé)"],"bf-20260925-69":[3,2,"Club SMAC 148 pl. avec plateaux punk/rock à 4 groupes, loin de Lyon"],"bf-20260925-70":[2,2,"Salle 500-1000 pl. avec soirées punk locales ; locaux = régionaux (estimé)"],"bf-20260925-71":[3,2,"Salle asso près de Clermont, soirées « Afterwork Rock » en AURA"],"bf-20260925-72":[3,1,"Lieu éclectique à 2 salles, lien post-punk limité"],"bf-20260925-73":[3,3,"Salle MJC rock indé exigeant, apéros-concerts accessibles, festival Kool Thing"],"bf-20260925-74":[3,2,"Soirées Club V2 multi-groupes à la SMAC de Montpellier, ligne rock lourd"],"bf-20260925-75":[3,2,"SMAC ouvrant une Salle Émergence, rock au programme, loin de Lyon"],"bf-20260925-76":[3,2,"Apéros gratuits « Magic Hour » et warmup prix libre accessibles aux émergents"],"bf-20260925-77":[3,3,"Programmation cold-wave/post-punk pile dans le style, dates club gratuites"],"bf-20260925-78":[2,2,"Grosse SMAC bordelaise à programmation internationale, 1re partie difficile"],"bf-20260925-79":[2,2,"Festival 91 % local bordelais : fermé aux Lyonnais, 1re partie en saison dure"],"bf-20260925-80":[3,3,"Lieu de diffusion alpin avec saison post-punk (ASHINOA), plateau partagé jouable"],"bf-20260927-02":[4,3,"Tiers-lieu asso strasbourgeois pile cold wave/garage, plateaux à 3 groupes"],"fe-001":[3,2,"Tremplin tous styles guitare, sélectif : 3 finalistes jouent devant 5 000 pers."],"fe-002":[3,2,"Tremplin réservé AURA avec compos : scène Korner rémunérée, sélectif"],"fe-003":[3,2,"Tremplin Rock régional, finale à Lyon, lauréats ouvrent la soirée rock du festival"],"fe-004":[2,2,"Festival municipal gratuit établi, place pour la scène régionale mais sélectif"],"fe-005":[2,2,"Festival pop-rock européen établi ; propositions via le média, sélectif"],"fe-006":[2,2,"Festival asso 11 000 pers., créneau d'ouverture régional possible mais disputé"],"fe-007":[2,1,"Gros festival généraliste, jouable seulement via scène locale"],"fe-008":[1,1,"Grosse affiche hip-hop/reggae/électro : hors cible et hors d'atteinte"],"fe-011":[3,2,"Festival lyonnais dédié aux émergents, multi-salles : candidature pertinente"],"fe-012":[1,3,"Festival indie de référence très sélectif, affiche internationale"],"fe-013":[1,3,"Festival psyché coproduit par Radical/Chabada, affiche de tourneurs"],"fe-014":[2,3,"Festival indie historique ; Collection Hiver plus petite mais encore sélective"],"fe-015":[1,2,"Grand festival national, programmation de tourneurs : hors d'atteinte"],"fe-016":[2,2,"Festival établi ouvert aux découvertes, mais repérage requis (estimé)"],"fe-017":[3,2,"Festival rock asso breton avec email de programmation publié, loin"],"fe-018":[3,1,"Festival rural asso éclectique qui accepte les candidatures"],"fe-019":[1,2,"Gros festival rock, dispositif découverte non publié"],"fe-020":[2,1,"Festival généraliste, ouverture rock possible mais grand public"],"fe-021":[2,1,"Festival moyen à programmation ouverte, peu ciblé rock"],"fe-022":[2,2,"Festival garage/punk de référence, affiche de groupes repérés (estimé)"],"fe-023":[1,3,"Festival parisien prescripteur noise/post-punk, programmation très sélective"]}; // évaluations Claude du 28/09/2026 : [réalisme 1-4, style 1-3, raison]
+const CORE=/post-?punk|cold[ -]?wave|dark ?wave|noise|goth|new[ -]?wave|shoegaze|kraut|no[ -]?wave|industri|minimal wave/i;
+const ADJ=/rock|ind[ié]e?\b|indie|punk|garage|alternati|psych|grunge|stoner|emo\b|hardcore|lo-?fi|underground/i;
+const OFF=/jazz|chanson|[ée]lectro|techno|hip-?hop|\brap\b|reggae|folk|classique|world music|m[ée]tal|vari[ée]t/i;
+const BIGMEDIA=/inrocks|inrockuptibles|rolling stone|t[ée]l[ée]rama|france inter|lib[ée]ration|radio nova|rock ?& ?folk|magic ?r?pc|nme\b|pitchfork|the quietus|stereogum|guardian|kexp|bbc|fip\b|le monde/i;
+const BIGV=/transbordeur|radiant|z[ée]nith|\barena\b|olympia|bataclan|la cigale|trianon|[ée]lys[ée]e montmartre|halle tony/i;
+function capMin(l){ const m=String(l.capacity??"").match(/\d{2,5}/g); return m?Math.min(...m.map(Number)):null; }
+function heurLevel(l,txt){
+  const c=capMin(l), t=txt.toLowerCase();
+  switch(l.cat){
+    case "tremplins": return /payant|national|international/.test(t)?2:3;
+    case "presse": return BIGMEDIA.test(txt)?2:/radio|webzine|blog|fanzine|associ|podcast|locale?/.test(t)?4:3;
+    case "pros": return /label/.test(t)?(/diy|associ|collectif|petit|ind[ée]pendant/.test(t)?3:2):/collectif|promot|asso/.test(t)?3:2;
+    case "festivals": return /d[ée]couverte|tremplin|[ée]mergen|gratuit|associ|petit|diy|local/.test(t)?3:2;
+    case "support": if(BIGV.test(txt)) return 1; return c==null?2:c<=300?3:c<=700?2:1;
+  }
+  if(c!=null) return c<=150?4:c<=300?(/bar|caf[ée]|cave|diy|squat|associ/.test(t)?4:3):c<=500?3:c<=900?2:1;
+  if(/bar|caf[ée]|cave|diy|squat|associ|tiers-lieu|pub\b|brasserie/.test(t)) return 4;
+  if(/smac|sc[èe]ne nationale|z[ée]nith|arena|palais/.test(t)) return 2;
+  return 3;
+}
+const LV_TXT={4:"à portée",3:"atteignable",2:"difficile",1:"hors d'atteinte"};
+const ST_TXT={3:"cœur post-punk / cold",2:"compatible rock indé / punk",1:"peu compatible"};
+function chance(l){
+  const a=ASSESS[l.id], txt=[l.type,l.why,l.support,l.name,l.org,l.venue].join(" ");
+  let lv=l.level||(a&&a[0]), st=l.style||(a&&a[1]), why=l.levelWhy||(a&&a[2])||"", src=lv?"évaluation Claude":"estimation automatique";
+  if(!lv){ lv=heurLevel(l,txt); const c=capMin(l); why=(c!=null?`Jauge ${c} pl.`:"Jauge inconnue")+" · "+(l.type||CATL[l.cat]||""); }
+  if(!st) st=CORE.test(txt)?3:OFF.test(txt)&&!ADJ.test(txt)?1:ADJ.test(txt)?2:Math.min(3,Math.max(1,l.fit||2));
+  if(l.decider==="tournée (fermé)"){ lv=1; why="Première partie déjà fixée par la tournée"; }
+  // Le réalisme domine : un lieu hors d'atteinte reste bas même avec un style parfait.
+  const base={4:70,3:52,2:30,1:8}[lv], mult={3:1,2:0.82,1:0.55}[st], core=Math.round(base*mult);
+  const Cp=emailsOf(l.email).length?12:(l.contactForm&&okUrl(l.contactForm.url))?9:l.instagram?4:0;
+  const z=zone(l), Pp=["pros","presse","tremplins"].includes(l.cat)?(z==="Europe"?4:8):(z==="Lyon / AURA"?12:z==="France"?7:2);
+  const adj=Math.max(-30,Math.min(30,+l.chanceAdj||0));
+  const sc=Math.max(0,Math.min(100,core+Cp+Pp+adj));
+  const pct=(v,m)=>Math.round(v/m*100), Cm=12, Pm=["pros","presse","tremplins"].includes(l.cat)?8:12;
+  return {sc,lv,st,why,src,adj,parts:[["Réalisme ("+LV_TXT[lv]+")",pct(base,70),100],["Style ("+ST_TXT[st]+")",Math.round(mult*100),100],["Contact",pct(Cp,Cm),100],["Proximité ("+z+")",pct(Pp,Pm),100]]};
+}
+const TIER=sc=>sc>=75?["Fortes","hi"]:sc>=58?["Réelles","mid"]:sc>=40?["Faibles","lo"]:["Très faibles","vlo"];
+const CH=new Map(); function ch(l){ let c=CH.get(l.id); if(!c||c._v!==l){ c=chance(l); c._v=l; CH.set(l.id,c); } return c; }
+function prio(l){ const k=keyDate(l); return ch(l).sc+(k&&k.n>=0&&k.n<=30?8:0)+(isNew(l)?4:0); }
+
+const hasDraft=l=>!!(l.draftState||l.draftAt);
+function filtered(){
+  const q=$("#q").value.trim().toLowerCase(), z=$("#f-zone").value, fit=+$("#f-fit").value, st=$("#f-status").value, srt=$("#f-sort").value, cy=$("#f-city").value;
+  let s=baseSet(tab);
+  if(q){ const qn=norm(q); s=s.filter(l=>{ const h=[l.name,l.city,l.country,l.contact,l.email,l.org,l.venue,l.type,l.why,l.notes,l.support].join(" "); return h.toLowerCase().includes(q)||norm(h).includes(qn); }); }
+  if(cy) s=s.filter(l=>normCity(l.city)===cy);
+  if(z) s=s.filter(l=>zone(l)===z);
+  if(fit) s=s.filter(l=>ch(l).sc>=fit);
+  if(st) s=s.filter(l=>(l.status||"nouveau")===st);
+  if($("#f-new").checked) s=s.filter(isNew);
+  if($("#f-mail").checked) s=s.filter(l=>l.email);
+  if($("#f-fresh").checked) s=s.filter(l=>{ const a=emailsOf(l.email); return a.length&&!hasDraft(l)&&!inCrm(l)&&!ADV.includes(l.status)&&!addrUsers(a,l.id).length; });
+  const kd=l=>{const k=keyDate(l);return k&&k.n>=0?k.n:9999;};
+  const cmp={
+    smart:(a,b)=>prio(b)-prio(a)||(kd(a)-kd(b))||a.name.localeCompare(b.name),
+    chance:(a,b)=>ch(b).sc-ch(a).sc||a.name.localeCompare(b.name),
+    deadline:(a,b)=>kd(a)-kd(b)||((b.fit||1)-(a.fit||1)),
+    added:(a,b)=>(b.addedAt||"").localeCompare(a.addedAt||"")||((b.fit||1)-(a.fit||1)),
+    name:(a,b)=>a.name.localeCompare(b.name)
+  }[srt];
+  if(tab==="todo"&&srt==="smart") return s.map(l=>[l,todoOf(l).sc]).sort((a,b)=>b[1]-a[1]||((b[0].fit||1)-(a[0].fit||1))).map(x=>x[0]);
+  if(tab==="crm"&&srt==="smart") return s.sort((a,b)=>String(b.crmAt||"").localeCompare(String(a.crmAt||""))||a.name.localeCompare(b.name));
+  if(tab==="drafts") return s.sort((a,b)=>((a.draftState==="pending")-(b.draftState==="pending"))*-1||String(b.draftAt||"").localeCompare(String(a.draftAt||""))||a.name.localeCompare(b.name));
+  return s.sort(cmp);
+}
+
+const okUrl=u=>/^https:\/\/[^\s"'<>]+$/.test(u||"");
+function formBtn(l,cls){ const f=l.contactForm; return f&&okUrl(f.url)?`<a class="btn ${cls||"sm"} form" href="${esc(f.url)}" target="_blank" rel="noopener" title="${esc(f.url)}">↗ ${esc(f.label||"Formulaire")}</a>`:""; }
+function igBtn(l,cls){ return okUrl(l.instagram)&&/instagram\.com/.test(l.instagram)?`<a class="btn ${cls||"sm"} ghost" href="${esc(l.instagram)}" target="_blank" rel="noopener">↗ Instagram</a>`:""; }
+const crmLink=l=>l.crmUrl&&/^https:\/\/[a-z0-9.-]+\/pipeline\?deal=[0-9a-f-]{36}$/.test(l.crmUrl)?new URL(l.crmUrl).pathname+new URL(l.crmUrl).search:"";
+function rowHTML(l){
+  const k=keyDate(l), f=l.fit||1, st=l.status||"nouveau", C=inCrm(l), ex=expired(l);
+  const loc=[l.venue,l.city,l.country&&l.country!=="FR"?l.country:null].filter(Boolean).join(" · ");
+  const tags=[];
+  if(isNew(l)&&live(l)) tags.push(`<span class="tag new">nouveau</span>`);
+  if(["all","trash","drafts","todo","crm"].includes(tab)) tags.push(`<span class="tag">${esc(CATL[l.cat]||l.cat)}</span>`);
+  if(l.type) tags.push(`<span class="tag">${esc(l.type)}</span>`);
+  if(l.capacity) tags.push(`<span class="tag">${esc(l.capacity)} pl.</span>`);
+  if(k) tags.push(`<span class="tag ${k.n<0?"past":"dl"} ${k.n>=0&&k.n<=14?"urg":""}">${esc(k.kind)} ${esc(fmtD(k.d))}${k.n>=0?` · J-${k.n}`:""}</span>`);
+  if(C) tags.push(`<span class="tag crm">CRM · ${esc(STAGE_LABEL[l.crmStage]||l.crmStage||"pipeline")}</span>`);
+  else if(st!=="nouveau") tags.push(`<span class="tag st-${esc(st.replace(/ /g,"_"))}">${esc(st)}</span>`);
+  if(needsCrm(l)) tags.push(`<span class="tag dl urg">pas encore au CRM</span>`);
+  if(!C){
+    if(l.draftState==="pending") tags.push(`<span class="tag dl">brouillon en attente</span>`);
+    else if(l.draftState==="error") tags.push(`<span class="tag dl urg">brouillon en erreur</span>`);
+    else if(l.draftAt) tags.push(`<span class="tag draft">brouillon ${esc(fmtD(l.draftAt))}</span>`);
+    if(l.email) tags.push(`<span class="tag">✉</span>`); else if(l.contactForm&&okUrl(l.contactForm.url)) tags.push(`<span class="tag">formulaire</span>`);
+  }
+  if(ex&&!l.dismissed&&!C) tags.push(`<span class="tag past">périmée</span>`);
+  if(live(l)){
+    const d=dupsOf(l); if(d.length) tags.push(`<span class="tag warn link" data-jump="${esc(d[0].id)}" title="Même nom et même ville">doublon ? ${esc(d[0].name)}${inCrm(d[0])?" (CRM)":d[0].dismissed?" (écartée)":""}</span>`);
+    const u=addrUsers(emailsOf(l.email),l.id); if(u.length&&!hasDraft(l)) tags.push(`<span class="tag warn link" data-jump="${esc(u[0].id)}" title="${esc(u.map(x=>x.name).join(", "))}">adresse déjà sollicitée : ${esc(u[0].name)}${u.length>1?" +"+(u.length-1):""}</span>`);
+  }
+  const td=tab==="todo"?todoOf(l):null;
+  const isOpen=open.has(l.id);
+  const links=(l.links||[]).filter(x=>x&&/^https?:\/\//.test(x.url)).map(x=>`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.label||"Lien")} ↗</a>`).join("");
+  const kv=[
+    ["Organisation",l.org],["Salle",l.venue],["Date",l.eventDate&&!/^\d{4}-\d{2}-\d{2}$/.test(l.eventDate)?l.eventDate:(l.eventDate?fmtD(l.eventDate):null)],
+    ["Deadline",l.deadline?fmtD(l.deadline):null],["Contacté",l.contactedAt?fmtD(l.contactedAt)+(l.contactChannel?" · par "+l.contactChannel:""):null],["1re partie",l.support],["Contact",l.contact],
+  ].filter(x=>x[1]).map(x=>`<dt>${x[0]}</dt><dd>${esc(x[1])}</dd>`).join("");
+  const cu=crmLink(l);
+  const side=C?`${cu?`<a class="btn sm crm" href="${esc(cu)}" >Ouvrir dans le CRM →</a>`:""}<button class="btn sm ghost" type="button" data-crm="${esc(l.id)}" ${crmBusy.has(l.id)?"disabled":""} title="Renvoie les infos à jour (ne change pas l'étape)">${crmBusy.has(l.id)?"Envoi…":"↻ Resynchro"}</button>`
+    :l.dismissed||ex?"":`${!l.email?formBtn(l):""}<button class="btn sm" type="button" data-mopen="${esc(l.id)}">✉ ${l.email?"Email":"Message"}</button><button class="btn sm crm" type="button" data-crm="${esc(l.id)}" ${crmBusy.has(l.id)?"disabled":""} title="Envoie au pipeline du CRM : la piste quitte alors le radar">${crmBusy.has(l.id)?"Envoi…":"＋ Pipeline"}</button>`;
+  const nbr=live(l)&&l.city?(IDX.city.get(normCity(l.city))||{items:[]}).items.filter(x=>x.id!==l.id):[];
+  let work;
+  if(C) work=`<div class="meta">Cette piste est suivie dans le CRM (étape <b>${esc(STAGE_LABEL[l.crmStage]||l.crmStage||"?")}</b>, synchronisée le ${esc(fmtD(l.crmAt))}). Le radar ne la montre plus ailleurs et la veille ne la reproposera pas.</div>
+      ${cu?`<div><a class="btn crm" href="${esc(cu)}" >Ouvrir dans le CRM →</a></div>`:""}
+      <div><label for="nt-${esc(l.id)}">Notes radar</label><textarea id="nt-${esc(l.id)}" data-notes="${esc(l.id)}">${esc(l.notes||"")}</textarea></div>`;
+  else if(l.dismissed||ex) work=`<div class="meta">${l.dismissed?`Écartée${l.dismissReason?` : <b>${esc(l.dismissReason)}</b>`:""}. La veille ne la reproposera pas.`:"Périmée : la date du concert ou la deadline est passée."}</div>
+      ${l.dismissed?`<div><button class="btn" data-restore="${esc(l.id)}" type="button">Restaurer</button></div>`:""}`;
+  else work=`
+        <div><label for="st-${esc(l.id)}">Statut · « contacté » et au-delà envoient la piste au CRM</label>
+          <select id="st-${esc(l.id)}" data-status="${esc(l.id)}">${STATUSES.map(s=>`<option ${s===st?"selected":""}>${s}</option>`).join("")}</select></div>
+        ${l.draftAt&&!ADV.includes(st)?`<div class="meta">Brouillon créé le ${esc(fmtD(l.draftAt))}${l.draftTo?` pour ${esc(l.draftTo)}`:""}. Une fois envoyé depuis Mail : <button class="btn sm pri" type="button" data-sent="${esc(l.id)}">Marquer contacté → CRM</button></div>`:""}
+        ${!l.email&&!l.draftAt?`<div class="meta">Contacté via formulaire ou DM ? <button class="btn sm" type="button" data-sent="${esc(l.id)}" data-ch="formulaire">Contacté (formulaire) → CRM</button> <button class="btn sm ghost" type="button" data-sent="${esc(l.id)}" data-ch="DM / téléphone">Contacté (DM / tél.) → CRM</button></div>`:""}
+        <div><label for="nt-${esc(l.id)}">Notes</label>
+          <textarea id="nt-${esc(l.id)}" data-notes="${esc(l.id)}" placeholder="Réponse, info utile, idée…">${esc(l.notes||"")}</textarea></div>
+        <div><label>Pas intéressé ? Écarter (la raison affine la veille)</label>
+          <div class="dismiss">${REASONS.map(r=>`<button class="btn sm ghost" data-dismiss="${esc(l.id)}" data-reason="${esc(r)}" type="button">${esc(r)}</button>`).join("")}
+          <input id="dr-${esc(l.id)}" placeholder="Autre raison…"><button class="btn sm danger" data-dismiss="${esc(l.id)}" type="button">Écarter</button></div></div>`;
+  const cc=ch(l); return `<article class="row c-${TIER(cc.sc)[1]} ${isNew(l)&&live(l)?"isnew":""} ${picked.has(l.id)?"picked":""}" id="r-${esc(l.id)}">
+    <div class="rh" data-toggle="${esc(l.id)}" role="button" tabindex="0" aria-expanded="${isOpen}">
+      <div><div class="rt"><input type="checkbox" class="sel" data-pick="${esc(l.id)}" aria-label="Sélectionner ${esc(l.name)}" ${picked.has(l.id)?"checked":""}><span class="nm">${esc(l.name)}</span><span class="meta">${esc(loc)}</span></div><div class="tags">${tags.join("")}</div>
+        ${td?`<div class="todo">${td.why.map(w=>`<div class="${w.soft?"soft":""}">${esc(w.t)}</div>`).join("")}</div>`:""}</div>
+      <div class="side"><span class="chance ${TIER(ch(l).sc)[1]}" title="Chances réelles pour KRUZBERG : ${ch(l).sc}/100 · ${esc(TIER(ch(l).sc)[0])}&#10;${esc(ch(l).parts.map(p=>p[0]+" "+p[1]+"/"+p[2]).join(" · "))}${ch(l).adj?" · ajustement "+(ch(l).adj>0?"+":"")+ch(l).adj:""}"><b>${ch(l).sc} %</b></span>${side}</div>
+    </div>
+    ${isOpen?`<div class="rb">
+      <div>
+        <div class="chx"><div class="chh"><b>Chances : ${cc.sc}/100 · ${esc(TIER(cc.sc)[0])}</b><span>${esc(cc.src)}</span></div>
+          ${cc.why?`<div class="chw">${esc(cc.why)}</div>`:""}
+          <div class="bars">${cc.parts.map(p=>`<div><span>${esc(p[0])}</span><i style="--w:${Math.round(p[1]/p[2]*100)}%"></i><em>${p[1]}/100</em></div>`).join("")}</div>
+          <div class="chf">Note finale = réalisme × style (jusqu'à 70 pts) + contact (12) + proximité (12)${cc.adj?` + ton ajustement (${cc.adj>0?"+":""}${cc.adj})`:""}</div>
+          ${C||!live(l)?"":`<div class="chadj"><span>Ton avis${cc.adj?` (ajusté ${cc.adj>0?"+":""}${cc.adj})`:""} :</span><button class="btn sm ghost" type="button" data-adj="${esc(l.id)}" data-d="10">Plus réaliste ＋</button><button class="btn sm ghost" type="button" data-adj="${esc(l.id)}" data-d="-10">Moins réaliste －</button>${cc.adj?`<button class="btn sm ghost" type="button" data-adj="${esc(l.id)}" data-d="0">Réinitialiser</button>`:""}</div>`}
+        </div>
+        ${l.why?`<div class="why" style="margin-top:10px">${esc(l.why)}</div>`:""}
+        ${l.action?`<div class="act"><b>Prochaine action</b>${esc(l.action)}</div>`:""}
+        <dl class="kv" style="margin-top:10px">${kv}
+          ${l.decider?`<dt>Qui décide</dt><dd><b>${esc(l.decider)}</b>${l.deciderWho?` · ${esc(l.deciderWho)}`:""}${l.deciderWhy?`<div style="color:var(--ink3);font-size:12px">${esc(l.deciderWhy)}</div>`:""}</dd>`:""}
+          ${l.email?`<dt>Email prog</dt><dd><span class="mail">${esc(l.email)}</span> <button class="btn sm ghost" data-copy="${esc(l.email)}" type="button">Copier</button>${l.emailSource&&/^https?:/.test(l.emailSource)?` <a href="${esc(l.emailSource)}" target="_blank" rel="noopener" style="font-size:12px">source ↗</a>`:""}</dd>`:`<dt>Email prog</dt><dd style="color:var(--warn)">Aucune adresse programmation publiée</dd>`}
+          ${l.contactRoute?`<dt>Voie d'accès</dt><dd>${esc(l.contactRoute)}</dd>`:""}
+          ${(l.contactForm&&okUrl(l.contactForm.url))||l.instagram?`<dt>Accès direct</dt><dd><div class="reach" style="margin-top:0">${formBtn(l,"")}${igBtn(l,"")}</div></dd>`:""}
+          ${l.emailGeneric?`<dt>Générique</dt><dd style="color:var(--ink3);font-size:12px"><span class="mail">${esc(l.emailGeneric)}</span> · boîte générale, pas la prog (dernier recours)</dd>`:""}
+          ${l.verified?`<dt>Vérifié</dt><dd style="color:var(--ink3);font-size:12px">${esc(l.verified)}</dd>`:""}
+          <dt>Ajouté</dt><dd style="color:var(--ink3);font-size:12px">${esc(fmtD(l.addedAt))}</dd>
+        </dl>
+        ${links?`<div class="links" style="margin-top:10px">${links}</div>`:""}
+        ${nbr.length?`<div class="nb"><span>Aussi à ${esc(String(l.city).split(/[(,]/)[0].trim())} (pour grouper une date / une tournée) :</span>${nbr.slice(0,10).map(x=>`<button type="button" data-jump="${esc(x.id)}">${esc(x.name)}</button>`).join("")}${nbr.length>10?`<span>+${nbr.length-10}</span>`:""}</div>`:""}
+      </div>
+      <div class="work">${work}</div>
+      ${C?"":mailHTML(l)}
+    </div>`:""}
+  </article>`;
+}
+
+let pendingList=false;
+function renderList(force){
+  const a=document.activeElement;
+  if(force!==true&&a&&$("#list").contains(a)&&/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)){ pendingList=true; return; }
+  pendingList=false;
+  const s=filtered();
+  $("#list").innerHTML=s.length?s.map(rowHTML).join(""):`<div class="empty">${leads.length?"Aucune piste ne correspond aux filtres.":"Aucune piste pour l'instant."}</div>`;
+}
+function renderOutbox(){ const b=$("#obx"); if(!b) return; b.hidden=!outbox.length; b.innerHTML=outbox.length?`<b>${outbox.length}</b> brouillon${outbox.length>1?"s":""} en file d'attente : ${outbox.map(o=>esc(o.leadName||o.leadId)).join(", ")}. Pour les créer dans Mail, écris à Claude : « crée les brouillons en attente ».`:""; }
+function renderAll(){ buildIndex(); renderCities(); setTimeout(renderBulk,0); counts(); renderRun(); renderStrip(); renderTabs(); renderList(); renderTri(); }
+
+function renderScope(){
+  if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest(".sc")) return;
+  $("#s-focus").value=scope.focus||""; $("#s-exclude").value=scope.exclude||""; $("#s-next").value=scope.next||"";
+  const c=scope.cats||{};
+  $("#s-cats").innerHTML=CATS.map(x=>{const v=c[x.id]||{on:true,max:5};return `<div><input type="checkbox" id="sc-on-${x.id}" ${v.on!==false?"checked":""}><label for="sc-on-${x.id}" style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink)">${esc(x.label)}</label><input type="number" min="0" max="20" id="sc-max-${x.id}" value="${esc(v.max??5)}" aria-label="Max ${esc(x.label)}"></div>`;}).join("");
+  $("#scope-state").textContent=scope.updatedAt?`modifiés le ${fmtD(scope.updatedAt)}`:"lus chaque matin par la recherche automatique";
+}
+
+async function patch(id,data,msg,silent){
+  if(!db){ if(!silent) toast("Base indisponible dans cette vue"); return false; }
+  try{ await db.doc("leads/"+id).update(data); if(msg&&!silent) toast(msg); return true; }
+  catch(e){ if(!silent) toast(e&&e.code==="permission_denied"?"Lecture seule : vous ne pouvez pas modifier":"Échec de l'enregistrement, réessayez"); return false; }
+}
+
+/* ---------- Sélection & actions groupées ---------- */
+const picked=new Set(); let bulkRunning=false, bulkMsg="";
+const BULK_ACTIONS=[
+  ["contacted_mail","Contacté par mail aujourd'hui → CRM"],
+  ["contacted_form","Contacté par formulaire aujourd'hui → CRM"],
+  ["contacted_dm","Contacté par DM / téléphone aujourd'hui → CRM"],
+  ["draft_auto","File de brouillons pour Claude (modèle auto, pistes avec email)"],
+  ["st:à contacter","Marquer « à contacter » (reste dans le radar)"],
+  ["crm","Envoyer au pipeline CRM (quittent le radar)"],
+  ["st:refusé","Refusé → CRM"],
+  ["dismiss","Écarter (pas intéressé)"],
+  ["restore","Restaurer (archives)"]
+];
+function renderBulk(){
+  const b=$("#bulk"); const n=[...picked].filter(id=>leads.some(l=>l.id===id)).length;
+  document.body.classList.toggle("hasbulk",n>0||bulkRunning);
+  const sa0=$("#selall"); if(sa0){ const vis=filtered(); sa0.checked=vis.length>0&&vis.every(l=>picked.has(l.id)); }
+  if(!n&&!bulkRunning){ b.hidden=true; return; }
+  b.hidden=false;
+  const sel=document.getElementById("bulk-act"); const cur=sel?sel.value:"contacted_mail";
+  b.innerHTML=`<span><b>${n}</b> sélectionnée${n>1?"s":""}</span>
+    <select id="bulk-act" aria-label="Action groupée" ${bulkRunning?"disabled":""}>${BULK_ACTIONS.map(([v,t])=>`<option value="${v}" ${v===cur?"selected":""}>${esc(t)}</option>`).join("")}</select>
+    <button class="btn pri" type="button" data-bulkgo="1" ${bulkRunning||!n?"disabled":""}>${bulkRunning?"En cours…":"Appliquer"}</button>
+    <button class="lnk" type="button" data-bulkclear="1" ${bulkRunning?"disabled":""}>Tout désélectionner</button>
+    ${bulkMsg?`<span class="prog">${esc(bulkMsg)}</span>`:""}`;
+  const sa=$("#selall"); if(sa){ const vis=filtered(); sa.checked=vis.length>0&&vis.every(l=>picked.has(l.id)); }
+}
+async function crmApply(l,stage,note,statusLabel){
+  if(!mcp) return "connecteurs indisponibles";
+  try{
+    if(l.crmId){
+      const r=await mcp.callTool(CRM,"update_stage",{id:l.crmId,stage,note:note.slice(0,2000)},{cache:false});
+      const p=crmPayload(r)||{};
+      await patch(l.id,{crmStage:p.stage||stage,crmAt:today()},null,true);
+    }else{
+      const inp=crmInput(Object.assign({},l,{status:statusLabel})); inp.stage=stage; inp.radar_status=(note||statusLabel).slice(0,100);
+      const r=await mcp.callTool(CRM,"add_to_pipeline",inp,{cache:false});
+      const p=crmPayload(r)||{};
+      await patch(l.id,{crmId:p.id||"",crmUrl:p.url||"",crmStage:p.stage||stage,crmAt:today()},null,true);
+    }
+    return null;
+  }catch(e){ return crmErr(e); }
+}
+async function runBulk(action){
+  const items=[...picked].map(id=>leads.find(l=>l.id===id)).filter(Boolean);
+  if(!items.length) return;
+  bulkRunning=true; let ok=0, crmOk=0; const errs=[];
+  const d=today(), dFR=new Date(d).toLocaleDateString("fr-FR");
+  const channel={contacted_mail:"email",contacted_form:"formulaire",contacted_dm:"DM / téléphone"}[action];
+  const batchAddr=new Set(); const skipped=[];
+  for(let i=0;i<items.length;i++){
+    const l=items[i]; bulkMsg=`${i+1}/${items.length} · ${l.name}`; renderBulk();
+    if(action==="draft_auto"){
+      const to=emailsOf(l.email);
+      if(!to.length){ skipped.push(l.name+" (pas d'email)"); continue; }
+      if(hasDraft(l)||inCrm(l)){ skipped.push(l.name+" (déjà traité)"); continue; }
+      if(addrUsers(to,l.id).length||to.some(a=>batchAddr.has(a))){ skipped.push(l.name+" (adresse déjà sollicitée)"); continue; }
+      const m=buildMail(l,kindOf(l),langOf(l));
+      try{
+        await db.collection("outbox").add({leadId:l.id,leadName:l.name,to,subject:m.subject,body:m.body,state:"pending",createdAt:new Date().toISOString()});
+        await patch(l.id,{draftState:"pending",draftTo:to.join(", "),status:(l.status&&l.status!=="nouveau")?l.status:"à contacter"},null,true);
+        to.forEach(a=>batchAddr.add(a)); ok++;
+      }catch(_){ errs.push(l.name+" : file d'attente"); }
+      continue;
+    }
+    if(action==="st:à contacter"){ if(await patch(l.id,{status:"à contacter",statusAt:d},null,true)) ok++; else errs.push(l.name+" : enregistrement"); continue; }
+    if(action==="dismiss"){ if(await patch(l.id,{dismissed:true,dismissReason:"Pas intéressé (lot)",dismissedAt:d},null,true)) ok++; else errs.push(l.name+" : enregistrement"); continue; }
+    if(action==="restore"){ if(await patch(l.id,{dismissed:false,dismissReason:"",dismissedAt:""},null,true)) ok++; else errs.push(l.name+" : enregistrement"); continue; }
+    if(action==="crm"){ const stage=STATUS_TO_STAGE[l.status]||"a_contacter"; const er=await crmApply(l,stage,"Radar : synchronisation groupée",l.status||"nouveau"); if(er) errs.push(l.name+" : "+er); else { ok++; crmOk++; } continue; }
+    let status, note;
+    if(channel){ status="contacté"; note=`Contacté par ${channel} le ${dFR} (radar)`; }
+    else { status=action.slice(3); note=`Radar : statut → ${status} le ${dFR}`; }
+    const data={status,statusAt:d}; if(channel){ data.contactChannel=channel; data.contactedAt=d; }
+    const saved=await patch(l.id,data,null,true);
+    if(!saved){ errs.push(l.name+" : enregistrement"); continue; }
+    ok++;
+    const stage=STATUS_TO_STAGE[status]||(status==="à contacter"?"a_contacter":null);
+    if(stage){ const er=await crmApply(l,stage,note,status); if(er) errs.push(l.name+" (CRM) : "+er); else crmOk++; }
+  }
+  bulkRunning=false;
+  const crmish=!["dismiss","restore","draft_auto","st:à contacter"].includes(action);
+  bulkMsg=`${ok}/${items.length} ${action==="draft_auto"?"mis en file de brouillons (dis à Claude « crée les brouillons en attente »)":"mis à jour"}${crmish?` · ${crmOk} passé${crmOk>1?"s":""} au CRM`:""}${skipped.length?` · ignorés : ${skipped.slice(0,3).join(", ")}${skipped.length>3?" …":""}`:""}${errs.length?` · ${errs.length} erreur${errs.length>1?"s":""} : ${errs.slice(0,3).join(" | ")}${errs.length>3?" …":""}`:""}`;
+  if(!errs.length) picked.clear();
+  renderList(true); renderBulk();
+}
+
+document.addEventListener("click",e=>{
+  const bt=e.target.closest("[data-bulkgo],[data-bulkclear]");
+  if(bt){ if(bt.dataset.bulkgo) runBulk(document.getElementById("bulk-act").value); else { picked.clear(); bulkMsg=""; renderList(true); renderBulk(); } return; }
+  if(e.target.matches&&e.target.matches("[data-pick]")) return;
+  if(e.target.closest("[data-undo]")){ const u=toast._u; $("#toast").hidden=true; toast._u=null; if(u) u(); return; }
+  if(e.target.closest("[data-crmall]")){ crmAll(); return; }
+  const mm=e.target.closest("[data-mmail]"); if(mm){ const id=mm.dataset.mmail, d=mailOpen.get(id), l=leads.find(x=>x.id===id); if(d&&l){ const to=emailsOf(d.to);
+      patch(id,{draftState:"created",draftAt:today(),draftTo:to.join(", "),draftVia:"mailto",status:(l.status&&l.status!=="nouveau")?l.status:"à contacter"},null,true);
+      d.msg="Ouvert dans Mail. Une fois envoyé : « Marquer contacté → CRM ». Si aucune fenêtre ne s'est ouverte, utilise « File pour Claude »."; d.cls="ok"; setTimeout(()=>rerenderMail(id),50); } return; }
+  const aj=e.target.closest("[data-adj]"); if(aj){ const l=leads.find(x=>x.id===aj.dataset.adj); if(!l) return; const d=+aj.dataset.d; const v=d===0?0:Math.max(-30,Math.min(30,(+l.chanceAdj||0)+d)); patch(l.id,{chanceAdj:v},"Chances ajustées : "+ch(Object.assign({},l,{chanceAdj:v})).sc+"/100"); return; }
+  const tr=e.target.closest("[data-tri]"); if(tr){ triAct(tr.dataset.tri,tr.dataset.reason); return; }
+  const mf=e.target.closest("[data-mform]"); if(mf){ const d=mailOpen.get(mf.dataset.mform); const url=mf.dataset.url; if(d&&navigator.clipboard) navigator.clipboard.writeText(d.body).then(()=>toast("Message copié : colle-le dans le formulaire (⌘V)",null,4000),()=>toast("Copie impossible : sélectionne le message à la main")); if(okUrl(url)) window.open(url,"_blank","noopener"); return; }
+  const t=e.target.closest("[data-crm],[data-mopen],[data-mcreate],[data-mcopy],[data-mclose],[data-sent],[data-tab],[data-toggle],[data-copy],[data-dismiss],[data-restore],[data-jump]"); if(!t) return;
+  if(t.dataset.mopen){ const l=leads.find(x=>x.id===t.dataset.mopen); if(!l) return; open.add(l.id); if(!mailOpen.has(l.id)) openMail(l); renderList(true); const b=document.getElementById("mb-"+l.id); b&&b.scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  if(t.dataset.mclose){ mailOpen.delete(t.dataset.mclose); renderList(true); return; }
+  if(t.dataset.mcopy){ const d=mailOpen.get(t.dataset.mcopy); if(!d) return; const txt=`À : ${d.to}\nObjet : ${d.subject}\n\n${d.body}`;
+    const fb=()=>{ const ta=document.getElementById("mb-"+t.dataset.mcopy); if(ta){ ta.focus(); ta.select(); } toast("Sélectionné : copie avec ⌘C"); };
+    if(navigator.clipboard) navigator.clipboard.writeText(txt).then(()=>toast("Email copié (destinataire, objet, message)"),fb); else fb(); return; }
+  if(t.dataset.crm){ const l=leads.find(x=>x.id===t.dataset.crm); if(l&&!crmBusy.has(l.id)) sendToCrm(l); return; }
+  if(t.dataset.sent){ const l=leads.find(x=>x.id===t.dataset.sent); const ch=t.dataset.ch||"email"; if(!l) return;
+    patch(l.id,{status:"contacté",statusAt:today(),contactChannel:ch,contactedAt:today()},null,true).then(ok=>{ if(ok) handoff(Object.assign({},l,{status:"contacté",contactChannel:ch,contactedAt:today()}),"contacté",ch); else toast("Échec de l'enregistrement"); }); return; }
+  if(t.dataset.mcreate){
+    const id=t.dataset.mcreate, d=mailOpen.get(id), l=leads.find(x=>x.id===id); if(!d||!l||d.busy) return;
+    const to=emailsOf(d.to);
+    if(!to.length){ d.msg="Ajoute au moins une adresse email valide."; d.cls="err"; rerenderMail(id); return; }
+    if(!d.subject.trim()||!d.body.trim()){ d.msg="Objet et message ne peuvent pas être vides."; d.cls="err"; rerenderMail(id); return; }
+    if(!db){ d.msg="Base indisponible dans cette vue."; d.cls="err"; rerenderMail(id); return; }
+    d.busy=true; d.msg=""; rerenderMail(id);
+    (async()=>{
+      try{
+        await db.collection("outbox").add({leadId:id,leadName:l.name,to,subject:d.subject,body:d.body,state:"pending",createdAt:new Date().toISOString()});
+        await db.doc("leads/"+id).update({draftState:"pending",draftTo:to.join(", "),status:(l.status&&l.status!=="nouveau")?l.status:"à contacter"});
+        d.busy=false; d.msg="Ajouté à la file. Pour le créer dans Mail, écris à Claude : « crée les brouillons en attente »."; d.cls="ok"; rerenderMail(id); toast("Brouillon en file d'attente");
+      }catch(err){ d.busy=false; d.msg=err&&err.code==="permission_denied"?"Lecture seule : tu ne peux pas créer de brouillon ici.":"Échec de l'ajout à la file, réessaie."; d.cls="err"; rerenderMail(id); }
+    })();
+    return;
+  }
+  if(t.dataset.tab){ tab=t.dataset.tab; try{localStorage.setItem("kz_tab",tab)}catch(_){} renderTabs(); renderList(); counts(); renderBulk(); window.scrollTo({top:$("#tabs").offsetTop-10,behavior:"smooth"}); return; }
+  if(t.dataset.toggle){ if(e.target.closest("a,button,select,textarea,input")&&e.target!==t) return; const id=t.dataset.toggle; open.has(id)?open.delete(id):open.add(id); renderList(); return; }
+  if(t.dataset.copy){ const v=t.dataset.copy; navigator.clipboard&&navigator.clipboard.writeText(v).then(()=>toast("Email copié"),()=>toast(v)); return; }
+  if(t.dataset.jump){ const l=leads.find(x=>x.id===t.dataset.jump); if(!l) return; tab=inCrm(l)?"crm":archived(l)?"trash":l.cat; open.add(l.id); $("#q").value=""; $("#f-city").value=""; $("#f-zone").value=""; $("#f-fit").value="0"; $("#f-status").value=""; $("#f-new").checked=false; $("#f-mail").checked=false; $("#f-fresh").checked=false; renderTabs(); renderList(true); counts(); const el=document.getElementById("r-"+l.id); el&&el.scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  if(t.dataset.dismiss){ const id=t.dataset.dismiss; const inp=document.getElementById("dr-"+id); const reason=t.dataset.reason||(inp&&inp.value.trim())||"Non précisé"; dismissLead(id,reason); return; }
+  if(t.dataset.restore){ patch(t.dataset.restore,{dismissed:false,dismissReason:"",dismissedAt:""},"Restaurée"); return; }
+});
+function dismissLead(id,reason){
+  const l=leads.find(x=>x.id===id); open.delete(id);
+  patch(id,{dismissed:true,dismissReason:reason,dismissedAt:today()},null,true).then(ok=>{
+    if(ok) toast(`Écartée${l?" : "+l.name:""} · « ${reason} »`,()=>patch(id,{dismissed:false,dismissReason:"",dismissedAt:""},"Restaurée"));
+    else toast("Échec de l'enregistrement");
+  });
+}
+const typing=el=>el&&(/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)||el.isContentEditable);
+function rowIdOf(el){ const a=el&&el.closest&&el.closest("article.row"); return a?a.id.slice(2):null; }
+function focusRow(dir){
+  const rows=[...document.querySelectorAll("#list article.row .rh")]; if(!rows.length) return;
+  const cur=document.activeElement&&document.activeElement.closest?document.activeElement.closest(".rh"):null;
+  let i=rows.indexOf(cur); i=i<0?(dir>0?0:rows.length-1):Math.max(0,Math.min(rows.length-1,i+dir));
+  rows[i].focus(); rows[i].scrollIntoView({block:"nearest",behavior:"smooth"});
+}
+document.addEventListener("keydown",e=>{
+  if(!$("#tri").hidden){ triKey(e); return; }
+  if((e.key==="Enter"||e.key===" ")&&e.target.dataset&&e.target.dataset.toggle){ e.preventDefault(); e.target.click(); return; }
+  if(typing(e.target)||e.metaKey||e.ctrlKey||e.altKey){ if(e.key==="Escape"&&typing(e.target)) e.target.blur(); return; }
+  const id=rowIdOf(document.activeElement);
+  const k=e.key;
+  if(k==="/"){ e.preventDefault(); $("#q").focus(); $("#q").select(); }
+  else if(k==="j"||k==="ArrowDown"&&id){ e.preventDefault(); focusRow(1); }
+  else if(k==="k"||k==="ArrowUp"&&id){ e.preventDefault(); focusRow(-1); }
+  else if(k==="o"&&id){ document.querySelector(`[data-toggle="${CSS.escape(id)}"]`).click(); }
+  else if(k==="e"&&id){ const b=document.querySelector(`[data-mopen="${CSS.escape(id)}"]`); b&&b.click(); }
+  else if(k==="p"&&id){ const b=document.querySelector(`[data-crm="${CSS.escape(id)}"]`); b&&b.click(); }
+  else if(k==="x"&&id){ const l=leads.find(x=>x.id===id); if(l&&live(l)){ focusRow(1); dismissLead(id,"Non précisé"); } }
+  else if(k==="t"){ startTri(); }
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.dataset&&t.dataset.pick){ t.checked?picked.add(t.dataset.pick):picked.delete(t.dataset.pick); bulkMsg=""; const r=document.getElementById("r-"+t.dataset.pick); if(r) r.classList.toggle("picked",t.checked); renderBulk(); t.blur(); }
+  if(t.id==="selall"){ const vis=filtered(); vis.forEach(l=>t.checked?picked.add(l.id):picked.delete(l.id)); bulkMsg=""; renderList(true); renderBulk(); }
+});
+document.addEventListener("input",e=>{
+  const t=e.target; if(!t.dataset||!t.dataset.mfield) return;
+  const d=mailOpen.get(t.dataset.mid); if(d){ d[t.dataset.mfield]=t.value; const a=document.querySelector(`[data-mmail="${CSS.escape(t.dataset.mid)}"]`); if(a) a.href=mailtoOf(d); }
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.dataset.mkind||t.dataset.mlang){
+    const id=t.dataset.mkind||t.dataset.mlang, d=mailOpen.get(id), l=leads.find(x=>x.id===id); if(!d||!l) return;
+    if(t.dataset.mkind) d.kind=t.value; else d.lang=t.value;
+    const m=buildMail(l,d.kind,d.lang); d.subject=m.subject; d.body=m.body; d.msg=""; rerenderMail(id); return;
+  }
+  if(t.dataset.status){ const l=leads.find(x=>x.id===t.dataset.status); const v=t.value; t.blur();
+    const data={status:v,statusAt:today()}; if(v==="contacté"&&l&&!l.contactedAt){ data.contactedAt=today(); }
+    patch(t.dataset.status,data,null,true).then(ok=>{ if(!ok){ toast("Échec de l'enregistrement"); return; } if(l&&ADV.includes(v)) handoff(Object.assign({},l,data),v,v==="contacté"?(l.contactChannel||null):null); else toast("Statut : "+v); }); }
+  if(t.dataset.notes) patch(t.dataset.notes,{notes:t.value},"Notes enregistrées");
+});
+["#q","#f-zone","#f-city","#f-fit","#f-status","#f-sort","#f-new","#f-mail","#f-fresh"].forEach(s=>$(s).addEventListener("input",renderList));
+$("#f-status").innerHTML+=STATUSES.map(s=>`<option>${s}</option>`).join("");
+$("#a-cat").innerHTML=CATS.map(c=>`<option value="${c.id}">${esc(c.label)}</option>`).join("");
+
+$("#s-save").addEventListener("click",async()=>{
+  if(!db){ toast("Base indisponible"); return; }
+  const cats={}; CATS.forEach(x=>cats[x.id]={on:$("#sc-on-"+x.id).checked,max:Math.max(0,Math.min(20,+$("#sc-max-"+x.id).value||0))});
+  const data={focus:$("#s-focus").value,exclude:$("#s-exclude").value,next:$("#s-next").value,cats,updatedAt:today()};
+  try{ await db.doc("config/scope").set(data); $("#s-saved").textContent="Enregistré · appliqué à la prochaine veille"; }
+  catch(e){ $("#s-saved").textContent="Échec de l'enregistrement"; }
+});
+$("#addf").addEventListener("submit",async e=>{
+  e.preventDefault(); if(!db){ toast("Base indisponible"); return; }
+  const name=$("#a-name").value.trim(); if(!name) return;
+  const k=norm(name)+"|"+normCity($("#a-city").value.trim()); const ex=(IDX.dup.get(k)||[])[0]||leads.find(l=>norm(l.name)===norm(name));
+  if(ex&&$("#addf").dataset.force!==k){ $("#addf").dataset.force=k; toast(`Existe déjà : ${ex.name}${inCrm(ex)?" (dans le CRM)":ex.dismissed?" (écartée)":""}. Clique encore sur Ajouter pour forcer.`,null,5000); return; }
+  delete $("#addf").dataset.force;
+  const url=$("#a-url").value.trim();
+  const d={cat:$("#a-cat").value,name,city:$("#a-city").value.trim()||null,country:"FR",email:$("#a-email").value.trim()||null,links:/^https?:\/\//.test(url)?[{label:"Lien",url}]:[],fit:2,status:"à contacter",dismissed:false,addedAt:today(),source:"manuel"};
+  try{ await db.collection("leads").add(d); e.target.reset(); toast("Piste ajoutée"); }catch(_){ toast("Échec de l'ajout"); }
+});
+
+/* ---------- Mode tri : une piste à la fois ---------- */
+const triSkip=new Set(); let triId=null, triDone=0;
+function triQueue(){
+  const kd=l=>{const k=keyDate(l);return k&&k.n>=0?k.n:9999;};
+  return leads.filter(l=>live(l)&&(l.status||"nouveau")==="nouveau"&&!hasDraft(l)&&!triSkip.has(l.id))
+    .sort((a,b)=>prio(b)-prio(a)||(kd(a)-kd(b))||a.name.localeCompare(b.name));
+}
+function startTri(){ triSkip.clear(); triDone=0; const q=triQueue(); if(!q.length){ toast("Aucune piste « nouveau » à trier"); return; } triId=q[0].id; $("#tri").hidden=false; renderTri(); }
+function closeTri(){ $("#tri").hidden=true; triId=null; renderAll(); }
+function renderTri(){
+  const box=$("#tri"); if(box.hidden) return;
+  let l=leads.find(x=>x.id===triId);
+  if(!l||!live(l)||(l.status||"nouveau")!=="nouveau"){ const q=triQueue(); l=q[0]; triId=l?l.id:null; }
+  if(!l){ box.innerHTML=`<div class="card"><div class="top"><span>Tri terminé</span><span>${triDone} piste${triDone>1?"s":""} traitée${triDone>1?"s":""}</span></div><h3>C'est trié.</h3><p class="meta">Les pistes gardées sont en « à contacter ». Prochaine étape : onglet « ⚡ À faire », puis ✉ Email → « Ouvrir dans Mail ».</p><div class="acts"><button class="btn pri" type="button" data-tri="close">Fermer</button></div></div>`; return; }
+  const left=triQueue().length, k=keyDate(l), f=l.fit||1;
+  const reach=emailsOf(l.email).length?`✉ ${esc(l.email)}`:l.contactForm&&okUrl(l.contactForm.url)?`Formulaire : ${esc(l.contactForm.label||"oui")}`:l.instagram?"Instagram seulement":`<span style="color:var(--warn)">${esc(l.contactRoute||"pas de contact direct")}</span>`;
+  const d=dupsOf(l), u=addrUsers(emailsOf(l.email),l.id);
+  box.innerHTML=`<div class="card">
+    <div class="top"><span>${esc(CATL[l.cat]||l.cat)} · ${esc(zone(l))}${isNew(l)?" · nouveau":""}</span><span>${left} à trier · ${triDone} fait${triDone>1?"s":""}</span></div>
+    <h3>${esc(l.name)}</h3>
+    <div class="meta">${esc([l.type,l.venue,l.city,l.country&&l.country!=="FR"?l.country:null,l.capacity?l.capacity+" pl.":null].filter(Boolean).join(" · "))}</div>
+    <div class="tags" style="margin-top:8px"><span class="chance ${TIER(ch(l).sc)[1]}" title="Chances réelles pour KRUZBERG : ${ch(l).sc}/100 · ${esc(TIER(ch(l).sc)[0])}&#10;${esc(ch(l).parts.map(p=>p[0]+" "+p[1]+"/"+p[2]).join(" · "))}${ch(l).adj?" · ajustement "+(ch(l).adj>0?"+":"")+ch(l).adj:""}"><b>${ch(l).sc} %</b></span>${k?`<span class="tag ${k.n<0?"past":"dl"} ${k.n>=0&&k.n<=14?"urg":""}">${esc(k.kind)} ${esc(fmtD(k.d))}${k.n>=0?` · J-${k.n}`:""}</span>`:""}${d.length?`<span class="tag warn">doublon ? ${esc(d[0].name)}</span>`:""}${u.length?`<span class="tag warn">adresse déjà sollicitée : ${esc(u[0].name)}</span>`:""}</div>
+    ${l.why?`<p class="why" style="margin:10px 0 0">${esc(l.why)}</p>`:""}
+    ${l.support?`<p class="meta" style="margin:6px 0 0">1re partie : ${esc(l.support)}</p>`:""}
+    ${l.decider?`<p class="meta" style="margin:6px 0 0">Qui décide : <b>${esc(l.decider)}</b>${l.deciderWho?" · "+esc(l.deciderWho):""}</p>`:""}
+    <p class="meta" style="margin:6px 0 0">Contact : ${reach}</p>
+    ${(l.links||[]).length?`<div class="links" style="margin-top:8px">${(l.links||[]).filter(x=>x&&/^https?:\/\//.test(x.url)).slice(0,4).map(x=>`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.label||"Lien")} ↗</a>`).join("")}</div>`:""}
+    <div class="acts">
+      <button class="btn pri" type="button" data-tri="keep">Garder <kbd>g</kbd></button>
+      ${emailsOf(l.email).length||l.contactForm?`<button class="btn" type="button" data-tri="mail">Garder + rédiger <kbd>e</kbd></button>`:""}
+      <button class="btn crm" type="button" data-tri="crm">Direct au CRM <kbd>p</kbd></button>
+      <button class="btn ghost" type="button" data-tri="skip">Plus tard <kbd>→</kbd></button>
+      <button class="btn ghost" type="button" data-tri="close" style="margin-left:auto">Fermer <kbd>Esc</kbd></button>
+    </div>
+    <div class="rs"><span class="meta" style="align-self:center">Écarter :</span>${REASONS.map((r,i)=>`<button class="btn sm danger" type="button" data-tri="dismiss" data-reason="${esc(r)}">${esc(r)} <kbd>${i+1}</kbd></button>`).join("")}</div>
+  </div>`;
+}
+async function triAct(a,reason){
+  const l=leads.find(x=>x.id===triId);
+  if(a==="close"){ closeTri(); return; }
+  if(!l){ renderTri(); return; }
+  const next=()=>{ triDone++; const q=triQueue().filter(x=>x.id!==l.id); triId=q[0]?q[0].id:null; renderTri(); };
+  if(a==="skip"){ triSkip.add(l.id); const q=triQueue(); triId=q[0]?q[0].id:null; renderTri(); return; }
+  if(a==="keep"){ triSkip.add(l.id); next(); patch(l.id,{status:"à contacter",statusAt:today()},null,true); return; }
+  if(a==="dismiss"){ triSkip.add(l.id); next(); dismissLead(l.id,reason||"Non précisé"); return; }
+  if(a==="crm"){ triSkip.add(l.id); next(); sendToCrm(l); return; }
+  if(a==="mail"){ await patch(l.id,{status:"à contacter",statusAt:today()},null,true); $("#tri").hidden=true; triId=null;
+    tab=l.cat; open.add(l.id); if(!mailOpen.has(l.id)) openMail(l); renderAll(); const b=document.getElementById("mb-"+l.id); b&&b.scrollIntoView({behavior:"smooth",block:"center"}); return; }
+}
+function triKey(e){
+  const k=e.key; if(e.metaKey||e.ctrlKey) return;
+  const map={g:"keep",e:"mail",p:"crm",ArrowRight:"skip",s:"skip",Escape:"close"};
+  if(map[k]){ e.preventDefault(); if(k==="e"&&!document.querySelector('#tri [data-tri="mail"]')) return; triAct(map[k]); return; }
+  if(/^[1-9]$/.test(k)&&REASONS[+k-1]){ e.preventDefault(); triAct("dismiss",REASONS[+k-1]); }
+}
+$("#tri").addEventListener("click",e=>{ if(e.target.id==="tri") closeTri(); });
+$("#tri-go").addEventListener("click",startTri);
+$("#pick-sent").addEventListener("click",()=>{
+  leads.filter(l=>!inCrm(l)&&!l.dismissed&&l.draftState==="created"&&!ADV.includes(l.status)).forEach(l=>picked.add(l.id));
+  bulkMsg="Choisis « Contacté par mail aujourd'hui → CRM » pour ceux réellement envoyés (décoche les autres)."; renderList(true); renderBulk();
+  const s=document.getElementById("bulk-act"); if(s){ s.value="contacted_mail"; }
+});
+$("#copyview").addEventListener("click",()=>{
+  const rows=filtered(); const cl=v=>String(v??"").replace(/[\t\r\n]+/g," ").trim();
+  const head=["Nom","Rubrique","Type","Ville","Pays","Jauge","Date clé","Email prog","Formulaire","Contact","Statut","Pertinence","Lien"];
+  const out=[head.join("\t")].concat(rows.map(l=>{ const k=keyDate(l); return [l.name,CATL[l.cat]||l.cat,l.type,l.city,l.country||"FR",l.capacity,k?k.kind+" "+(l.deadline&&k.kind!=="Concert"?l.deadline:l.eventDate||""):"",l.email,l.contactForm&&l.contactForm.url,l.contact,inCrm(l)?"CRM · "+(STAGE_LABEL[l.crmStage]||""):l.status||"nouveau",l.fit||1,(l.links||[])[0]&&l.links[0].url].map(cl).join("\t"); }));
+  const txt=out.join("\n");
+  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(()=>toast(`${rows.length} lignes copiées : colle-les dans Numbers, Excel ou Sheets`,null,3500),()=>toast("Copie impossible dans cette vue")); else toast("Copie impossible dans cette vue");
+});
+
+document.addEventListener("focusout",()=>setTimeout(()=>{ if(pendingList) renderList(); },0));
+renderAll(); renderScope();
+(async()=>{
+
+  (window.claude?.use?.("mcp")??Promise.resolve(null)).then(m=>{ mcp=m; }).catch(()=>{ mcp=null; });
+  db=await (window.claude?.use?.("db")??null);
+  if(!db){ const b=$("#banner"); b.hidden=false; b.textContent="Le radar n'arrive pas à joindre le CRM : rechargez la page ou reconnectez-vous."; $("#runinfo").textContent=""; return; }
+  const err=e=>{ const b=$("#banner"); b.hidden=false; b.textContent="Connexion à la base interrompue ("+(e&&e.code||"erreur")+"). Rechargez la page."; };
+  db.collection("leads").onSnapshot(s=>{ leads=s.docs.map(d=>({id:d.id,...d.data()})); renderAll(); },err);
+  db.doc("config/meta").onSnapshot(s=>{ meta=s.exists?s.data():{}; renderAll(); },err);
+  db.doc("config/scope").onSnapshot(s=>{ scope=s.exists?s.data():{}; renderScope(); },err);
+  db.collection("outbox").where("state","==","pending").onSnapshot(s=>{ outbox=s.docs.map(d=>({id:d.id,...d.data()})); renderOutbox(); },err);
+  db.collection("runs").orderBy("date","desc").limit(60).onSnapshot(s=>{ runs=s.docs.map(d=>d.data()); renderRun(); },err);
+})();
+</script>
+
+</body></html>

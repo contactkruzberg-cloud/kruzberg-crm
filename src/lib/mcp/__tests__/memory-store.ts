@@ -21,6 +21,7 @@ const DEFAULTS: Record<Table, Row> = {
   bands: { city: null, genre: null, contact_name: null, email: null, phone: null, instagram: null, website: null, exchange_status: 'none', notes: null },
   deal_bands: { role: 'co_bill' },
   briefings: { title: '', content: '' },
+  radar_docs: { data: {}, version: 1 },
   mcp_audit_log: {},
 };
 
@@ -109,7 +110,7 @@ export function createMemoryStore() {
       const row: Row = {
         id: randomUUID(),
         ...DEFAULTS[table],
-        ...(table === 'mcp_audit_log' ? {} : table === 'deal_bands' ? { deleted_at: null } : table === 'briefings' ? { updated_at: now } : { deleted_at: null, deleted_batch: null, updated_at: now }),
+        ...(table === 'mcp_audit_log' ? {} : table === 'deal_bands' ? { deleted_at: null } : table === 'briefings' || table === 'radar_docs' ? { updated_at: now } : { deleted_at: null, deleted_batch: null, updated_at: now }),
         created_at: now,
         ...structuredClone(input),
         user_id: OWNER,
@@ -118,7 +119,7 @@ export function createMemoryStore() {
         checkDeal(row);
         nextRelance(row, null, input);
       }
-      const uniqueBy: Partial<Record<Table, string[]>> = { deal_bands: ['deal_id', 'band_id'], briefings: ['week_start'] };
+      const uniqueBy: Partial<Record<Table, string[]>> = { deal_bands: ['deal_id', 'band_id'], briefings: ['week_start'], radar_docs: ['collection', 'id'] };
       const cols = uniqueBy[table];
       if (cols && db[table].some((r) => cols.every((c) => r[c] === row[c]))) throw new UniqueViolationError();
       db[table].push(row);
@@ -136,6 +137,7 @@ export function createMemoryStore() {
           nextRelance(next, old, patch);
         }
         if ('updated_at' in row) next.updated_at = tick();
+        if (table === 'radar_docs') next.version = Number(row.version) + 1; // radar_docs_bump trigger
         Object.assign(row, next);
         if (table === 'deals' && old.stage !== row.stage) {
           // Mirrors the deal_stage_change_log trigger.

@@ -63,13 +63,27 @@ src/
 
 Schema and migrations are in `supabase/migrations/`. Seed data in `supabase/seed.sql`.
 
+## Booking Radar (`/radar`)
+
+Pistes de prospection trouvées chaque matin par la veille automatique (tâche planifiée Claude),
+triées, rédigées et envoyées au pipeline depuis le CRM.
+
+- Interface : `public/radar-app/index.html` (ex-artifact claude.ai, inchangé dans sa logique),
+  affichée dans la page `src/app/(app)/radar/page.tsx`. `public/radar-app/crm-bridge.js` lui fournit
+  le stockage (`/api/radar/docs`) et « + Pipeline » (`/api/radar/crm`) avec la session du CRM.
+- Données : table `radar_docs` (migration 017) — collections `leads`, `config` (`scope`, `meta`), `runs`, `outbox`,
+  un document JSON par ligne, version incrémentée à chaque écriture.
+- Veille : outils MCP `radar_list`, `radar_get`, `radar_batch` (écritures conditionnées par `if_version`,
+  champs de Greg protégés, jamais de suppression).
+- Import initial depuis l'artifact : `node scripts/radar-import.mjs <dossier export>`.
+
 ## Connecteur MCP (Claude ↔ CRM)
 
 Le CRM expose un serveur MCP distant (transport Streamable HTTP) sur deux adresses :
 
 | Adresse | Auth | Outils | Usage |
 |---|---|---|---|
-| `/api/mcp` | OAuth 2.1 (DCR + PKCE) | tous (63) | Connecteur personnalisé claude.ai / Cowork : lire et écrire tout le CRM |
+| `/api/mcp` | OAuth 2.1 (DCR + PKCE) | tous (66) | Connecteur personnalisé claude.ai / Cowork : lire et écrire tout le CRM |
 | `/api/mcp/<MCP_SECRET>` | secret dans l'URL | les 4 outils radar | Artifact **KRUZBERG Booking Radar** (inchangé) |
 
 L'URL secrète est volontairement limitée aux 4 outils du radar : si elle fuit,

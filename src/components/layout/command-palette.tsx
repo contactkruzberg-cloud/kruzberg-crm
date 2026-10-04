@@ -24,6 +24,7 @@ import {
   AlarmClock,
   Settings,
   ListTodo,
+  Radar,
 } from 'lucide-react';
 import { useBands } from '@/hooks/use-bands';
 import { useTours } from '@/hooks/use-tours';
@@ -32,6 +33,7 @@ import type { CreateIntent } from '@/stores/app-store';
 
 const PAGES = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Radar (pistes de la veille)', href: '/radar', icon: Radar },
   { name: 'Pipeline', href: '/pipeline', icon: Kanban },
   { name: 'Lieux & Contacts', href: '/venues', icon: Building2 },
   { name: 'Tournées', href: '/tours', icon: Route },
