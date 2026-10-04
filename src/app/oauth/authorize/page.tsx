@@ -91,7 +91,7 @@ export default async function AuthorizePage({ searchParams }: { searchParams: Pr
             <li>Archiver (toujours restaurable) — jamais de suppression définitive.</li>
             <li>Chaque modification est inscrite au journal d&apos;audit.</li>
           </ul>
-          <p className="text-xs text-muted-foreground">Accès valable 30 jours sans utilisation, révocable à tout moment depuis la page Connexions Claude du CRM.</p>
+          <p className="text-xs text-muted-foreground">Accès valable 30 jours sans utilisation, révocable à tout moment dans le CRM : clic sur KRUZBERG en haut à gauche → Réglages.</p>
           <form method="post" action="/api/oauth/authorize" className="flex gap-3">
             {FIELDS.map((k) => (p[k] ? <input key={k} type="hidden" name={k} value={p[k]} /> : null))}
             <Button type="submit" name="decision" value="deny" variant="outline" className="flex-1">

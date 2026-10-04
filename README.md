@@ -149,7 +149,7 @@ Aucun secret ni jeton n'est stocké en clair : la base ne garde que des empreint
 2. Nom : `KRUZBERG CRM` — URL : `https://kruzberg-crm.vercel.app/api/mcp` — laisser les champs OAuth (Client ID / secret) **vides**.
 3. Cliquer **Ajouter**, puis **Se connecter** : Claude ouvre la page du CRM
    (connexion avec ton compte si besoin), cliquer **Autoriser**.
-4. Les accès actifs se voient et se révoquent dans le CRM, menu **Connexions Claude**.
+4. Les accès actifs se voient et se révoquent dans le CRM : clic sur **KRUZBERG** en haut à gauche → fenêtre **Réglages** → Connexions Claude.
 
 ### Tests
 

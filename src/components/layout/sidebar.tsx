@@ -17,12 +17,13 @@ import {
   LogOut,
   ChevronLeft,
   Zap,
-  Plug,
   Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { SettingsDialog } from '@/components/layout/settings-dialog';
+import { useState } from 'react';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -32,7 +33,6 @@ const NAV_ITEMS = [
   { href: '/groupes', label: 'Groupes amis', icon: Users },
   { href: '/templates', label: 'Templates', icon: Mail },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/connexions', label: 'Connexions Claude', icon: Plug },
 ];
 
 export function Sidebar() {
@@ -40,6 +40,7 @@ export function Sidebar() {
   const router = useRouter();
   const { sidebarOpen, toggleSidebar, theme, setTheme } = useAppStore();
   const supabase = createClient();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -57,12 +58,17 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex h-14 items-center justify-between px-4">
         {sidebarOpen && (
-          <Link href="/" className="flex items-center gap-2 group">
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            title="Réglages et compte"
+            className="flex items-center gap-2 group rounded-md -mx-1 px-1 hover:bg-accent transition-colors"
+          >
             <Zap className="h-5 w-5 text-primary transition-transform group-hover:rotate-12" />
             <span className="text-lg font-bold tracking-tighter">
               <span className="text-primary">KRUZ</span>BERG
             </span>
-          </Link>
+          </button>
         )}
         <Button
           variant="ghost"
@@ -78,6 +84,8 @@ export function Sidebar() {
           />
         </Button>
       </div>
+
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       <Separator />
 
