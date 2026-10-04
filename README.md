@@ -68,14 +68,15 @@ Schema and migrations are in `supabase/migrations/`. Seed data in `supabase/seed
 Pistes de prospection trouvées chaque matin par la veille automatique (tâche planifiée Claude),
 triées, rédigées et envoyées au pipeline depuis le CRM.
 
-- Interface : `public/radar-app/index.html` (ex-artifact claude.ai, inchangé dans sa logique),
-  affichée dans la page `src/app/(app)/radar/page.tsx`. `public/radar-app/crm-bridge.js` lui fournit
-  le stockage (`/api/radar/docs`) et « + Pipeline » (`/api/radar/crm`) avec la session du CRM.
+- Interface : `src/components/radar/` (page `src/app/(app)/radar/page.tsx`), logique portée de l'ex-artifact
+  dans `src/lib/radar/` (chances, « à faire », modèles de mails de Greg à l'identique, échéances, doublons).
+  Données via `/api/radar/docs` et « + Pipeline » via `/api/radar/crm`, avec la session du CRM.
 - Données : table `radar_docs` (migration 017) — collections `leads`, `config` (`scope`, `meta`), `runs`, `outbox`,
   un document JSON par ligne, version incrémentée à chaque écriture.
 - Veille : outils MCP `radar_list`, `radar_get`, `radar_batch` (écritures conditionnées par `if_version`,
   champs de Greg protégés, jamais de suppression).
 - Import initial depuis l'artifact : `node scripts/radar-import.mjs <dossier export>`.
+- Synchro horaire avec l'artifact claude.ai (dans les deux sens) : `src/lib/mcp/radar-sync.ts`, outils `radar_sync_*`.
 
 ## Connecteur MCP (Claude ↔ CRM)
 

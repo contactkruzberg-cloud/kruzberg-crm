@@ -225,3 +225,16 @@ export async function radarSyncBaseline(deps: Deps, args: { collection: RadarCol
   if (rows.length) await deps.store.insertMany('radar_sync', rows);
   return { collection: args.collection, baselined: rows.length, already: states.size };
 }
+
+/** Forces the next pass to re-read these documents from the artifact (repair after a missed change). */
+export async function radarSyncRefetch(deps: Deps, args: { collection: RadarCollection; ids: string[] }) {
+  const { states } = await load(deps, args.collection);
+  let marked = 0;
+  for (const id of args.ids) {
+    const state = states.get(id);
+    if (!state) continue;
+    await saveState(deps, args.collection, id, state, { artifact_version: 0 });
+    marked++;
+  }
+  return { collection: args.collection, marked };
+}

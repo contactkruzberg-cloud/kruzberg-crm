@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- documents in tests */
 import { beforeEach, describe, expect, it } from 'vitest';
 import { radarBatch, radarGet } from '../radar';
-import { merge3, radarSyncAck, radarSyncBaseline, radarSyncPush, radarSyncStatus, type ArtifactWrite } from '../radar-sync';
+import { merge3, radarSyncAck, radarSyncBaseline, radarSyncPush, radarSyncRefetch, radarSyncStatus, type ArtifactWrite } from '../radar-sync';
 import { createMemoryStore } from './memory-store';
 
 // Simulated artifact database, with the ArtifactData rules: versions bumped on
@@ -165,6 +165,17 @@ describe('radar sync artifact ⇄ CRM', () => {
     art.patch('a', { email: 'x@a.fr' });
     expect(await syncPass()).toMatchObject({ fetched: 1 });
     expect(await crm('a')).toMatchObject({ email: 'x@a.fr' });
+  });
+});
+
+describe('radar_sync_refetch', () => {
+  it('repairs an artifact change that was adopted as identical', async () => {
+    art.patch('a', { audit: 'ok' }); // changed before the first pass, then adopted as equal
+    await syncPass();
+    expect(await crm('a')).not.toHaveProperty('audit');
+    await radarSyncRefetch(deps(), { collection: 'leads', ids: ['a'] });
+    expect(await syncPass()).toMatchObject({ fetched: 1 });
+    expect(await crm('a')).toMatchObject({ audit: 'ok' });
   });
 });
 

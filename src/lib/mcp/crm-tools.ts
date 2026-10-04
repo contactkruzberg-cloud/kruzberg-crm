@@ -47,7 +47,7 @@ import {
 } from './entities';
 import { depsFor, runTool, takeFor, type McpContext } from './tools';
 import { MAX_RADAR_BATCH, radarBatch, radarGet, radarList, RADAR_COLLECTIONS } from './radar';
-import { radarSyncAck, radarSyncBaseline, radarSyncPush, radarSyncStatus } from './radar-sync';
+import { radarSyncAck, radarSyncBaseline, radarSyncPush, radarSyncRefetch, radarSyncStatus } from './radar-sync';
 import type { Row } from './store';
 
 // Full read/write access to the CRM for Claude (OAuth endpoint only).
@@ -674,5 +674,16 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
       annotations: WRITE,
     },
     run('radar_sync_baseline', (deps, a: Parameters<typeof radarSyncBaseline>[1]) => radarSyncBaseline(deps, a)),
+  );
+
+  server.registerTool(
+    'radar_sync_refetch',
+    {
+      title: 'Synchro radar : relire des documents',
+      description: 'Réparation : force le prochain passage de synchro à relire ces documents depuis l\'artifact (fusionnés ensuite normalement).' + SYNC_NOTE,
+      inputSchema: z.strictObject({ collection: radarCollection, ids: z.array(radarId).min(1).max(1000) }),
+      annotations: IDEMPOTENT_WRITE,
+    },
+    run('radar_sync_refetch', (deps, a: Parameters<typeof radarSyncRefetch>[1]) => radarSyncRefetch(deps, a)),
   );
 }
