@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase } from './use-supabase';
 import type { TourStop } from '@/types/database';
+import { archiveEntity, undoToast } from '@/lib/archive';
+import { SAVE_META } from '@/lib/save-status';
 
 const STOP_SELECT =
   '*, deal:deals(*, venue:venues(*), contact:contacts(*)), venue:venues(*)';
@@ -66,6 +68,7 @@ export function useUpdateTourStop() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
+    meta: SAVE_META,
     mutationFn: async ({ id, ...updates }: Partial<TourStop> & { id: string }) => {
       const { data, error } = await supabase
         .from('tour_stops')
@@ -105,12 +108,11 @@ export function useDeleteTourStop() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id }: { id: string; tourId: string }) => {
-      const { error } = await supabase.from('tour_stops').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: (_data, { tourId }) => {
-      queryClient.invalidateQueries({ queryKey: ['tour_stops', tourId] });
+    // Archive (restorable), never a hard delete: see src/lib/archive.ts.
+    mutationFn: async ({ id }: { id: string; tourId: string }) => archiveEntity(supabase, 'tour_stop', id),
+    onSuccess: (batch) => {
+      queryClient.invalidateQueries();
+      undoToast(supabase, queryClient, 'Étape supprimée', batch);
     },
   });
 }

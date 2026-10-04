@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { usePersistentState } from '@/lib/persistent-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn, formatDate, getRelanceUrgency, daysUntil, dealLabel } from '@/lib/utils';
 import { STAGES, type Deal, type DealStage } from '@/types/database';
 import { ArrowUpDown, Clock } from 'lucide-react';
+import { DealQuickActions } from './deal-quick-actions';
 
 interface PipelineTableProps {
   deals: Deal[];
@@ -17,9 +19,9 @@ interface PipelineTableProps {
 type SortField = 'venue' | 'city' | 'stage' | 'priority' | 'next_relance' | 'last_message';
 
 export function PipelineTable({ deals, onDealClick, hints }: PipelineTableProps) {
-  const [sortField, setSortField] = useState<SortField>('next_relance');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  const [stageFilter, setStageFilter] = useState<DealStage | 'all'>('all');
+  const [sortField, setSortField] = usePersistentState<SortField>('pipeline:table-sort', 'next_relance');
+  const [sortDir, setSortDir] = usePersistentState<'asc' | 'desc'>('pipeline:table-dir', 'asc');
+  const [stageFilter, setStageFilter] = usePersistentState<DealStage | 'all'>('pipeline:table-stage', 'all');
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -108,6 +110,7 @@ export function PipelineTable({ deals, onDealClick, hints }: PipelineTableProps)
                 <th className="text-left p-3"><SortHeader field="next_relance">Relance</SortHeader></th>
                 <th className="text-left p-3"><SortHeader field="last_message">Dernier contact</SortHeader></th>
                 <th className="text-left p-3">Tags</th>
+                <th className="text-left p-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -176,12 +179,15 @@ export function PipelineTable({ deals, onDealClick, hints }: PipelineTableProps)
                         ))}
                       </div>
                     </td>
+                    <td className="p-3">
+                      <DealQuickActions deal={deal} />
+                    </td>
                   </tr>
                 );
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
                     Aucune opportunité trouvée
                   </td>
                 </tr>

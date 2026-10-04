@@ -7,10 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getRelanceUrgency, daysUntil, dealLabel } from '@/lib/utils';
 import { AlertTriangle, Clock, ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { usePipelineFilters } from '@/components/pipeline/pipeline-filters';
 import Link from 'next/link';
+import { DealQuickActions } from '@/components/pipeline/deal-quick-actions';
 
 export function RelanceAlerts() {
   const { data: deals, isLoading } = useDeals();
+  const router = useRouter();
+  const [filters, setFilters] = usePipelineFilters();
 
   if (isLoading) {
     return (
@@ -27,14 +32,15 @@ export function RelanceAlerts() {
     );
   }
 
-  const alerts = (deals || [])
+  const allAlerts = (deals || [])
     .filter((d) => d.next_relance_at && getRelanceUrgency(d.next_relance_at) !== 'ok' && !['confirme', 'termine', 'refuse'].includes(d.stage))
     .sort((a, b) => {
       const dA = daysUntil(a.next_relance_at!);
       const dB = daysUntil(b.next_relance_at!);
       return dA - dB;
     })
-    .slice(0, 5);
+    ;
+  const alerts = allAlerts.slice(0, 5);
 
   return (
     <Card>
@@ -43,8 +49,8 @@ export function RelanceAlerts() {
           <AlertTriangle className="h-4 w-4 text-orange-500" />
           Relances à faire
         </CardTitle>
-        {alerts.length > 0 && (
-          <Badge variant="destructive">{alerts.length}</Badge>
+        {allAlerts.length > 0 && (
+          <Badge variant="destructive">{allAlerts.length}</Badge>
         )}
       </CardHeader>
       <CardContent>
@@ -60,17 +66,16 @@ export function RelanceAlerts() {
               const urgency = getRelanceUrgency(deal.next_relance_at);
               const days = daysUntil(deal.next_relance_at!);
               return (
-                <Link
+                <div
                   key={deal.id}
-                  href={`/pipeline?deal=${deal.id}`}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition-all hover:shadow-md ${
+                  className={`flex items-center justify-between gap-2 p-3 rounded-lg border transition-all hover:shadow-md ${
                     urgency === 'overdue'
                       ? 'border-red-500/30 bg-red-500/5 animate-pulse-urgent'
                       : 'border-orange-500/30 bg-orange-500/5 animate-pulse-warning'
                   }`}
                 >
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm truncate">
+                  <Link href={`/pipeline?deal=${deal.id}`} className="min-w-0 flex-1 group">
+                    <p className="font-medium text-sm truncate group-hover:text-primary">
                       {dealLabel(deal, 'Lieu inconnu')}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -80,11 +85,24 @@ export function RelanceAlerts() {
                         ? "Aujourd'hui"
                         : `Dans ${days}j`}
                     </p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                </Link>
+                  </Link>
+                  <DealQuickActions deal={deal} />
+                </div>
               );
             })}
+            {allAlerts.length > alerts.length && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full gap-1.5 text-xs text-muted-foreground"
+                onClick={() => {
+                  setFilters({ ...filters, due: true });
+                  router.push('/pipeline');
+                }}
+              >
+                Voir les {allAlerts.length} relances dans le pipeline <ArrowRight className="h-3 w-3" />
+              </Button>
+            )}
           </div>
         )}
       </CardContent>

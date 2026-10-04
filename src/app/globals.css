@@ -204,3 +204,12 @@ body {
   background: hsl(var(--card)) !important;
   border-radius: var(--radius);
 }
+
+/* ===== "Enregistré ✓" indicator: visible ~2 s then fades ===== */
+@keyframes fade-out-late {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+.animate-fade-out-late {
+  animation: fade-out-late 2.5s ease-out forwards;
+}

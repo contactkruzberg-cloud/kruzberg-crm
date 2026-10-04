@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase } from './use-supabase';
 import type { TourExpense } from '@/types/database';
+import { archiveEntity, undoToast } from '@/lib/archive';
 
 export function useTourExpenses(tourId: string | null) {
   const supabase = useSupabase();
@@ -62,12 +63,11 @@ export function useDeleteTourExpense() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id }: { id: string; tourId: string }) => {
-      const { error } = await supabase.from('tour_expenses').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: (_data, { tourId }) => {
-      queryClient.invalidateQueries({ queryKey: ['tour_expenses', tourId] });
+    // Archive (restorable), never a hard delete: see src/lib/archive.ts.
+    mutationFn: async ({ id }: { id: string; tourId: string }) => archiveEntity(supabase, 'tour_expense', id),
+    onSuccess: (batch) => {
+      queryClient.invalidateQueries();
+      undoToast(supabase, queryClient, 'Dépense supprimée', batch);
     },
   });
 }

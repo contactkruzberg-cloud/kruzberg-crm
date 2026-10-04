@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase } from './use-supabase';
 import type { Tour } from '@/types/database';
+import { archiveEntity, undoToast } from '@/lib/archive';
+import { SAVE_META } from '@/lib/save-status';
 
 export function useTours() {
   const supabase = useSupabase();
@@ -62,6 +64,7 @@ export function useUpdateTour() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
+    meta: SAVE_META,
     mutationFn: async ({ id, ...updates }: Partial<Tour> & { id: string }) => {
       const { data, error } = await supabase
         .from('tours')
@@ -83,12 +86,11 @@ export function useDeleteTour() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('tours').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tours'] });
+    // Archive (restorable), never a hard delete: see src/lib/archive.ts.
+    mutationFn: async (id: string) => archiveEntity(supabase, 'tour', id),
+    onSuccess: (batch) => {
+      queryClient.invalidateQueries();
+      undoToast(supabase, queryClient, 'Tournée supprimée', batch);
     },
   });
 }

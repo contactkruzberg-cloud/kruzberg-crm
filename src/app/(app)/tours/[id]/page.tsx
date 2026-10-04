@@ -51,10 +51,8 @@ export default function TourDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Supprimer la tournée "${tour.name}" ? Les dates seront retirées de la tournée (les deals restent dans le pipeline).`))
-      return;
+    // Archived with its stops and expenses (deals stay in the pipeline); undo from the toast.
     await deleteTour.mutateAsync(tour.id);
-    toast.success('Tournée supprimée');
     router.push('/tours');
   };
 

@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase } from './use-supabase';
 import type { Venue } from '@/types/database';
+import { archiveEntity, undoToast } from '@/lib/archive';
+import { SAVE_META } from '@/lib/save-status';
 
 export function useVenues() {
   const supabase = useSupabase();
@@ -61,6 +63,7 @@ export function useUpdateVenue() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
+    meta: SAVE_META,
     mutationFn: async ({ id, ...updates }: Partial<Venue> & { id: string }) => {
       const { data, error } = await supabase
         .from('venues')
@@ -82,12 +85,11 @@ export function useDeleteVenue() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('venues').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['venues'] });
+    // Archive (restorable), never a hard delete: see src/lib/archive.ts.
+    mutationFn: async (id: string) => archiveEntity(supabase, 'venue', id),
+    onSuccess: (batch) => {
+      queryClient.invalidateQueries();
+      undoToast(supabase, queryClient, 'Lieu supprimé', batch);
     },
   });
 }

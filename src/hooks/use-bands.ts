@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase } from './use-supabase';
 import type { Band, BandRole, DealBand } from '@/types/database';
+import { archiveEntity, undoToast } from '@/lib/archive';
+import { SAVE_META } from '@/lib/save-status';
 
 export function useBands() {
   const supabase = useSupabase();
@@ -35,6 +37,7 @@ export function useUpdateBand() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
+    meta: SAVE_META,
     mutationFn: async ({ id, ...updates }: Partial<Band> & { id: string }) => {
       const { data, error } = await supabase.from('bands').update(updates).eq('id', id).select().single();
       if (error) throw error;
@@ -48,13 +51,11 @@ export function useDeleteBand() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('bands').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bands'] });
-      queryClient.invalidateQueries({ queryKey: ['deal_bands'] });
+    // Archive (restorable), never a hard delete: see src/lib/archive.ts.
+    mutationFn: async (id: string) => archiveEntity(supabase, 'band', id),
+    onSuccess: (batch) => {
+      queryClient.invalidateQueries();
+      undoToast(supabase, queryClient, 'Groupe supprimé', batch);
     },
   });
 }

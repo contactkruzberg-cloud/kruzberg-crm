@@ -5,13 +5,13 @@ import { KpiCards } from '@/components/dashboard/kpi-cards';
 import { RelanceAlerts } from '@/components/dashboard/relance-alerts';
 import { UpcomingConcerts } from '@/components/dashboard/upcoming-concerts';
 import { ActivityFeed } from '@/components/dashboard/activity-feed';
-import { QuickActions } from '@/components/dashboard/quick-actions';
 import { VenueMap } from '@/components/dashboard/venue-map';
 import { WeeklySparklines } from '@/components/dashboard/weekly-sparklines';
 import { PendingTasks } from '@/components/dashboard/pending-tasks';
 import { NextTour } from '@/components/dashboard/next-tour';
 import { BriefingCard } from '@/components/dashboard/briefing-card';
 import { ApplicationDeadlines } from '@/components/dashboard/application-deadlines';
+import { CollapsibleSection } from '@/components/dashboard/collapsible-section';
 
 const container = {
   hidden: { opacity: 0 },
@@ -26,6 +26,7 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
 };
 
+// Action first (what to do this week), then the overview, which can be folded.
 export default function DashboardPage() {
   const now = new Date();
   const greeting =
@@ -40,7 +41,7 @@ export default function DashboardPage() {
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       {/* Hero */}
-      <motion.div variants={item} className="gradient-hero rounded-2xl p-6 lg:p-8">
+      <motion.div variants={item} className="gradient-hero rounded-2xl p-5 lg:p-6">
         <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
           {greeting}, <span className="text-primary">KRUZBERG</span>
         </h1>
@@ -52,17 +53,7 @@ export default function DashboardPage() {
         <BriefingCard />
       </motion.div>
 
-      {/* KPIs */}
-      <motion.div variants={item}>
-        <KpiCards />
-      </motion.div>
-
-      {/* Quick Actions */}
-      <motion.div variants={item}>
-        <QuickActions />
-      </motion.div>
-
-      {/* Alerts + Tasks */}
+      {/* To do now */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div variants={item}>
           <RelanceAlerts />
@@ -77,29 +68,39 @@ export default function DashboardPage() {
         <ApplicationDeadlines />
       </motion.div>
 
-      {/* Concerts + Next tour */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div variants={item}>
-          <UpcomingConcerts />
-        </motion.div>
-        <motion.div variants={item}>
-          <NextTour />
-        </motion.div>
-      </div>
-
-      {/* Activity */}
+      {/* Upcoming */}
       <motion.div variants={item}>
-        <ActivityFeed />
+        <CollapsibleSection id="upcoming" title="Prochaines dates">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <UpcomingConcerts />
+            <NextTour />
+          </div>
+        </CollapsibleSection>
       </motion.div>
 
-      {/* Map */}
+      {/* Overview */}
       <motion.div variants={item}>
-        <VenueMap />
+        <CollapsibleSection id="kpis" title="Chiffres clés">
+          <KpiCards />
+        </CollapsibleSection>
       </motion.div>
 
-      {/* Sparklines */}
       <motion.div variants={item}>
-        <WeeklySparklines />
+        <CollapsibleSection id="activity" title="Activité récente">
+          <ActivityFeed />
+        </CollapsibleSection>
+      </motion.div>
+
+      <motion.div variants={item}>
+        <CollapsibleSection id="map" title="Carte">
+          <VenueMap />
+        </CollapsibleSection>
+      </motion.div>
+
+      <motion.div variants={item}>
+        <CollapsibleSection id="trends" title="Tendances">
+          <WeeklySparklines />
+        </CollapsibleSection>
       </motion.div>
     </motion.div>
   );

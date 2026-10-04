@@ -15,11 +15,15 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Kanban, Table2, Search, X, Building2, User } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { usePersistentState } from '@/lib/persistent-state';
+import { applyPipelineFilters, PipelineFilters, usePipelineFilters } from '@/components/pipeline/pipeline-filters';
 
 export default function PipelinePage() {
   const { data: deals, isLoading } = useDeals();
-  const [view, setView] = useState<'kanban' | 'table'>('kanban');
+  const [view, setView] = usePersistentState<'kanban' | 'table'>('pipeline:view', 'kanban');
+  const [filters, setFilters] = usePipelineFilters();
+  const router = useRouter();
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [prefill, setPrefill] = useState<{ venueId?: string; contactId?: string; n: number }>({ n: 0 });
@@ -30,7 +34,7 @@ export default function PipelinePage() {
 
   const byVenue = useMemo(() => contactsByVenue(contacts), [contacts]);
   const matches = useMemo(() => searchDeals(deals || [], search, byVenue), [deals, search, byVenue]);
-  const filteredDeals = useMemo(() => matches.map((m) => m.deal), [matches]);
+  const filteredDeals = useMemo(() => applyPipelineFilters(matches.map((m) => m.deal), filters), [matches, filters]);
   const hints = useMemo(
     () => new Map(matches.filter((m) => m.hint).map((m) => [m.deal.id, m.hint as string])),
     [matches]
@@ -78,9 +82,9 @@ export default function PipelinePage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold">Pipeline</h1>
+          <h1 className="text-xl font-bold hidden md:block">Pipeline</h1>
           <Tabs value={view} onValueChange={(v) => setView(v as 'kanban' | 'table')}>
             <TabsList>
               <TabsTrigger value="kanban" className="gap-2">
@@ -122,6 +126,8 @@ export default function PipelinePage() {
             </button>
           )}
         </div>
+
+        <PipelineFilters deals={deals || []} filters={filters} setFilters={setFilters} />
 
         {search.trim() && (
           <div className="rounded-lg border bg-card/50 px-3 py-2 text-sm space-y-2">
@@ -196,7 +202,7 @@ export default function PipelinePage() {
             <KanbanBoard
               deals={filteredDeals}
               hints={hints}
-              hideEmptyColumns={!!search.trim()}
+              hideEmptyColumns={!!search.trim() || filteredDeals.length !== (deals || []).length}
               onDealClick={(id) => setSelectedDealId(id)}
             />
           ) : (
@@ -213,7 +219,11 @@ export default function PipelinePage() {
       {activeDealId && (
         <DealSidePanel
           dealId={activeDealId}
-          onClose={() => setSelectedDealId(null)}
+          onClose={() => {
+            setSelectedDealId(null);
+            // Opened from a link (?deal=…): drop the param, otherwise the panel can't be closed.
+            if (urlDealId) router.replace('/pipeline', { scroll: false });
+          }}
         />
       )}
 

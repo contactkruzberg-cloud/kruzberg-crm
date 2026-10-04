@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase } from './use-supabase';
 import type { Task } from '@/types/task';
+import { archiveEntity, undoToast } from '@/lib/archive';
+import { SAVE_META } from '@/lib/save-status';
 
 export function useTasks() {
   const supabase = useSupabase();
@@ -62,6 +64,7 @@ export function useUpdateTask() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
+    meta: SAVE_META,
     mutationFn: async ({ id, ...updates }: Partial<Task> & { id: string }) => {
       const { data, error } = await supabase
         .from('tasks')
@@ -82,12 +85,11 @@ export function useDeleteTask() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('tasks').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    // Archive (restorable), never a hard delete: see src/lib/archive.ts.
+    mutationFn: async (id: string) => archiveEntity(supabase, 'task', id),
+    onSuccess: (batch) => {
+      queryClient.invalidateQueries();
+      undoToast(supabase, queryClient, 'Tâche supprimée', batch);
     },
   });
 }

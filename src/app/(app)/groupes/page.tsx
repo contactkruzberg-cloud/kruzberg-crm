@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Users, Plus, Trash2, MapPin, AtSign, Mail, Phone, Globe, ArrowLeftRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,10 +53,8 @@ function BandDetail({ band }: { band: Band }) {
           variant="ghost"
           size="icon"
           className="text-muted-foreground hover:text-destructive"
-          onClick={() => {
-            if (!confirm(`Supprimer « ${band.name} » ?`)) return;
-            remove.mutate(band.id, { onSuccess: () => toast.success('Groupe supprimé') });
-          }}
+          title="Supprimer (annulable)"
+          onClick={() => remove.mutate(band.id)}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -125,7 +124,9 @@ function BandDetail({ band }: { band: Band }) {
 export default function GroupesPage() {
   const { data: bands, isLoading } = useBands();
   const create = useCreateBand();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const [pickedId, setSelectedId] = useState<string | null | undefined>(undefined);
+  const selectedId = pickedId === undefined ? searchParams.get('id') : pickedId;
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [filter, setFilter] = useState<'all' | 'we_owe' | 'they_owe'>('all');
@@ -153,14 +154,14 @@ export default function GroupesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+        <h1 className="text-2xl font-bold tracking-tight hidden md:flex items-center gap-2">
           <Users className="h-6 w-6" /> Groupes amis
         </h1>
         <p className="text-sm text-muted-foreground">Plateaux partagés et échanges de dates avec les groupes de la scène.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-6">
-        <div className="space-y-3">
+        <div className={cn('space-y-3', selected && 'hidden lg:block')}>
           <form onSubmit={add} className="flex gap-2">
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom du groupe" />
             <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ville" className="w-32" />
@@ -216,7 +217,14 @@ export default function GroupesPage() {
             </div>
           )}
         </div>
-        <div>{selected ? <BandDetail band={selected} /> : <p className="text-sm text-muted-foreground">Sélectionne un groupe.</p>}</div>
+        <div className={cn(!selected && 'hidden lg:block')}>
+          {selected && (
+            <Button variant="ghost" size="sm" className="lg:hidden mb-2 -ml-2" onClick={() => setSelectedId(null)}>
+              ← Retour à la liste
+            </Button>
+          )}
+          {selected ? <BandDetail band={selected} /> : <p className="text-sm text-muted-foreground">Sélectionne un groupe.</p>}
+        </div>
       </div>
     </div>
   );

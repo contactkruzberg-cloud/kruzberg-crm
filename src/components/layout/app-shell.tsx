@@ -10,10 +10,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <main
       className={cn(
         'min-h-[calc(100vh-3.5rem)] transition-all duration-300 pt-14',
-        sidebarOpen ? 'ml-60' : 'ml-16'
+        sidebarOpen ? 'md:ml-60' : 'md:ml-16'
       )}
     >
-      <div className="p-4 lg:p-6">{children}</div>
+      <div className="p-3 sm:p-4 lg:p-6">{children}</div>
     </main>
   );
 }

@@ -143,7 +143,7 @@ export default function AnalyticsPage() {
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      <h1 className="text-xl font-bold">Analytics</h1>
+      <h1 className="text-xl font-bold hidden md:block">Analytics</h1>
 
       {/* Top KPIs */}
       <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">

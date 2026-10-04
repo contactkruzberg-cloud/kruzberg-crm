@@ -19,19 +19,32 @@ import {
   FileText,
   Search,
   Users,
+  Route,
+  Plus,
+  AlarmClock,
+  Settings,
+  ListTodo,
 } from 'lucide-react';
+import { useBands } from '@/hooks/use-bands';
+import { useTours } from '@/hooks/use-tours';
+import { usePipelineFilters } from '@/components/pipeline/pipeline-filters';
+import type { CreateIntent } from '@/stores/app-store';
 
 const PAGES = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Pipeline', href: '/pipeline', icon: Kanban },
   { name: 'Lieux & Contacts', href: '/venues', icon: Building2 },
+  { name: 'Tournées', href: '/tours', icon: Route },
   { name: 'Groupes amis', href: '/groupes', icon: Users },
   { name: 'Templates', href: '/templates', icon: Mail },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 
 export function CommandPalette() {
-  const { commandPaletteOpen, setCommandPaletteOpen } = useAppStore();
+  const { commandPaletteOpen, setCommandPaletteOpen, openCreate, setSettingsOpen } = useAppStore();
+  const { data: bands } = useBands();
+  const { data: tours } = useTours();
+  const [pipelineFilters, setPipelineFilters] = usePipelineFilters();
   const router = useRouter();
   const { data: venues } = useVenues();
   const { data: contacts } = useContacts();
@@ -58,6 +71,28 @@ export function CommandPalette() {
 
   if (!commandPaletteOpen) return null;
 
+  const create = (kind: CreateIntent) => {
+    setSearch('');
+    openCreate(kind);
+  };
+
+  const actions: { name: string; icon: typeof Plus; keywords: string; run: () => void }[] = [
+    { name: 'Relances dues', icon: AlarmClock, keywords: 'relancer retard à faire', run: () => {
+      setPipelineFilters({ ...pipelineFilters, due: true });
+      navigate('/pipeline');
+    } },
+    { name: 'Nouvelle opportunité', icon: Plus, keywords: 'créer ajouter deal', run: () => create('deal') },
+    { name: 'Nouveau lieu', icon: Plus, keywords: 'créer ajouter structure salle festival', run: () => create('venue') },
+    { name: 'Nouveau contact', icon: Plus, keywords: 'créer ajouter personne', run: () => create('contact') },
+    { name: 'Nouvelle tâche', icon: ListTodo, keywords: 'créer ajouter todo', run: () => create('task') },
+    { name: 'Nouveau groupe ami', icon: Plus, keywords: 'créer ajouter band', run: () => create('band') },
+    { name: 'Nouvelle tournée', icon: Plus, keywords: 'créer ajouter tour', run: () => create('tour') },
+    { name: 'Réglages, corbeille et connexions Claude', icon: Settings, keywords: 'compte paramètres restaurer supprimés', run: () => {
+      setCommandPaletteOpen(false);
+      setSettingsOpen(true);
+    } },
+  ];
+
   const navigate = (href: string) => {
     setCommandPaletteOpen(false);
     setSearch('');
@@ -78,7 +113,7 @@ export function CommandPalette() {
               autoFocus
               value={search}
               onValueChange={setSearch}
-              placeholder="Rechercher lieux, contacts, pages..."
+                            placeholder="Rechercher ou lancer une action (relances dues, nouveau lieu…)"
               className="flex h-12 w-full bg-transparent py-3 px-3 text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>
@@ -86,6 +121,20 @@ export function CommandPalette() {
             <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
               Aucun résultat trouvé.
             </Command.Empty>
+
+            <Command.Group heading="Actions" className="text-xs text-muted-foreground px-2 py-1.5">
+              {actions.map((a) => (
+                <Command.Item
+                  key={a.name}
+                  value={`action ${a.name} ${a.keywords}`}
+                  onSelect={a.run}
+                  className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                >
+                  <a.icon className="h-4 w-4 text-muted-foreground" />
+                  {a.name}
+                </Command.Item>
+              ))}
+            </Command.Group>
 
             <Command.Group heading="Pages" className="text-xs text-muted-foreground px-2 py-1.5">
               {PAGES.map((page) => (
@@ -161,6 +210,38 @@ export function CommandPalette() {
                     </Command.Item>
                   );
                 })}
+              </Command.Group>
+            )}
+            {search && bands && bands.length > 0 && (
+              <Command.Group heading="Groupes amis" className="text-xs text-muted-foreground px-2 py-1.5">
+                {bands.map((band) => (
+                  <Command.Item
+                    key={band.id}
+                    value={`band-${band.id} ${band.name} ${band.city || ''} ${band.genre || ''}`}
+                    onSelect={() => navigate(`/groupes?id=${band.id}`)}
+                    className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                  >
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span>{band.name}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">{band.city}</span>
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            )}
+
+            {search && tours && tours.length > 0 && (
+              <Command.Group heading="Tournées" className="text-xs text-muted-foreground px-2 py-1.5">
+                {tours.map((tour) => (
+                  <Command.Item
+                    key={tour.id}
+                    value={`tour-${tour.id} ${tour.name}`}
+                    onSelect={() => navigate(`/tours/${tour.id}`)}
+                    className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent aria-selected:bg-accent"
+                  >
+                    <Route className="h-4 w-4 text-muted-foreground" />
+                    <span>{tour.name}</span>
+                  </Command.Item>
+                ))}
               </Command.Group>
             )}
           </Command.List>

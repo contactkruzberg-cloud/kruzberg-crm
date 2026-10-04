@@ -81,13 +81,7 @@ export default function TemplatesPage() {
 
   const handleDelete = () => {
     if (!selectedId) return;
-    if (!confirm('Supprimer ce template ?')) return;
-    deleteTemplate.mutate(selectedId, {
-      onSuccess: () => {
-        setSelectedId(null);
-        toast.success('Template supprimé');
-      },
-    });
+    deleteTemplate.mutate(selectedId, { onSuccess: () => setSelectedId(null) });
   };
 
   const handleCopy = () => {
@@ -199,7 +193,7 @@ export default function TemplatesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold">Templates & Communications</h1>
+          <h1 className="text-xl font-bold hidden md:block">Templates & Communications</h1>
           <Tabs value={pageTab} onValueChange={(v) => setPageTab(v as 'templates' | 'history')}>
             <TabsList>
               <TabsTrigger value="templates" className="gap-2">

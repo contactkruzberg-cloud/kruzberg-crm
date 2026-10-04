@@ -2,6 +2,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { CommandPalette } from '@/components/layout/command-palette';
 import { AppShell } from '@/components/layout/app-shell';
+import { GlobalCreate } from '@/components/layout/global-create';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <Header />
       <CommandPalette />
+      <GlobalCreate />
       <AppShell>{children}</AppShell>
     </div>
   );

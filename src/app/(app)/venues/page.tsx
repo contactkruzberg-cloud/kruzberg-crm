@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { usePersistentState } from '@/lib/persistent-state';
 import { motion } from 'framer-motion';
 import { useVenues } from '@/hooks/use-venues';
 import { useContacts } from '@/hooks/use-contacts';
@@ -61,30 +63,36 @@ export default function VenuesPage() {
   const { data: deals } = useDeals();
   const { data: activities } = useActivities(500);
   const { data: tasks } = useTasks();
-  const [selectedVenueId, setSelectedVenueId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  // undefined = nothing picked yet (fall back to the URL), null = explicitly none.
+  const [pickedVenueId, setSelectedVenueId] = useState<string | null | undefined>(undefined);
+  // Opened from the ⌘K palette: /venues?id=<venue> or /venues?contact=<contact> (shows its venue).
+  const urlVenueId =
+    searchParams.get('id') ?? (contacts || []).find((c) => c.id === searchParams.get('contact'))?.venue_id ?? null;
+  const selectedVenueId = pickedVenueId === undefined ? urlVenueId : pickedVenueId;
   const [createVenueOpen, setCreateVenueOpen] = useState(false);
   const [createContactOpen, setCreateContactOpen] = useState(false);
   const [contactDefaultVenueId, setContactDefaultVenueId] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState('venues');
-  const [venuesView, setVenuesView] = useState<'list' | 'map'>('list');
+  const [tab, setTab] = usePersistentState<string>('venues:tab', 'venues');
+  const [venuesView, setVenuesView] = usePersistentState<'list' | 'map'>('venues:view', 'list');
 
   // Venue filters
-  const [typeFilter, setTypeFilter] = useState<VenueType | 'all'>('all');
-  const [regionFilter, setRegionFilter] = useState<string>('all');
-  const [deptFilter, setDeptFilter] = useState<string>('all');
-  const [cityFilter, setCityFilter] = useState<string>('all');
-  const [fitFilter, setFitFilter] = useState<number | 'all'>('all');
-  const [pipelineFilter, setPipelineFilter] = useState<'all' | 'not_contacted' | 'in_pipeline'>('all');
-  const [styleFilter, setStyleFilter] = useState<'all' | 'yes' | 'yes_maybe' | 'unknown'>('all');
-  const [contactableOnly, setContactableOnly] = useState(false);
-  const [venueSort, setVenueSort] = useState<VenueSortKey>('fit_score');
+  const [typeFilter, setTypeFilter] = usePersistentState<VenueType | 'all'>('venues:type', 'all');
+  const [regionFilter, setRegionFilter] = usePersistentState<string>('venues:region', 'all');
+  const [deptFilter, setDeptFilter] = usePersistentState<string>('venues:dept', 'all');
+  const [cityFilter, setCityFilter] = usePersistentState<string>('venues:city', 'all');
+  const [fitFilter, setFitFilter] = usePersistentState<number | 'all'>('venues:fit', 'all');
+  const [pipelineFilter, setPipelineFilter] = usePersistentState<'all' | 'not_contacted' | 'in_pipeline'>('venues:pipeline', 'all');
+  const [styleFilter, setStyleFilter] = usePersistentState<'all' | 'yes' | 'yes_maybe' | 'unknown'>('venues:style', 'all');
+  const [contactableOnly, setContactableOnly] = usePersistentState<boolean>('venues:contactable', false);
+  const [venueSort, setVenueSort] = usePersistentState<VenueSortKey>('venues:sort', 'fit_score');
   const [showFilters, setShowFilters] = useState(false);
 
   // Contact filters
-  const [contactRoleFilter, setContactRoleFilter] = useState<string>('all');
-  const [contactSort, setContactSort] = useState<ContactSortKey>('name');
+  const [contactRoleFilter, setContactRoleFilter] = usePersistentState<string>('venues:contact-role', 'all');
+  const [contactSort, setContactSort] = usePersistentState<ContactSortKey>('venues:contact-sort', 'name');
 
   const isLoading = venuesLoading || contactsLoading;
 
@@ -320,7 +328,7 @@ export default function VenuesPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold">Lieux & Contacts</h1>
+          <h1 className="text-xl font-bold hidden md:block">Lieux & Contacts</h1>
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList>
               <TabsTrigger value="venues">Lieux ({filteredVenues.length}/{venues?.length || 0})</TabsTrigger>
@@ -686,14 +694,20 @@ export default function VenuesPage() {
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
+            {/* Phone: list OR detail (with a back button), side by side from lg. */}
+            <div className={cn('lg:col-span-1', selectedVenue && 'hidden lg:block')}>
               <VenueList
                 venues={filteredVenues}
                 selectedId={selectedVenueId}
                 onSelect={setSelectedVenueId}
               />
             </div>
-            <div className="lg:col-span-2">
+            <div className={cn('lg:col-span-2', !selectedVenue && 'hidden lg:block')}>
+              {selectedVenue && (
+                <Button variant="ghost" size="sm" className="lg:hidden mb-2 -ml-2" onClick={() => setSelectedVenueId(null)}>
+                  ← Retour à la liste
+                </Button>
+              )}
               {selectedVenue ? (
                 <motion.div
                   key={selectedVenue.id}

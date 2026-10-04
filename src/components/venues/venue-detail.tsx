@@ -100,10 +100,7 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
   };
 
   const handleDelete = () => {
-    if (!confirm(`Supprimer "${venue.name}" ?`)) return;
-    deleteVenue.mutate(venue.id, {
-      onSuccess: () => toast.success('Lieu supprimé'),
-    });
+    deleteVenue.mutate(venue.id);
   };
 
   const handleGeocode = async () => {

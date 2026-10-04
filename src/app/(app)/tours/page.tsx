@@ -42,7 +42,7 @@ export default function ToursPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
           <Route className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold">Tournées</h1>
+          <h1 className="text-xl font-bold hidden md:block">Tournées</h1>
           <span className="text-sm text-muted-foreground">({tours?.length || 0})</span>
         </div>
         <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>

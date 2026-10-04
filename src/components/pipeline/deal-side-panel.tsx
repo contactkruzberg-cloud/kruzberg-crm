@@ -13,7 +13,6 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { STAGES, PRIORITIES, RELANCE_METHODS, type DealStage, type DealPriority, type RelanceMethod } from '@/types/database';
 import { formatDate, formatRelativeDate, cn, dealLabel } from '@/lib/utils';
 import { useVenues } from '@/hooks/use-venues';
@@ -25,6 +24,9 @@ import { SendEmailDialog } from '@/components/shared/send-email-dialog';
 import { AddToTourDialog } from '@/components/tours/add-to-tour-dialog';
 import { useDealTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks';
 import { DealBill } from '@/components/pipeline/deal-bill';
+import { DealQuickActions } from '@/components/pipeline/deal-quick-actions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { usePersistentState } from '@/lib/persistent-state';
 
 const NONE = '__none__';
 
@@ -50,7 +52,16 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const [newNote, setNewNote] = useState('');
   const [emailOpen, setEmailOpen] = useState(false);
   const [addToTourOpen, setAddToTourOpen] = useState(false);
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [tab, setTab] = usePersistentState<string>('deal-panel:tab', 'infos');
+
+  // Escape closes the panel (unless a dialog / menu is open on top of it).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !document.querySelector('[role="dialog"], [role="menu"], [role="alertdialog"]')) onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDue, setNewTaskDue] = useState('');
@@ -209,465 +220,465 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
         </div>
       ) : deal ? (
         <ScrollArea className="h-[calc(100vh-57px)]">
-          <div className="p-4 space-y-5">
-            {/* Venue info */}
-            {(deal.venue || deal.concert_date) && (
-              <div className="space-y-1">
-                {deal.venue && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {deal.venue.city}, {deal.venue.country}
-                  </div>
-                )}
-                {deal.concert_date && (
-                  <div className="flex items-center gap-2 text-sm text-primary">
-                    <Calendar className="h-3.5 w-3.5" />
-                    Concert: {formatDate(deal.concert_date)}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Nom + rattachement (lieu ou contact) */}
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label className="text-xs">Nom de l&apos;opportunité</Label>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onBlur={handleTitleSave}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') e.currentTarget.blur();
-                  }}
-                  placeholder={deal.venue?.name || deal.contact?.name || 'Ex. Première partie'}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs">Lieu</Label>
-                  <Select value={deal.venue_id ?? NONE} onValueChange={handleVenueChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Aucun lieu" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>Aucun lieu</SelectItem>
-                      {venues?.map((v) => (
-                        <SelectItem key={v.id} value={v.id}>
-                          {v.name} — {v.city}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Contact</Label>
-                  <Select value={deal.contact_id ?? NONE} onValueChange={handleContactChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Aucun contact" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>Aucun contact</SelectItem>
-                      {contactOptions.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                          {c.venue?.name && c.venue_id !== deal.venue_id ? ` — ${c.venue.name}` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            {/* Send Email */}
-            <Button
-              className="w-full gap-2"
-              onClick={() => setEmailOpen(true)}
-            >
-              <Send className="h-4 w-4" />
-              Envoyer un email
-            </Button>
-
-            {(deal.stage === 'confirme' || deal.stage === 'termine') && (
-              <Button
-                variant="outline"
-                className="w-full gap-2"
-                onClick={() => setAddToTourOpen(true)}
-              >
-                <Route className="h-4 w-4" />
-                Ajouter à une tournée
+          <div className="p-4 space-y-4">
+            {/* Action bar: the frequent actions, always at hand */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <DealQuickActions deal={deal} size="sm" />
+              <Button size="sm" className="gap-1.5 h-8" onClick={() => setEmailOpen(true)}>
+                <Send className="h-3.5 w-3.5" />
+                Email
               </Button>
-            )}
-
-            <Separator />
-
-            {/* Stage + Priority */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs">Stage</Label>
-                <Select value={deal.stage} onValueChange={handleStageChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STAGES.map((s) => (
-                      <SelectItem key={s.key} value={s.key}>
-                        {s.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Priorité</Label>
-                <Select value={deal.priority} onValueChange={handlePriorityChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PRIORITIES.map((p) => (
-                      <SelectItem key={p.key} value={p.key}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Dernier contact */}
-            <div className="space-y-2">
-              <Label className="text-xs">Dernier contact</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  type="date"
-                  value={deal.last_message_at ? deal.last_message_at.slice(0, 10) : ''}
-                  onChange={(e) => handleLastRelanceDateChange(e.target.value)}
-                />
-                <Select
-                  value={deal.last_relance_method ?? ''}
-                  onValueChange={(v) => handleLastRelanceMethodChange(v as RelanceMethod)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Mode..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RELANCE_METHODS.map((m) => (
-                      <SelectItem key={m.key} value={m.key}>
-                        {m.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {deal.next_relance_at && (
-                <p className="text-[10px] text-muted-foreground">
-                  Prochaine relance prévue : {formatDate(deal.next_relance_at)}
-                </p>
+              {(deal.stage === 'confirme' || deal.stage === 'termine') && (
+                <Button size="sm" variant="outline" className="gap-1.5 h-8" onClick={() => setAddToTourOpen(true)}>
+                  <Route className="h-3.5 w-3.5" />
+                  Tournée
+                </Button>
               )}
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 ml-auto text-muted-foreground hover:text-destructive"
+                title="Supprimer l'opportunité (annulable)"
+                disabled={deleteDeal.isPending}
+                onClick={() => deleteDeal.mutate(deal.id, { onSuccess: onClose })}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
 
-            {/* Concert date + Fee */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs">Date du concert</Label>
-                <Input
-                  type="date"
-                  value={deal.concert_date ? deal.concert_date.slice(0, 10) : ''}
-                  onChange={(e) => {
-                    updateDeal.mutate({
-                      id: deal.id,
-                      concert_date: e.target.value || null,
-                    });
-                  }}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Cachet (€)</Label>
-                <Input
-                  type="number"
-                  value={deal.fee ?? ''}
-                  onChange={(e) => {
-                    const fee = e.target.value ? parseFloat(e.target.value) : null;
-                    updateDeal.mutate({ id: deal.id, fee });
-                  }}
-                  placeholder="250"
-                />
-              </div>
-            </div>
+            <Tabs value={tab} onValueChange={setTab}>
+              <TabsList className="w-full">
+                <TabsTrigger value="infos" className="flex-1">Infos</TabsTrigger>
+                <TabsTrigger value="history" className="flex-1">Historique ({dealActivities.length})</TabsTrigger>
+                <TabsTrigger value="tasks" className="flex-1">
+                  Tâches & plateau ({dealTasks?.filter((t) => !t.completed_at).length || 0})
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Afficher sur le site public */}
-            <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2.5">
-              <div className="space-y-0.5 pr-3">
-                <Label className="text-xs flex items-center gap-1.5">
-                  <Globe className="h-3.5 w-3.5" />
-                  Afficher sur le site
-                </Label>
-                <p className="text-[11px] leading-tight text-muted-foreground">
-                  Publie cette date sur kruzberg.com (uniquement si stage confirmé ou terminé).
-                </p>
-              </div>
-              <Switch
-                checked={deal.show_on_website ?? false}
-                onCheckedChange={(checked) => {
-                  updateDeal.mutate(
-                    { id: deal.id, show_on_website: checked },
-                    {
-                      onSuccess: () => {
-                        if (!checked) {
-                          toast.success('Retiré du site — mise à jour d\'ici 5 min');
-                          return;
-                        }
-                        // The public_shows view only exposes confirmed/finished deals
-                        // that have a date, so say so instead of promising a publish.
-                        if (deal.stage !== 'confirme' && deal.stage !== 'termine') {
-                          toast.warning('Coché, mais la date restera masquée tant que le stage n\'est pas Confirmé ou Terminé');
-                        } else if (!deal.concert_date) {
-                          toast.warning('Coché, mais la date restera masquée tant qu\'il n\'y a pas de date de concert');
-                        } else {
-                          toast.success('Publié sur kruzberg.com — visible d\'ici 5 min');
-                        }
-                      },
-                      onError: () => toast.error('Échec de la mise à jour'),
-                    }
-                  );
-                }}
-              />
-            </div>
-
-            {/* Tags */}
-            <div className="space-y-2">
-              <Label className="text-xs">Tags</Label>
-              <div className="flex gap-1.5 flex-wrap">
-                {deal.tags?.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-                {(!deal.tags || deal.tags.length === 0) && (
-                  <span className="text-xs text-muted-foreground">Aucun tag</span>
+              <TabsContent value="infos" className="space-y-5 mt-4">
+                {/* Venue info */}
+                {(deal.venue || deal.concert_date) && (
+                  <div className="space-y-1">
+                    {deal.venue && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {deal.venue.city}, {deal.venue.country}
+                      </div>
+                    )}
+                    {deal.concert_date && (
+                      <div className="flex items-center gap-2 text-sm text-primary">
+                        <Calendar className="h-3.5 w-3.5" />
+                        Concert: {formatDate(deal.concert_date)}
+                      </div>
+                    )}
+                  </div>
                 )}
-              </div>
-            </div>
 
-            {/* Notes */}
-            <div className="space-y-2">
-              <Label className="text-xs">Notes</Label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Notes sur cette opportunité..."
-                className="min-h-[80px]"
-              />
-              <p className="text-[10px] text-muted-foreground">Sauvegarde automatique</p>
-            </div>
-
-            <Separator />
-
-            {/* Add activity note */}
-            <div className="space-y-2">
-              <Label className="text-xs">Ajouter une note</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  placeholder="Nouvelle note..."
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
-                />
-                <Button size="sm" onClick={handleAddNote} disabled={!newNote.trim()}>
-                  +
-                </Button>
-              </div>
-            </div>
-
-            {/* Plateau (friend bands) */}
-            <Separator />
-            <DealBill dealId={dealId} />
-
-            {/* Tasks */}
-            <Separator />
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs flex items-center gap-1.5">
-                  <ListTodo className="h-3.5 w-3.5" />
-                  Tâches ({dealTasks?.filter((t) => !t.completed_at).length || 0})
-                </Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-xs gap-1"
-                  onClick={() => setShowAddTask(!showAddTask)}
-                >
-                  <Plus className="h-3 w-3" />
-                  Ajouter
-                </Button>
-              </div>
-
-              {showAddTask && (
-                <div className="rounded-lg border p-2.5 space-y-2 bg-muted/30">
-                  <Input
-                    value={newTaskTitle}
-                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                    placeholder="Ex: Envoyer le morceau pour diffusion"
-                    className="h-8 text-xs"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newTaskTitle.trim()) {
-                        createTask.mutate({
-                          deal_id: deal?.id,
-                          venue_id: deal?.venue_id,
-                          title: newTaskTitle.trim(),
-                          due_date: newTaskDue || null,
-                        }, {
-                          onSuccess: () => {
-                            setNewTaskTitle('');
-                            setNewTaskDue('');
-                            toast.success('Tâche créée');
-                          },
-                        });
-                      }
-                    }}
-                  />
-                  <div className="flex items-center justify-between">
+                {/* Nom + rattachement (lieu ou contact) */}
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Nom de l&apos;opportunité</Label>
                     <Input
-                      type="date"
-                      value={newTaskDue}
-                      onChange={(e) => setNewTaskDue(e.target.value)}
-                      className="h-7 text-xs w-36"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      onBlur={handleTitleSave}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') e.currentTarget.blur();
+                      }}
+                      placeholder={deal.venue?.name || deal.contact?.name || 'Ex. Première partie'}
                     />
-                    <div className="flex gap-1.5">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => { setShowAddTask(false); setNewTaskTitle(''); setNewTaskDue(''); }}
-                      >
-                        Annuler
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="h-7 text-xs"
-                        disabled={!newTaskTitle.trim() || createTask.isPending}
-                        onClick={() => {
-                          createTask.mutate({
-                            deal_id: deal?.id,
-                            venue_id: deal?.venue_id,
-                            title: newTaskTitle.trim(),
-                            due_date: newTaskDue || null,
-                          }, {
-                            onSuccess: () => {
-                              setNewTaskTitle('');
-                              setNewTaskDue('');
-                              setShowAddTask(false);
-                              toast.success('Tâche créée');
-                            },
-                          });
-                        }}
-                      >
-                        Créer
-                      </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Lieu</Label>
+                      <Select value={deal.venue_id ?? NONE} onValueChange={handleVenueChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Aucun lieu" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NONE}>Aucun lieu</SelectItem>
+                          {venues?.map((v) => (
+                            <SelectItem key={v.id} value={v.id}>
+                              {v.name} — {v.city}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Contact</Label>
+                      <Select value={deal.contact_id ?? NONE} onValueChange={handleContactChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Aucun contact" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NONE}>Aucun contact</SelectItem>
+                          {contactOptions.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                              {c.venue?.name && c.venue_id !== deal.venue_id ? ` — ${c.venue.name}` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
-              )}
 
-              {dealTasks && dealTasks.length > 0 ? (
-                <div className="space-y-1.5">
-                  {dealTasks.map((task) => {
-                    const isCompleted = !!task.completed_at;
-                    const isOverdue = !isCompleted && task.due_date && new Date(task.due_date) < new Date();
-                    return (
-                      <div
-                        key={task.id}
-                        className={cn(
-                          'flex items-start gap-2 p-2 rounded-lg group transition-colors',
-                          isCompleted ? 'opacity-50' : 'hover:bg-muted/50',
-                          isOverdue && 'bg-red-500/5'
-                        )}
-                      >
-                        <button
-                          className="mt-0.5 shrink-0"
-                          onClick={() => {
-                            updateTask.mutate({
-                              id: task.id,
-                              completed_at: isCompleted ? null : new Date().toISOString(),
-                            });
-                          }}
-                        >
-                          {isCompleted ? (
-                            <CheckCircle2 className="h-4 w-4 text-primary" />
-                          ) : (
-                            <Circle className={cn('h-4 w-4', isOverdue ? 'text-red-500' : 'text-muted-foreground')} />
-                          )}
-                        </button>
-                        <div className="flex-1 min-w-0">
-                          <p className={cn('text-xs', isCompleted && 'line-through')}>{task.title}</p>
-                          {task.due_date && (
-                            <p className={cn(
-                              'text-[10px] mt-0.5',
-                              isOverdue ? 'text-red-500 font-medium' : 'text-muted-foreground'
-                            )}>
-                              {isOverdue ? 'En retard — ' : ''}{formatDate(task.due_date)}
-                            </p>
-                          )}
-                        </div>
-                        <button
-                          className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                          onClick={() => deleteTask.mutate(task.id)}
-                        >
-                          <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
-                        </button>
-                      </div>
-                    );
-                  })}
+                {/* Stage + Priority */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Stage</Label>
+                    <Select value={deal.stage} onValueChange={handleStageChange}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STAGES.map((s) => (
+                          <SelectItem key={s.key} value={s.key}>
+                            {s.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Priorité</Label>
+                    <Select value={deal.priority} onValueChange={handlePriorityChange}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PRIORITIES.map((p) => (
+                          <SelectItem key={p.key} value={p.key}>
+                            {p.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              ) : !showAddTask ? (
-                <p className="text-xs text-muted-foreground">Aucune tâche</p>
-              ) : null}
-            </div>
 
-            <Separator />
+                {/* Dernier contact */}
+                <div className="space-y-2">
+                  <Label className="text-xs">Dernier contact</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="date"
+                      value={deal.last_message_at ? deal.last_message_at.slice(0, 10) : ''}
+                      onChange={(e) => handleLastRelanceDateChange(e.target.value)}
+                    />
+                    <Select
+                      value={deal.last_relance_method ?? ''}
+                      onValueChange={(v) => handleLastRelanceMethodChange(v as RelanceMethod)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Mode..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RELANCE_METHODS.map((m) => (
+                          <SelectItem key={m.key} value={m.key}>
+                            {m.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {deal.next_relance_at && (
+                    <p className="text-[10px] text-muted-foreground">
+                      Prochaine relance prévue : {formatDate(deal.next_relance_at)}
+                    </p>
+                  )}
+                </div>
 
-            {/* Activity timeline */}
-            <div className="space-y-3">
-              <Label className="text-xs">Historique</Label>
-              {dealActivities.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Aucune activité</p>
-              ) : (
+                {/* Concert date + Fee */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Date du concert</Label>
+                    <Input
+                      type="date"
+                      value={deal.concert_date ? deal.concert_date.slice(0, 10) : ''}
+                      onChange={(e) => {
+                        updateDeal.mutate({
+                          id: deal.id,
+                          concert_date: e.target.value || null,
+                        });
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Cachet (€)</Label>
+                    <Input
+                      type="number"
+                      value={deal.fee ?? ''}
+                      onChange={(e) => {
+                        const fee = e.target.value ? parseFloat(e.target.value) : null;
+                        updateDeal.mutate({ id: deal.id, fee });
+                      }}
+                      placeholder="250"
+                    />
+                  </div>
+                </div>
+
+                {/* Afficher sur le site public */}
+                <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-3 py-2.5">
+                  <div className="space-y-0.5 pr-3">
+                    <Label className="text-xs flex items-center gap-1.5">
+                      <Globe className="h-3.5 w-3.5" />
+                      Afficher sur le site
+                    </Label>
+                    <p className="text-[11px] leading-tight text-muted-foreground">
+                      Publie cette date sur kruzberg.com (uniquement si stage confirmé ou terminé).
+                    </p>
+                  </div>
+                  <Switch
+                    checked={deal.show_on_website ?? false}
+                    onCheckedChange={(checked) => {
+                      updateDeal.mutate(
+                        { id: deal.id, show_on_website: checked },
+                        {
+                          onSuccess: () => {
+                            if (!checked) {
+                              toast.success('Retiré du site — mise à jour d\'ici 5 min');
+                              return;
+                            }
+                            // The public_shows view only exposes confirmed/finished deals
+                            // that have a date, so say so instead of promising a publish.
+                            if (deal.stage !== 'confirme' && deal.stage !== 'termine') {
+                              toast.warning('Coché, mais la date restera masquée tant que le stage n\'est pas Confirmé ou Terminé');
+                            } else if (!deal.concert_date) {
+                              toast.warning('Coché, mais la date restera masquée tant qu\'il n\'y a pas de date de concert');
+                            } else {
+                              toast.success('Publié sur kruzberg.com — visible d\'ici 5 min');
+                            }
+                          },
+                          onError: () => toast.error('Échec de la mise à jour'),
+                        }
+                      );
+                    }}
+                  />
+                </div>
+
+                {/* Tags */}
+                <div className="space-y-2">
+                  <Label className="text-xs">Tags</Label>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {deal.tags?.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs">
+                        {tag}
+                      </Badge>
+                    ))}
+                    {(!deal.tags || deal.tags.length === 0) && (
+                      <span className="text-xs text-muted-foreground">Aucun tag</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-2">
+                  <Label className="text-xs">Notes</Label>
+                  <Textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Notes sur cette opportunité..."
+                    className="min-h-[80px]"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Sauvegarde automatique</p>
+                </div>
+
+              </TabsContent>
+
+              <TabsContent value="history" className="space-y-5 mt-4">
+                {/* Add activity note */}
+                <div className="space-y-2">
+                  <Label className="text-xs">Ajouter une note</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      placeholder="Nouvelle note..."
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
+                    />
+                    <Button size="sm" onClick={handleAddNote} disabled={!newNote.trim()}>
+                      +
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Activity timeline */}
                 <div className="space-y-3">
-                  {dealActivities.map((activity) => {
-                    const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
-                    return (
-                      <div key={activity.id} className="flex items-start gap-3">
-                        <div className="rounded-full bg-muted p-1.5 shrink-0">
-                          <Icon className="h-3 w-3 text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="text-xs">{activity.content}</p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {formatRelativeDate(activity.created_at)}
-                          </p>
+                  <Label className="text-xs">Historique</Label>
+                  {dealActivities.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Aucune activité</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {dealActivities.map((activity) => {
+                        const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
+                        return (
+                          <div key={activity.id} className="flex items-start gap-3">
+                            <div className="rounded-full bg-muted p-1.5 shrink-0">
+                              <Icon className="h-3 w-3 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="text-xs">{activity.content}</p>
+                              <p className="text-[10px] text-muted-foreground">
+                                {formatRelativeDate(activity.created_at)}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+              </TabsContent>
+
+              <TabsContent value="tasks" className="space-y-5 mt-4">
+                <DealBill dealId={dealId} />
+                <Separator />
+                {/* Tasks */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs flex items-center gap-1.5">
+                      <ListTodo className="h-3.5 w-3.5" />
+                      Tâches ({dealTasks?.filter((t) => !t.completed_at).length || 0})
+                    </Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-xs gap-1"
+                      onClick={() => setShowAddTask(!showAddTask)}
+                    >
+                      <Plus className="h-3 w-3" />
+                      Ajouter
+                    </Button>
+                  </div>
+
+                  {showAddTask && (
+                    <div className="rounded-lg border p-2.5 space-y-2 bg-muted/30">
+                      <Input
+                        value={newTaskTitle}
+                        onChange={(e) => setNewTaskTitle(e.target.value)}
+                        placeholder="Ex: Envoyer le morceau pour diffusion"
+                        className="h-8 text-xs"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && newTaskTitle.trim()) {
+                            createTask.mutate({
+                              deal_id: deal?.id,
+                              venue_id: deal?.venue_id,
+                              title: newTaskTitle.trim(),
+                              due_date: newTaskDue || null,
+                            }, {
+                              onSuccess: () => {
+                                setNewTaskTitle('');
+                                setNewTaskDue('');
+                                toast.success('Tâche créée');
+                              },
+                            });
+                          }
+                        }}
+                      />
+                      <div className="flex items-center justify-between">
+                        <Input
+                          type="date"
+                          value={newTaskDue}
+                          onChange={(e) => setNewTaskDue(e.target.value)}
+                          className="h-7 text-xs w-36"
+                        />
+                        <div className="flex gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => { setShowAddTask(false); setNewTaskTitle(''); setNewTaskDue(''); }}
+                          >
+                            Annuler
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs"
+                            disabled={!newTaskTitle.trim() || createTask.isPending}
+                            onClick={() => {
+                              createTask.mutate({
+                                deal_id: deal?.id,
+                                venue_id: deal?.venue_id,
+                                title: newTaskTitle.trim(),
+                                due_date: newTaskDue || null,
+                              }, {
+                                onSuccess: () => {
+                                  setNewTaskTitle('');
+                                  setNewTaskDue('');
+                                  setShowAddTask(false);
+                                  toast.success('Tâche créée');
+                                },
+                              });
+                            }}
+                          >
+                            Créer
+                          </Button>
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
+
+                  {dealTasks && dealTasks.length > 0 ? (
+                    <div className="space-y-1.5">
+                      {dealTasks.map((task) => {
+                        const isCompleted = !!task.completed_at;
+                        const isOverdue = !isCompleted && task.due_date && new Date(task.due_date) < new Date();
+                        return (
+                          <div
+                            key={task.id}
+                            className={cn(
+                              'flex items-start gap-2 p-2 rounded-lg group transition-colors',
+                              isCompleted ? 'opacity-50' : 'hover:bg-muted/50',
+                              isOverdue && 'bg-red-500/5'
+                            )}
+                          >
+                            <button
+                              className="mt-0.5 shrink-0"
+                              onClick={() => {
+                                updateTask.mutate({
+                                  id: task.id,
+                                  completed_at: isCompleted ? null : new Date().toISOString(),
+                                });
+                              }}
+                            >
+                              {isCompleted ? (
+                                <CheckCircle2 className="h-4 w-4 text-primary" />
+                              ) : (
+                                <Circle className={cn('h-4 w-4', isOverdue ? 'text-red-500' : 'text-muted-foreground')} />
+                              )}
+                            </button>
+                            <div className="flex-1 min-w-0">
+                              <p className={cn('text-xs', isCompleted && 'line-through')}>{task.title}</p>
+                              {task.due_date && (
+                                <p className={cn(
+                                  'text-[10px] mt-0.5',
+                                  isOverdue ? 'text-red-500 font-medium' : 'text-muted-foreground'
+                                )}>
+                                  {isOverdue ? 'En retard — ' : ''}{formatDate(task.due_date)}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                              onClick={() => deleteTask.mutate(task.id)}
+                            >
+                              <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : !showAddTask ? (
+                    <p className="text-xs text-muted-foreground">Aucune tâche</p>
+                  ) : null}
                 </div>
-              )}
-            </div>
 
-            <Separator />
-
-            {/* Delete deal */}
-            <div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={() => setConfirmDeleteOpen(true)}
-              >
-                <Trash2 className="h-4 w-4" />
-                Supprimer l&apos;opportunité
-              </Button>
-            </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </ScrollArea>
       ) : null}
@@ -682,39 +693,6 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
             venue={deal.venue}
           />
           <AddToTourDialog open={addToTourOpen} onOpenChange={setAddToTourOpen} deal={deal} />
-          <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Supprimer l&apos;opportunité ?</DialogTitle>
-                <DialogDescription>
-                  L&apos;opportunité « {dealLabel(deal, 'Sans lieu')} » sera supprimée définitivement du pipeline, ainsi que toutes ses activités et tâches liées. Cette action ne peut pas être annulée.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex justify-end gap-2 mt-4">
-                <Button variant="ghost" onClick={() => setConfirmDeleteOpen(false)}>
-                  Annuler
-                </Button>
-                <Button
-                  variant="destructive"
-                  disabled={deleteDeal.isPending}
-                  onClick={() => {
-                    deleteDeal.mutate(deal.id, {
-                      onSuccess: () => {
-                        toast.success('Opportunité supprimée');
-                        setConfirmDeleteOpen(false);
-                        onClose();
-                      },
-                      onError: () => {
-                        toast.error('Erreur lors de la suppression');
-                      },
-                    });
-                  }}
-                >
-                  {deleteDeal.isPending ? 'Suppression…' : 'Supprimer'}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
         </>
       )}
     </motion.div>

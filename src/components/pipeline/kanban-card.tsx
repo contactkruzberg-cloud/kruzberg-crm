@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn, getRelanceUrgency, daysUntil, formatRelativeDate, dealLabel } from '@/lib/utils';
 import type { Deal } from '@/types/database';
 import { Clock, MapPin, Star } from 'lucide-react';
+import { DealQuickActions } from './deal-quick-actions';
 
 interface KanbanCardProps {
   deal: Deal;
@@ -100,6 +101,8 @@ export function KanbanCard({ deal, onClick, isDragging, hint }: KanbanCardProps)
           Dernier contact : {formatRelativeDate(deal.last_message_at)}
         </p>
       )}
+
+      <DealQuickActions deal={deal} className="mt-2" />
     </div>
   );
 }

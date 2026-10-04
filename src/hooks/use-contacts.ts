@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSupabase } from './use-supabase';
 import type { Contact } from '@/types/database';
+import { archiveEntity, undoToast } from '@/lib/archive';
+import { SAVE_META } from '@/lib/save-status';
 
 export function useContacts() {
   const supabase = useSupabase();
@@ -44,6 +46,7 @@ export function useUpdateContact() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
+    meta: SAVE_META,
     mutationFn: async ({ id, ...updates }: Partial<Contact> & { id: string }) => {
       const { data, error } = await supabase
         .from('contacts')
@@ -64,12 +67,11 @@ export function useDeleteContact() {
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('contacts').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+    // Archive (restorable), never a hard delete: see src/lib/archive.ts.
+    mutationFn: async (id: string) => archiveEntity(supabase, 'contact', id),
+    onSuccess: (batch) => {
+      queryClient.invalidateQueries();
+      undoToast(supabase, queryClient, 'Contact supprimé', batch);
     },
   });
 }
