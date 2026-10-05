@@ -58,6 +58,8 @@ export function zone(l: Lead): Zone {
 export const isNew = (l: Lead, meta: RadarMeta) => !!meta.date && (l.addedAt || '') >= meta.date;
 export const hasDraft = (l: Lead) => !!(l.draftState || l.draftAt);
 export const inCrm = (l: Lead) => !!l.crmId;
+/** Booking lead already in the CRM or already written to from booking@ (see known.ts). */
+export const isKnown = (l: Lead) => !inCrm(l) && !l.dismissed && !expired(l) && !!l._known;
 export function expired(l: Lead) {
   if (l.cat === 'support') {
     const e = daysTo(l.eventDate);
@@ -69,9 +71,9 @@ export function expired(l: Lead) {
   }
   return false;
 }
-export const live = (l: Lead) => !inCrm(l) && !l.dismissed && !expired(l);
+export const live = (l: Lead) => !inCrm(l) && !l.dismissed && !expired(l) && !l._known;
 export const archived = (l: Lead) => !inCrm(l) && (!!l.dismissed || expired(l));
-export const needsCrm = (l: Lead) => !inCrm(l) && !l.dismissed && ADV.includes(l.status || '');
+export const needsCrm = (l: Lead) => !inCrm(l) && !l.dismissed && !l._known && ADV.includes(l.status || '');
 export const norm = (s: unknown) =>
   String(s || '')
     .normalize('NFD')
@@ -266,20 +268,22 @@ export function todoOf(l: Lead, meta: RadarMeta): Todo | null {
 
 // ---------------------------------------------------------------- tabs, filters, sort
 
-export type TabId = 'todo' | 'all' | RadarCat | 'drafts' | 'crm' | 'trash';
+export type TabId = 'todo' | 'all' | RadarCat | 'drafts' | 'crm' | 'known' | 'trash';
 export const TABS: { id: TabId; label: string }[] = [
   { id: 'todo', label: 'À faire' },
   { id: 'all', label: 'Toutes' },
   ...CATS,
   { id: 'drafts', label: 'Brouillons' },
   { id: 'crm', label: 'Dans le pipeline' },
+  { id: 'known', label: 'Déjà connues' },
   { id: 'trash', label: 'Archives' },
 ];
 export function baseSet(leads: Lead[], tab: TabId, meta: RadarMeta) {
   if (tab === 'todo') return leads.filter((l) => todoOf(l, meta));
   if (tab === 'crm') return leads.filter(inCrm);
+  if (tab === 'known') return leads.filter(isKnown);
   if (tab === 'trash') return leads.filter(archived);
-  if (tab === 'drafts') return leads.filter((l) => !inCrm(l) && !l.dismissed && hasDraft(l));
+  if (tab === 'drafts') return leads.filter((l) => !inCrm(l) && !l.dismissed && !l._known && hasDraft(l));
   if (tab === 'all') return leads.filter(live);
   return leads.filter((l) => live(l) && l.cat === tab);
 }

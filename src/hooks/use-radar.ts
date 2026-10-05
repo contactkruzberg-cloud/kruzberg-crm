@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { crmInput, STATUS_TO_STAGE, today } from '@/lib/radar/logic';
+import { markKnown, type KnownData } from '@/lib/radar/known';
 import type { Lead, OutboxItem, RadarMeta, RadarRun, RadarScope } from '@/lib/radar/types';
 
 // Booking Radar data (table radar_docs via /api/radar/*). Refreshed every 30 s:
@@ -31,8 +32,19 @@ function useCollection(collection: Collection) {
   });
 }
 
+/** Anti-duplicate scan (CRM + booking@ sent mail), refreshed every 10 min. */
+export function useRadarKnown() {
+  return useQuery({
+    queryKey: ['radar', 'known'],
+    queryFn: () => api<KnownData>('/api/radar/known'),
+    staleTime: 5 * 60_000,
+    refetchInterval: 10 * 60_000,
+  });
+}
+
 export function useRadar() {
   const leads = useCollection('leads');
+  const known = useRadarKnown();
   const config = useCollection('config');
   const runs = useCollection('runs');
   const outbox = useCollection('outbox');
@@ -40,7 +52,12 @@ export function useRadar() {
   return {
     isLoading: leads.isLoading,
     error: leads.error,
-    leads: (leads.data ?? []).map((d) => ({ ...(d.data as Omit<Lead, 'id'>), id: d.id }) as Lead),
+    leads: markKnown(
+      (leads.data ?? []).map((d) => ({ ...(d.data as Omit<Lead, 'id'>), id: d.id }) as Lead),
+      known.data,
+    ),
+    known: known.data,
+    knownError: known.error,
     meta: (configById.get('meta') ?? {}) as RadarMeta,
     scope: (configById.get('scope') ?? {}) as RadarScope,
     runs: ((runs.data ?? []).map((d) => d.data) as unknown as RadarRun[]).sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 60),
@@ -105,7 +122,10 @@ export function useRadarCrm() {
       });
       return res;
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ['deals'] }),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ['deals'] });
+      void qc.invalidateQueries({ queryKey: ['radar', 'known'] });
+    },
   });
 }
 

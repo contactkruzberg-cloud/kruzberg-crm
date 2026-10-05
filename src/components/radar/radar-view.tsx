@@ -27,6 +27,7 @@ import {
   fmtDate,
   hasDraft,
   inCrm,
+  isKnown,
   isNew,
   keyDate,
   live,
@@ -128,7 +129,7 @@ function LeadRow({
         </div>
         <div className="mt-1.5 flex flex-wrap gap-1">
           {isNew(lead, meta) && live(lead) && <Tag tone="new">nouveau</Tag>}
-          {['all', 'trash', 'drafts', 'todo', 'crm'].includes(tab) && <Tag>{CATL[lead.cat] || lead.cat}</Tag>}
+          {['all', 'trash', 'drafts', 'todo', 'crm', 'known'].includes(tab) && <Tag>{CATL[lead.cat] || lead.cat}</Tag>}
           {lead.type && <Tag>{lead.type}</Tag>}
           {k && (
             <Tag tone={k.n < 0 ? 'muted' : k.n <= 14 ? 'urgent' : 'warn'}>
@@ -145,7 +146,9 @@ function LeadRow({
           {lead.dismissed && <Tag tone="muted">écartée{lead.dismissReason ? ` · ${lead.dismissReason}` : ''}</Tag>}
           {dups.length > 0 && <Tag tone="warn">doublon ? {dups[0].name}</Tag>}
           {used.length > 0 && <Tag tone="warn">adresse déjà sollicitée</Tag>}
+          {isKnown(lead) && <Tag tone="warn">{lead._known!.source === 'sent' ? 'déjà écrit depuis booking@' : 'déjà dans le CRM'}</Tag>}
         </div>
+        {isKnown(lead) && <p className="mt-2 border-l-2 border-orange-500 pl-2 text-xs text-muted-foreground">{lead._known!.why}</p>}
         {td && (
           <div className="mt-2 space-y-0.5">
             {td.why.map((w) => (
@@ -193,7 +196,7 @@ function LeadRow({
 // ---------------------------------------------------------------- view
 
 export function RadarView() {
-  const { leads, meta, scope, runs, outbox, isLoading, error } = useRadar();
+  const { leads, meta, scope, runs, outbox, isLoading, error, known, knownError } = useRadar();
   const actions = useRadarActions();
   const [tab, setTab] = usePersistentState<TabId>('radar:tab', 'todo');
   const [filters, setFilters] = usePersistentState<RadarFilters>('radar:filters', DEFAULT_FILTERS);
@@ -234,7 +237,7 @@ export function RadarView() {
     (id: string) => {
       const l = leads.find((x) => x.id === id);
       if (!l) return;
-      setTab(inCrm(l) ? 'crm' : !live(l) ? 'trash' : l.cat);
+      setTab(inCrm(l) ? 'crm' : isKnown(l) ? 'known' : !live(l) ? 'trash' : l.cat);
       setFilters(DEFAULT_FILTERS);
       setOpenId(id);
     },
@@ -514,7 +517,7 @@ export function RadarView() {
       <div className="flex gap-1 overflow-x-auto border-b">
         {TABS.map((t) => {
           const n = counts[t.id]?.length ?? 0;
-          const nw = ['trash', 'drafts', 'crm', 'todo'].includes(t.id) ? 0 : (counts[t.id] ?? []).filter((l) => isNew(l, meta)).length;
+          const nw = ['trash', 'drafts', 'crm', 'known', 'todo'].includes(t.id) ? 0 : (counts[t.id] ?? []).filter((l) => isNew(l, meta)).length;
           return (
             <button
               key={t.id}
@@ -536,6 +539,14 @@ export function RadarView() {
           );
         })}
       </div>
+      {/* Anti-duplicate scan status */}
+      <p className={cn('-mt-2 text-xs', known?.sentError || knownError ? 'text-orange-500' : 'text-muted-foreground')}>
+        {knownError
+          ? `Anti-doublon indisponible : ${knownError instanceof Error ? knownError.message : ''}`
+          : !known
+            ? 'Anti-doublon : vérification du pipeline et des mails envoyés…'
+            : `Anti-doublon booking : ${counts.known.length} piste${counts.known.length > 1 ? 's' : ''} masquée${counts.known.length > 1 ? 's' : ''} (déjà dans le CRM ou déjà écrites depuis booking@, ${known.sent.length} adresses scannées)${known.sentError ? ` · mails envoyés non lus : ${known.sentError}` : ''}`}
+      </p>
 
       {/* Filters */}
       <div className="space-y-2">

@@ -47,6 +47,7 @@ import {
   fmtDate,
   hasDraft,
   inCrm,
+  isKnown,
   keyDate,
   live,
   normCity,
@@ -303,6 +304,28 @@ export function LeadPanel({
               <RotateCcw className="h-3.5 w-3.5" /> Resynchro
             </Button>
           </>
+        ) : isKnown(lead) ? (
+          <>
+            {lead._known!.path && (
+              <Button asChild size="sm" className="gap-1.5">
+                <Link href={lead._known!.path}>
+                  <Kanban className="h-3.5 w-3.5" /> Voir dans le CRM
+                </Link>
+              </Button>
+            )}
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => actions.dismiss(lead, 'Déjà contacté').then(onClose)}>
+              <Ban className="h-3.5 w-3.5" /> Écarter (déjà contacté)
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-auto gap-1.5 text-muted-foreground"
+              title="Fausse alerte : la piste revient dans le radar"
+              onClick={() => actions.patch(lead.id, { knownIgnore: true }).then(() => toast.success('Remise dans le radar'))}
+            >
+              <RotateCcw className="h-3.5 w-3.5" /> Pas un doublon
+            </Button>
+          </>
         ) : lead.dismissed || ex ? (
           lead.dismissed && (
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => actions.restore(lead)}>
@@ -372,6 +395,7 @@ export function LeadPanel({
               </Tag>
             )}
             {C && <Tag tone="crm">Pipeline · {STAGE_LABEL[lead.crmStage || ''] || lead.crmStage || '—'}</Tag>}
+            {isKnown(lead) && <Tag tone="warn">Déjà connue : {lead._known!.why}</Tag>}
             {lead.dismissed && <Tag tone="muted">Écartée{lead.dismissReason ? ` : ${lead.dismissReason}` : ''}</Tag>}
             {ex && !lead.dismissed && !C && <Tag tone="muted">périmée</Tag>}
             {hasDraft(lead) && !C && <Tag tone={lead.draftState === 'pending' ? 'warn' : 'ok'}>{lead.draftState === 'pending' ? 'brouillon en file' : `brouillon ${fmtDate(lead.draftAt)}`}</Tag>}

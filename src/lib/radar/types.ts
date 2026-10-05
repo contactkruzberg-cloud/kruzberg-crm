@@ -1,4 +1,5 @@
 // Booking Radar documents (same shape as the claude.ai artifact database).
+import type { KnownHit } from './known';
 
 export type RadarCat = 'festivals' | 'tremplins' | 'booking_fr' | 'booking_eu' | 'support' | 'pros' | 'presse';
 
@@ -53,6 +54,10 @@ export interface Lead {
   crmUrl?: string;
   crmStage?: string;
   crmAt?: string;
+  /** Greg said "not a duplicate": the anti-duplicate check skips this lead. */
+  knownIgnore?: boolean;
+  /** Computed in the browser (never stored): already in the CRM or already written to. */
+  _known?: KnownHit;
   [key: string]: unknown;
 }
 
