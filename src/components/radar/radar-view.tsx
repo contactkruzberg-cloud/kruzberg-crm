@@ -47,7 +47,8 @@ import type { Lead } from '@/lib/radar/types';
 import { LeadPanel } from './lead-panel';
 import { TriageDialog } from './triage-dialog';
 import { VeilleDialog } from './veille-dialog';
-import { ChanceBadge, Kbd, Kpi, Tag } from './radar-ui';
+import { ChanceBadge, Kbd, Tag } from './radar-ui';
+import { NAV_ITEMS, RadarNav, RadarNavMobile } from './radar-nav';
 import { useRadarActions } from './use-radar-actions';
 
 const PAGE = 80;
@@ -217,6 +218,17 @@ export function RadarView() {
   const list = useMemo(() => filterLeads(leads, tab, filters, meta, idx), [leads, tab, filters, meta, idx]);
   const visible = list.slice(0, limit);
   const counts = useMemo(() => Object.fromEntries(TABS.map((t) => [t.id, baseSet(leads, t.id, meta)])), [leads, meta]);
+  const tabCounts = useMemo(() => Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, v.length])), [counts]);
+  const freshCounts = useMemo(
+    () => Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, ['trash', 'drafts', 'crm', 'known', 'todo'].includes(k) ? 0 : v.filter((l) => isNew(l, meta)).length])),
+    [counts, meta],
+  );
+  const currentNav = NAV_ITEMS.find((n) => n.id === tab);
+  const selectTab = (id: TabId) => {
+    setTab(id);
+    setLimit(PAGE);
+    setFocusIdx(-1);
+  };
   const toCrm = leads.filter(needsCrm);
   const triCount = triQueue(leads, meta, new Set()).length;
   const strip = leads
@@ -459,247 +471,234 @@ export function RadarView() {
       </div>
       {meta.summary && <p className="-mt-3 text-xs text-muted-foreground line-clamp-2">{meta.summary}</p>}
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Kpi value={counts.todo.length} label="À faire maintenant" tone="urgent" active={tab === 'todo'} onClick={() => setTab('todo')} />
-        <Kpi value={counts.all.length} label="Pistes à exploiter" sub={`+${counts.all.filter((l) => isNew(l, meta)).length} nouvelles`} active={tab === 'all'} onClick={() => setTab('all')} />
-        <Kpi value={counts.drafts.length} label="Brouillons à envoyer" active={tab === 'drafts'} onClick={() => setTab('drafts')} />
-        <Kpi value={counts.crm.length} label="Passées au pipeline" active={tab === 'crm'} onClick={() => setTab('crm')} />
-      </div>
-
-      {/* Banners */}
-      {toCrm.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm">
-          <AlertTriangle className="h-4 w-4 text-orange-500" />
-          <span>
-            <b>{toCrm.length}</b> piste{toCrm.length > 1 ? 's' : ''} déjà contactée{toCrm.length > 1 ? 's' : ''} mais absente{toCrm.length > 1 ? 's' : ''} du pipeline (
-            {toCrm.slice(0, 3).map((l) => l.name).join(', ')}
-            {toCrm.length > 3 ? '…' : ''})
-          </span>
-          <Button size="sm" className="ml-auto h-7" onClick={sendAllToCrm} disabled={actions.busy}>
-            Tout envoyer au pipeline
-          </Button>
-        </div>
-      )}
-      {outbox.length > 0 && (
-        <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
-          <b>{outbox.length}</b> brouillon{outbox.length > 1 ? 's' : ''} en file ({outbox.slice(0, 4).map((o) => o.leadName || o.leadId).join(', ')}
-          {outbox.length > 4 ? '…' : ''}). Pour les créer dans Mail, demande à Claude : « crée les brouillons en attente ».
-        </div>
-      )}
-
-      {/* Upcoming deadlines */}
-      {strip.length > 0 && (
-        <section className="space-y-2">
-          <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Échéances · 60 jours</h2>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {strip.map(({ l, k }) => (
-              <button
-                key={l.id}
-                type="button"
-                onClick={() => jump(l.id)}
-                className={cn('w-52 shrink-0 rounded-lg border bg-card p-2.5 text-left transition-all hover:border-primary/40 hover:shadow-md', k!.n <= 14 && 'border-red-500/40')}
-              >
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                  {CATL[l.cat]} · {k!.kind}
-                </div>
-                <div className={cn('mt-0.5 font-mono text-xs', k!.n <= 14 ? 'text-red-500' : 'text-orange-500')}>
-                  {fmtDate(k!.d)} · J-{k!.n}
-                </div>
-                <div className="mt-0.5 truncate text-sm font-medium">{l.name}</div>
-              </button>
-            ))}
+      <RadarNavMobile tab={tab} counts={tabCounts} fresh={freshCounts} onSelect={selectTab} />
+      <div className="lg:flex lg:items-start lg:gap-6">
+        <RadarNav tab={tab} counts={tabCounts} fresh={freshCounts} onSelect={selectTab} />
+        <div className="min-w-0 flex-1 space-y-5">
+          {/* Current view */}
+          <div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              {currentNav && <currentNav.icon className="h-5 w-5 text-primary" />}
+              {currentNav?.label}
+              <span className="text-sm font-normal text-muted-foreground">
+                {list.length}
+                {list.length !== (tabCounts[tab] ?? 0) ? ` / ${tabCounts[tab] ?? 0}` : ''} piste{list.length > 1 ? 's' : ''}
+              </span>
+            </h2>
+            {currentNav && <p className="text-xs text-muted-foreground">{currentNav.hint}</p>}
           </div>
-        </section>
-      )}
 
-      {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b">
-        {TABS.map((t) => {
-          const n = counts[t.id]?.length ?? 0;
-          const nw = ['trash', 'drafts', 'crm', 'known', 'todo'].includes(t.id) ? 0 : (counts[t.id] ?? []).filter((l) => isNew(l, meta)).length;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => {
-                setTab(t.id);
-                setLimit(PAGE);
-                setFocusIdx(-1);
-              }}
-              className={cn(
-                'flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors',
-                tab === t.id ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {t.label}
-              <span className="text-xs text-muted-foreground">{n}</span>
-              {nw > 0 && <span className="rounded bg-primary px-1 text-[10px] font-semibold text-primary-foreground">+{nw}</span>}
-            </button>
-          );
-        })}
-      </div>
-      {/* Anti-duplicate scan status */}
-      <p className={cn('-mt-2 text-xs', known?.sentError || knownError ? 'text-orange-500' : 'text-muted-foreground')}>
-        {knownError
-          ? `Anti-doublon indisponible : ${knownError instanceof Error ? knownError.message : ''}`
-          : !known
-            ? 'Anti-doublon : vérification du pipeline et des mails envoyés…'
-            : `Anti-doublon booking : ${counts.known.length} piste${counts.known.length > 1 ? 's' : ''} masquée${counts.known.length > 1 ? 's' : ''} (déjà dans le CRM ou déjà écrites depuis booking@, ${known.sent.length} adresses scannées)${known.sentError ? ` · mails envoyés non lus : ${known.sentError}` : ''}`}
-      </p>
+          {/* Banners */}
+          {toCrm.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm">
+              <AlertTriangle className="h-4 w-4 text-orange-500" />
+              <span>
+                <b>{toCrm.length}</b> piste{toCrm.length > 1 ? 's' : ''} déjà contactée{toCrm.length > 1 ? 's' : ''} mais absente{toCrm.length > 1 ? 's' : ''} du pipeline (
+                {toCrm.slice(0, 3).map((l) => l.name).join(', ')}
+                {toCrm.length > 3 ? '…' : ''})
+              </span>
+              <Button size="sm" className="ml-auto h-7" onClick={sendAllToCrm} disabled={actions.busy}>
+                Tout envoyer au pipeline
+              </Button>
+            </div>
+          )}
+          {outbox.length > 0 && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
+              <b>{outbox.length}</b> brouillon{outbox.length > 1 ? 's' : ''} en file ({outbox.slice(0, 4).map((o) => o.leadName || o.leadId).join(', ')}
+              {outbox.length > 4 ? '…' : ''}). Pour les créer dans Mail, demande à Claude : « crée les brouillons en attente ».
+            </div>
+          )}
 
-      {/* Filters */}
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-[200px] flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input ref={searchRef} value={filters.q} onChange={(e) => setF({ q: e.target.value })} onKeyDown={(e) => e.key === 'Escape' && setF({ q: '' })} placeholder="Chercher un lieu, une ville, un contact…  ( / )" className="pl-9" />
-          </div>
-          <Select value={filters.sort} onValueChange={(v) => setF({ sort: v as RadarFilters['sort'] })}>
-            <SelectTrigger className="w-auto gap-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="smart">Tri : priorité</SelectItem>
-              <SelectItem value="chance">Tri : chances</SelectItem>
-              <SelectItem value="deadline">Tri : échéance</SelectItem>
-              <SelectItem value="added">Tri : ajout récent</SelectItem>
-              <SelectItem value="name">Tri : A → Z</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant={showFilters || activeFilters ? 'secondary' : 'outline'} className="gap-1.5" onClick={() => setShowFilters(!showFilters)}>
-            <Filter className="h-4 w-4" /> Filtres{activeFilters ? ` (${activeFilters})` : ''}
-          </Button>
-          <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-[hsl(var(--primary))]"
-              checked={list.length > 0 && list.every((l) => picked.has(l.id))}
-              onChange={(e) => setPicked(e.target.checked ? new Set(list.map((l) => l.id)) : new Set())}
-            />
-            Tout sélectionner
-          </label>
-        </div>
-        {showFilters && (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3">
-            <Select value={filters.zone || 'all'} onValueChange={(v) => setF({ zone: v === 'all' ? '' : (v as RadarFilters['zone']) })}>
-              <SelectTrigger className="h-8 w-auto text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes zones</SelectItem>
-                <SelectItem value="Lyon / AURA">Lyon / AURA</SelectItem>
-                <SelectItem value="France">France</SelectItem>
-                <SelectItem value="Europe">Europe</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.city || 'all'} onValueChange={(v) => setF({ city: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-auto text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes villes</SelectItem>
-                {cities.map(([key, v]) => (
-                  <SelectItem key={key} value={key}>
-                    {v.label} ({v.items.length})
-                  </SelectItem>
+          {/* Upcoming deadlines */}
+          {strip.length > 0 && (tab === 'todo' || tab === 'all') && (
+            <section className="space-y-2">
+              <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Échéances · 60 jours</h2>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {strip.map(({ l, k }) => (
+                  <button
+                    key={l.id}
+                    type="button"
+                    onClick={() => jump(l.id)}
+                    className={cn('w-52 shrink-0 rounded-lg border bg-card p-2.5 text-left transition-all hover:border-primary/40 hover:shadow-md', k!.n <= 14 && 'border-red-500/40')}
+                  >
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      {CATL[l.cat]} · {k!.kind}
+                    </div>
+                    <div className={cn('mt-0.5 font-mono text-xs', k!.n <= 14 ? 'text-red-500' : 'text-orange-500')}>
+                      {fmtDate(k!.d)} · J-{k!.n}
+                    </div>
+                    <div className="mt-0.5 truncate text-sm font-medium">{l.name}</div>
+                  </button>
                 ))}
-              </SelectContent>
-            </Select>
-            <Select value={String(filters.minChance)} onValueChange={(v) => setF({ minChance: Number(v) })}>
-              <SelectTrigger className="h-8 w-auto text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">Toutes chances</SelectItem>
-                <SelectItem value="58">Réelles et fortes</SelectItem>
-                <SelectItem value="75">Fortes seulement</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.status || 'all'} onValueChange={(v) => setF({ status: v === 'all' ? '' : v })}>
-              <SelectTrigger className="h-8 w-auto text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous statuts</SelectItem>
-                {STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
+              </div>
+            </section>
+          )}
+
+          {/* Anti-duplicate scan status */}
+          {['booking_fr', 'booking_eu', 'known'].includes(tab) && (
+            <p className={cn('text-xs', known?.sentError || knownError ? 'text-orange-500' : 'text-muted-foreground')}>
+              {knownError
+                ? `Anti-doublon indisponible : ${knownError instanceof Error ? knownError.message : ''}`
+                : !known
+                  ? 'Anti-doublon : vérification du pipeline et des mails envoyés…'
+                  : `Anti-doublon booking : ${counts.known.length} piste${counts.known.length > 1 ? 's' : ''} masquée${counts.known.length > 1 ? 's' : ''} (déjà dans le CRM ou déjà écrites depuis booking@, ${known.sent.length} adresses scannées)${known.sentError ? ` · mails envoyés non lus : ${known.sentError}` : ''}`}
+            </p>
+          )}
+
+          {/* Filters */}
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative min-w-[200px] flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input ref={searchRef} value={filters.q} onChange={(e) => setF({ q: e.target.value })} onKeyDown={(e) => e.key === 'Escape' && setF({ q: '' })} placeholder="Chercher un lieu, une ville, un contact…  ( / )" className="pl-9" />
+              </div>
+              <Select value={filters.sort} onValueChange={(v) => setF({ sort: v as RadarFilters['sort'] })}>
+                <SelectTrigger className="w-auto gap-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="smart">Tri : priorité</SelectItem>
+                  <SelectItem value="chance">Tri : chances</SelectItem>
+                  <SelectItem value="deadline">Tri : échéance</SelectItem>
+                  <SelectItem value="added">Tri : ajout récent</SelectItem>
+                  <SelectItem value="name">Tri : A → Z</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant={showFilters || activeFilters ? 'secondary' : 'outline'} className="gap-1.5" onClick={() => setShowFilters(!showFilters)}>
+                <Filter className="h-4 w-4" /> Filtres{activeFilters ? ` (${activeFilters})` : ''}
+              </Button>
+              <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-[hsl(var(--primary))]"
+                  checked={list.length > 0 && list.every((l) => picked.has(l.id))}
+                  onChange={(e) => setPicked(e.target.checked ? new Set(list.map((l) => l.id)) : new Set())}
+                />
+                Tout sélectionner
+              </label>
+            </div>
+            {showFilters && (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3">
+                <Select value={filters.zone || 'all'} onValueChange={(v) => setF({ zone: v === 'all' ? '' : (v as RadarFilters['zone']) })}>
+                  <SelectTrigger className="h-8 w-auto text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes zones</SelectItem>
+                    <SelectItem value="Lyon / AURA">Lyon / AURA</SelectItem>
+                    <SelectItem value="France">France</SelectItem>
+                    <SelectItem value="Europe">Europe</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filters.city || 'all'} onValueChange={(v) => setF({ city: v === 'all' ? '' : v })}>
+                  <SelectTrigger className="h-8 w-auto text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes villes</SelectItem>
+                    {cities.map(([key, v]) => (
+                      <SelectItem key={key} value={key}>
+                        {v.label} ({v.items.length})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={String(filters.minChance)} onValueChange={(v) => setF({ minChance: Number(v) })}>
+                  <SelectTrigger className="h-8 w-auto text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Toutes chances</SelectItem>
+                    <SelectItem value="58">Réelles et fortes</SelectItem>
+                    <SelectItem value="75">Fortes seulement</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filters.status || 'all'} onValueChange={(v) => setF({ status: v === 'all' ? '' : v })}>
+                  <SelectTrigger className="h-8 w-auto text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous statuts</SelectItem>
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {(
+                  [
+                    ['onlyNew', 'Nouveautés'],
+                    ['withEmail', 'Avec email'],
+                    ['fresh', 'Adresses pas encore sollicitées'],
+                  ] as const
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setF({ [key]: !filters[key] })}
+                    className={cn(
+                      'rounded-full border px-2.5 py-1 text-xs font-medium transition-all',
+                      filters[key] ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/50',
+                    )}
+                  >
+                    {label}
+                  </button>
                 ))}
-              </SelectContent>
-            </Select>
-            {(
-              [
-                ['onlyNew', 'Nouveautés'],
-                ['withEmail', 'Avec email'],
-                ['fresh', 'Adresses pas encore sollicitées'],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setF({ [key]: !filters[key] })}
-                className={cn(
-                  'rounded-full border px-2.5 py-1 text-xs font-medium transition-all',
-                  filters[key] ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:border-primary/50',
+                {activeFilters > 0 && (
+                  <button type="button" onClick={() => setFilters({ ...DEFAULT_FILTERS, q: filters.q, sort: filters.sort })} className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                    <X className="h-3 w-3" /> Effacer
+                  </button>
                 )}
-              >
-                {label}
-              </button>
-            ))}
-            {activeFilters > 0 && (
-              <button type="button" onClick={() => setFilters({ ...DEFAULT_FILTERS, q: filters.q, sort: filters.sort })} className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                <X className="h-3 w-3" /> Effacer
-              </button>
+              </div>
             )}
+            <p className="hidden lg:block text-[11px] text-muted-foreground">
+              Raccourcis : <Kbd>/</Kbd> chercher · <Kbd>j</Kbd>
+              <Kbd>k</Kbd> naviguer · <Kbd>↵</Kbd> ouvrir · <Kbd>e</Kbd> email · <Kbd>p</Kbd> pipeline · <Kbd>x</Kbd> écarter · <Kbd>t</Kbd> trier
+            </p>
           </div>
-        )}
-        <p className="hidden lg:block text-[11px] text-muted-foreground">
-          Raccourcis : <Kbd>/</Kbd> chercher · <Kbd>j</Kbd>
-          <Kbd>k</Kbd> naviguer · <Kbd>↵</Kbd> ouvrir · <Kbd>e</Kbd> email · <Kbd>p</Kbd> pipeline · <Kbd>x</Kbd> écarter · <Kbd>t</Kbd> trier
-        </p>
-      </div>
 
-      {/* List */}
-      {list.length === 0 ? (
-        <div className="rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground">
-          {leads.length ? 'Aucune piste ne correspond aux filtres.' : 'Aucune piste pour l’instant.'}
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {visible.map((l, i) => (
-            <LeadRow
-              key={l.id}
-              lead={l}
-              tab={tab}
-              meta={meta}
-              idx={idx}
-              picked={picked.has(l.id)}
-              focused={i === focusIdx}
-              onPick={(on) => {
-                const s = new Set(picked);
-                if (on) s.add(l.id);
-                else s.delete(l.id);
-                setPicked(s);
-              }}
-              onOpen={() => {
-                setFocusIdx(i);
-                setComposeId(null);
-                setOpenId(l.id);
-              }}
-              onCompose={() => {
-                setFocusIdx(i);
-                setComposeId(l.id);
-                setOpenId(l.id);
-              }}
-            />
-          ))}
-          {list.length > visible.length && (
-            <Button variant="ghost" className="w-full" onClick={() => setLimit(limit + PAGE)}>
-              Afficher {Math.min(PAGE, list.length - visible.length)} de plus ({list.length - visible.length} restantes)
-            </Button>
+          {/* List */}
+          {list.length === 0 ? (
+            <div className="rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground">
+              {leads.length ? 'Aucune piste ne correspond aux filtres.' : 'Aucune piste pour l’instant.'}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {visible.map((l, i) => (
+                <LeadRow
+                  key={l.id}
+                  lead={l}
+                  tab={tab}
+                  meta={meta}
+                  idx={idx}
+                  picked={picked.has(l.id)}
+                  focused={i === focusIdx}
+                  onPick={(on) => {
+                    const s = new Set(picked);
+                    if (on) s.add(l.id);
+                    else s.delete(l.id);
+                    setPicked(s);
+                  }}
+                  onOpen={() => {
+                    setFocusIdx(i);
+                    setComposeId(null);
+                    setOpenId(l.id);
+                  }}
+                  onCompose={() => {
+                    setFocusIdx(i);
+                    setComposeId(l.id);
+                    setOpenId(l.id);
+                  }}
+                />
+              ))}
+              {list.length > visible.length && (
+                <Button variant="ghost" className="w-full" onClick={() => setLimit(limit + PAGE)}>
+                  Afficher {Math.min(PAGE, list.length - visible.length)} de plus ({list.length - visible.length} restantes)
+                </Button>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       {/* Bulk bar */}
       {picked.size > 0 && (
