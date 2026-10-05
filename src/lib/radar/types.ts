@@ -77,6 +77,8 @@ export interface RadarScope {
 
 export interface RadarRun {
   date: string;
+  /** Search slot of the day: matin / midi / soir. */
+  slot?: string;
   added?: number;
   summary?: string;
 }
@@ -90,4 +92,13 @@ export interface OutboxItem {
   body: string;
   state: string;
   createdAt?: string;
+}
+
+/** config/learned: what the daily search has learned from Greg's feedback (written by the search). */
+export interface RadarLearned {
+  updatedAt?: string;
+  summary?: string;
+  works?: string[];
+  avoid?: string[];
+  angles?: string[];
 }

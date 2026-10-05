@@ -84,14 +84,15 @@ describe('tools/list', () => {
       'restore', 'add_note', 'log_activity', 'move_stage', 'set_follow_up', 'bulk_update',
       'list_bands', 'get_band', 'create_band', 'update_band', 'archive_band',
       'list_application_deadlines', 'link_band_to_deal', 'unlink_band_from_deal', 'save_briefing', 'get_briefing',
-      'radar_list', 'radar_get', 'radar_batch', 'radar_sync_status', 'radar_sync_push', 'radar_sync_ack', 'radar_sync_baseline', 'radar_sync_refetch',
+      'radar_list', 'radar_get', 'radar_batch', 'radar_known_check', 'radar_feedback',
+      'radar_sync_status', 'radar_sync_push', 'radar_sync_ack', 'radar_sync_baseline', 'radar_sync_refetch',
     ];
     expect(Object.keys(tools).sort()).toEqual([...expected].sort());
     for (const name of expected) {
       const t = tools[name];
       expect(t.description.length, name).toBeGreaterThan(40);
       expect(t.inputSchema.additionalProperties, name).toBe(false);
-      const readOnly = /^(get_|list_|search|find_|radar_list|radar_get)/.test(name);
+      const readOnly = /^(get_|list_|search|find_|radar_list|radar_get|radar_known_check|radar_feedback)/.test(name);
       expect(t.annotations.readOnlyHint, name).toBe(readOnly);
       if (/^archive_|^bulk_update$/.test(name)) expect(t.annotations.destructiveHint, name).toBe(true);
       if (/^(create_|update_|add_note|log_activity|move_stage|set_follow_up|restore)/.test(name)) {

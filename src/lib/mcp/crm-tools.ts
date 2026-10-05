@@ -47,6 +47,7 @@ import {
 } from './entities';
 import { depsFor, runTool, takeFor, type McpContext } from './tools';
 import { MAX_RADAR_BATCH, radarBatch, radarGet, radarList, RADAR_COLLECTIONS } from './radar';
+import { radarFeedback, radarKnownCheck, type Candidate } from './radar-insights';
 import { radarSyncAck, radarSyncBaseline, radarSyncPush, radarSyncRefetch, radarSyncStatus } from './radar-sync';
 import type { Row } from './store';
 
@@ -605,6 +606,48 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
       annotations: WRITE,
     },
     run('radar_batch', (deps, a: Parameters<typeof radarBatch>[1]) => radarBatch(deps, a)),
+  );
+
+  server.registerTool(
+    'radar_known_check',
+    {
+      title: 'Radar : déjà connu ? (anti-doublon)',
+      description:
+        'Avant d\'ajouter des pistes, vérifie si elles sont déjà connues : salle, contact ou opportunité du CRM (non archivés), ou adresse à qui booking@kruzberg.com a déjà écrit (dossier Envoyés). ' +
+        'Correspondance par email exact, même domaine (hors webmails), même site web, ou même nom + même ville. Jusqu\'à 100 candidats par appel ; ref = ton identifiant pour relier la réponse. ' +
+        'Une piste booking / pros / presse « known » ne doit pas être ajoutée ; pour une 1re partie ou un festival, c\'est une info (le lieu est connu, la date peut rester une vraie piste).',
+      inputSchema: z.strictObject({
+        candidates: z
+          .array(
+            z.strictObject({
+              ref: z.string().max(100).optional(),
+              cat: z.string().max(40).optional(),
+              name: z.string().min(1).max(200),
+              city: z.string().max(100).optional(),
+              venue: z.string().max(200).optional(),
+              email: z.string().max(500).optional(),
+              website: z.string().max(500).optional(),
+            }),
+          )
+          .min(1)
+          .max(100),
+      }),
+      annotations: READ,
+    },
+    run('radar_known_check', (deps, a: { candidates: Candidate[] }) => radarKnownCheck(deps, a)),
+  );
+
+  server.registerTool(
+    'radar_feedback',
+    {
+      title: 'Radar : retour d\'expérience',
+      description:
+        'Ce que sont devenues les pistes : passées au pipeline (par rubrique : envoyées, ont répondu, confirmées, refusées, en attente ; exemples positifs et refus), ' +
+        'écartées par Greg (raisons par rubrique, exemples récents), ajustements de réalisme de Greg, et pistes ignorées depuis 14 j. À lire au début de chaque veille pour cibler ce qui marche.',
+      inputSchema: z.strictObject({}),
+      annotations: READ,
+    },
+    run('radar_feedback', (deps) => radarFeedback(deps)),
   );
 
   // ---------------- Synchro radar artifact claude.ai ⇄ CRM (tâche horaire)

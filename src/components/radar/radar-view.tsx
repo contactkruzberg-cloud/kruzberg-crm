@@ -197,7 +197,7 @@ function LeadRow({
 // ---------------------------------------------------------------- view
 
 export function RadarView() {
-  const { leads, meta, scope, runs, outbox, isLoading, error, known, knownError } = useRadar();
+  const { leads, meta, scope, learned, runs, outbox, isLoading, error, known, knownError } = useRadar();
   const actions = useRadarActions();
   const [tab, setTab] = usePersistentState<TabId>('radar:tab', 'todo');
   const [filters, setFilters] = usePersistentState<RadarFilters>('radar:filters', DEFAULT_FILTERS);
@@ -755,7 +755,7 @@ export function RadarView() {
           setOpenId(id);
         }}
       />
-      <VeilleDialog open={veilleOpen} onOpenChange={setVeilleOpen} scope={scope} runs={runs} leads={leads} idx={idx} />
+      <VeilleDialog open={veilleOpen} onOpenChange={setVeilleOpen} scope={scope} learned={learned} runs={runs} leads={leads} idx={idx} />
     </div>
   );
 }

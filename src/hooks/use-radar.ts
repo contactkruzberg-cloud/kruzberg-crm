@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { crmInput, STATUS_TO_STAGE, today } from '@/lib/radar/logic';
 import { markKnown, type KnownData } from '@/lib/radar/known';
-import type { Lead, OutboxItem, RadarMeta, RadarRun, RadarScope } from '@/lib/radar/types';
+import type { Lead, OutboxItem, RadarLearned, RadarMeta, RadarRun, RadarScope } from '@/lib/radar/types';
 
 // Booking Radar data (table radar_docs via /api/radar/*). Refreshed every 30 s:
 // the hourly sync with the claude.ai artifact and the daily search write too.
@@ -60,7 +60,10 @@ export function useRadar() {
     knownError: known.error,
     meta: (configById.get('meta') ?? {}) as RadarMeta,
     scope: (configById.get('scope') ?? {}) as RadarScope,
-    runs: ((runs.data ?? []).map((d) => d.data) as unknown as RadarRun[]).sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 60),
+    learned: (configById.get('learned') ?? {}) as RadarLearned,
+    runs: ((runs.data ?? []).map((d) => ({ ...d.data, id: d.id })) as unknown as (RadarRun & { id: string })[])
+      .sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.id.localeCompare(a.id))
+      .slice(0, 90),
     outbox: (outbox.data ?? []).map((d) => ({ ...(d.data as Omit<OutboxItem, 'id'>), id: d.id }) as OutboxItem).filter((o) => o.state === 'pending'),
   };
 }

@@ -11,13 +11,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRadarWrite } from '@/hooks/use-radar';
 import { CATS, fmtDate, inCrm, norm, normCity, today, type RadarIndex } from '@/lib/radar/logic';
-import type { Lead, RadarCat, RadarRun, RadarScope } from '@/lib/radar/types';
+import type { Lead, RadarCat, RadarLearned, RadarRun, RadarScope } from '@/lib/radar/types';
 
-/** Daily search settings (read every morning), manual lead, search log. */
+/** Search settings (read by every search, 3 times a day), what it learned, manual lead, search log. */
 export function VeilleDialog({
   open,
   onOpenChange,
   scope,
+  learned,
   runs,
   leads,
   idx,
@@ -25,6 +26,7 @@ export function VeilleDialog({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   scope: RadarScope;
+  learned: RadarLearned;
   runs: RadarRun[];
   leads: Lead[];
   idx: RadarIndex;
@@ -93,14 +95,15 @@ export function VeilleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Veille quotidienne</DialogTitle>
+          <DialogTitle>Veille</DialogTitle>
           <DialogDescription>
-            Lue chaque matin par la recherche automatique{scope.updatedAt ? ` · réglages modifiés le ${fmtDate(scope.updatedAt)}` : ''}.
+            Recherche automatique 3 fois par jour (7 h · 13 h · 19 h), qui apprend de tes choix{scope.updatedAt ? ` · réglages modifiés le ${fmtDate(scope.updatedAt)}` : ''}.
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="scope">
           <TabsList>
             <TabsTrigger value="scope">Réglages</TabsTrigger>
+            <TabsTrigger value="learned">Ce qu’elle a appris</TabsTrigger>
             <TabsTrigger value="add">Ajouter une piste</TabsTrigger>
             <TabsTrigger value="log">Journal ({runs.length})</TabsTrigger>
           </TabsList>
@@ -121,7 +124,7 @@ export function VeilleDialog({
               <Textarea value={draft.next || ''} onChange={(e) => setDraft({ ...draft, next: e.target.value })} placeholder="Ex : trouve les dates de tournée européenne de Gurriers au printemps 2027." />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs">Rubriques suivies · nouvelles pistes max par jour</Label>
+              <Label className="text-xs">Rubriques suivies · nouvelles pistes max par recherche</Label>
               <div className="grid gap-2 sm:grid-cols-2">
                 {CATS.map((c) => (
                   <label key={c.id} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
@@ -137,6 +140,37 @@ export function VeilleDialog({
                 Enregistrer les réglages
               </Button>
             </div>
+          </TabsContent>
+
+          <TabsContent value="learned" className="mt-4 space-y-4 text-sm">
+            {!learned.updatedAt ? (
+              <p className="text-muted-foreground">
+                Rien encore : à chaque recherche, la veille relit ce que deviennent les pistes (réponses, refus, pistes écartées et pourquoi, ton avis « plus / moins réaliste ») et note ici ce qu’elle en retient.
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground">Mis à jour le {fmtDate(learned.updatedAt)}. Pour la corriger, écris une consigne dans « Priorités » ou « À exclure ».</p>
+                {learned.summary && <p>{learned.summary}</p>}
+                {(
+                  [
+                    ['Ce qui marche (elle en cherche plus)', learned.works],
+                    ['Ce qu’elle évite', learned.avoid],
+                    ['Pistes de recherche des prochains jours', learned.angles],
+                  ] as const
+                ).map(([title, items]) =>
+                  items?.length ? (
+                    <div key={title} className="space-y-1">
+                      <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</h4>
+                      <ul className="list-disc space-y-0.5 pl-5">
+                        {items.map((x) => (
+                          <li key={x}>{x}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null,
+                )}
+              </>
+            )}
           </TabsContent>
 
           <TabsContent value="add" className="mt-4">
@@ -168,10 +202,13 @@ export function VeilleDialog({
               <p className="text-sm text-muted-foreground">Aucune veille enregistrée.</p>
             ) : (
               <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
-                {runs.map((r) => (
-                  <div key={r.date} className="rounded-lg border p-2.5 text-sm">
+                {runs.map((r, i) => (
+                  <div key={`${r.date}-${r.slot ?? ''}-${i}`} className="rounded-lg border p-2.5 text-sm">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">{fmtDate(r.date)}</span>
+                      <span className="font-medium text-foreground">
+                        {fmtDate(r.date)}
+                        {r.slot ? ` · ${r.slot}` : ''}
+                      </span>
                       <span>+{r.added ?? 0} piste{(r.added ?? 0) > 1 ? 's' : ''}</span>
                     </div>
                     {r.summary && <p className="mt-1 text-muted-foreground">{r.summary}</p>}

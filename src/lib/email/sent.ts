@@ -66,3 +66,20 @@ export async function fetchSentRecipients(sinceDays = 3 * 365): Promise<SentReci
   }
   return [...byAddr.values()];
 }
+
+// Kept 10 min per server instance: the Sent folder is scanned at most that often.
+let cache: { at: number; data: SentRecipient[] } | null = null;
+const TTL = 10 * 60_000;
+
+/** Cached scan; on failure, returns the last good scan (if any) with the error. */
+export async function sentRecipientsCached(force = false): Promise<{ data: SentRecipient[]; error?: string }> {
+  if (!force && cache && Date.now() - cache.at < TTL) return { data: cache.data };
+  try {
+    const data = await fetchSentRecipients();
+    cache = { at: Date.now(), data };
+    return { data };
+  } catch (err) {
+    console.error('[radar] sent scan failed', err);
+    return { data: cache?.data ?? [], error: err instanceof Error ? err.message : 'échec IMAP' };
+  }
+}
