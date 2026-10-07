@@ -83,3 +83,95 @@ export async function sentRecipientsCached(force = false): Promise<{ data: SentR
     return { data: cache?.data ?? [], error: err instanceof Error ? err.message : 'échec IMAP' };
   }
 }
+
+export interface SentMessage {
+  subject: string;
+  date: string; // ISO
+  to: string;
+  /** Plain-text body, quoted history and signature noise trimmed, max ~4000 chars. */
+  text: string;
+}
+
+type BodyNode = { type?: string; part?: string; childNodes?: BodyNode[]; disposition?: string };
+
+function findPart(node: BodyNode | undefined, type: string): string | null {
+  if (!node) return null;
+  if (node.type === type && node.disposition !== 'attachment') return node.part || '1';
+  for (const c of node.childNodes ?? []) {
+    const p = findPart(c, type);
+    if (p) return p;
+  }
+  return null;
+}
+
+const stripHtml = (h: string) =>
+  h
+    .replace(/<(style|script)[\s\S]*?<\/\1>/gi, '')
+    .replace(/<br\s*\/?>|<\/p>|<\/div>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&quot;/g, '"');
+
+/** Drop the quoted history ("> …", "Le … a écrit :") so only what we wrote remains. */
+function ownText(t: string) {
+  const lines = t.replace(/\r/g, '').split('\n');
+  const cut = lines.findIndex((l) => /^(>|Le .+ a écrit\s*:|On .+ wrote:|-----Original Message|De\s*:.+@)/i.test(l.trim()));
+  return (cut >= 0 ? lines.slice(0, cut) : lines).join('\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, 4000);
+}
+
+/** Latest message sent from booking@ to one of these addresses (OVH "Sent" folder), or null. */
+export async function fetchLastSentTo(addresses: string[]): Promise<SentMessage | null> {
+  const targets = [...new Set(addresses.map((a) => a.trim().toLowerCase()).filter((a) => a.includes('@')))];
+  if (!targets.length || !process.env.IMAP_PASSWORD) return null;
+  const client = new ImapFlow({
+    host: process.env.IMAP_HOST || 'ssl0.ovh.net',
+    port: parseInt(process.env.IMAP_PORT || '993'),
+    secure: true,
+    auth: { user: process.env.IMAP_USER || 'booking@kruzberg.com', pass: process.env.IMAP_PASSWORD },
+    logger: false,
+  });
+  try {
+    await client.connect();
+    const boxes = await client.list();
+    const sent = boxes.find((b) => b.specialUse === '\\Sent') ?? boxes.find((b) => SENT_NAMES.test(b.path));
+    if (!sent) return null;
+    const lock = await client.getMailboxLock(sent.path);
+    try {
+      let best: { uid: number; date: Date; subject: string; to: string; body?: BodyNode } | null = null;
+      for (const addr of targets) {
+        const uids = await client.search({ to: addr }, { uid: true });
+        if (!uids || !uids.length) continue;
+        // The highest UIDs are the most recent; check the last few for the latest date.
+        for await (const msg of client.fetch(uids.slice(-5), { envelope: true, bodyStructure: true }, { uid: true })) {
+          const date = msg.envelope?.date ? new Date(msg.envelope.date) : new Date(0);
+          if (!best || date > best.date) best = { uid: msg.uid, date, subject: msg.envelope?.subject || '', to: addr, body: msg.bodyStructure as BodyNode };
+        }
+      }
+      if (!best) return null;
+      const plain = findPart(best.body, 'text/plain');
+      const html = plain ? null : findPart(best.body, 'text/html');
+      let text = '';
+      const part = plain || html;
+      if (part) {
+        const dl = await client.download(String(best.uid), part, { uid: true });
+        const chunks: Buffer[] = [];
+        for await (const c of dl.content) chunks.push(Buffer.from(c));
+        text = Buffer.concat(chunks).toString('utf8');
+        if (html) text = stripHtml(text);
+      }
+      return { subject: best.subject, date: best.date.toISOString(), to: best.to, text: ownText(text) };
+    } finally {
+      lock.release();
+    }
+  } finally {
+    try {
+      await client.logout();
+    } catch {
+      /* ignore */
+    }
+  }
+}
