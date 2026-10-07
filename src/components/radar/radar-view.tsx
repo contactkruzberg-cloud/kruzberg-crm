@@ -47,6 +47,9 @@ import { buildMail, emailsOf, kindOf, langOf } from '@/lib/radar/mail-templates'
 import type { Lead } from '@/lib/radar/types';
 import { LeadPanel } from './lead-panel';
 import { RadarMap } from './radar-map';
+import { PlacePicker } from './place-picker';
+import { useGeoLocate } from './use-geo-locate';
+import { geoPlace, leadDistanceKm } from '@/lib/radar/geo';
 import { TriageDialog } from './triage-dialog';
 import { VeilleDialog } from './veille-dialog';
 import { ChanceBadge, Kbd, Tag } from './radar-ui';
@@ -79,6 +82,7 @@ function LeadRow({
   onPick,
   onOpen,
   onCompose,
+  distanceKm,
 }: {
   lead: Lead;
   tab: TabId;
@@ -89,6 +93,8 @@ function LeadRow({
   onPick: (on: boolean) => void;
   onOpen: () => void;
   onCompose: () => void;
+  /** km from the "autour de" place. */
+  distanceKm?: number | null;
 }) {
   const actions = useRadarActions();
   const k = keyDate(lead);
@@ -129,6 +135,7 @@ function LeadRow({
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <span className="font-medium">{lead.name}</span>
           {loc && <span className="truncate text-xs text-muted-foreground">{loc}</span>}
+          {distanceKm != null && <span className="text-xs font-medium text-primary">à {Math.round(distanceKm)} km</span>}
         </div>
         <div className="mt-1.5 flex flex-wrap gap-1">
           {isNew(lead, meta) && live(lead) && <Tag tone="new">nouveau</Tag>}
@@ -219,7 +226,25 @@ export function RadarView() {
   const searchRef = useRef<HTMLInputElement>(null);
 
   const idx = useMemo(() => buildIndex(leads), [leads]);
-  const list = useMemo(() => filterLeads(leads, tab, filters, meta, idx), [leads, tab, filters, meta, idx]);
+  const filtered = useMemo(() => filterLeads(leads, tab, filters, meta, idx), [leads, tab, filters, meta, idx]);
+  // "Autour de" filter: needs the city coordinates, located in the background (also for the map).
+  const near = filters.near ?? null;
+  const radius = filters.radius ?? 100;
+  const { cache: geoCache, progress: geoProgress } = useGeoLocate(filtered, geo, geoExists, view === 'map' || !!near);
+  const distances = useMemo(() => {
+    const m = new Map<string, number | null>();
+    if (near) for (const l of filtered) m.set(l.id, leadDistanceKm(l, geoCache, near));
+    return m;
+  }, [filtered, geoCache, near]);
+  const list = useMemo(() => {
+    if (!near) return filtered;
+    const inside = filtered.filter((l) => {
+      const d = distances.get(l.id);
+      return d != null && d <= radius;
+    });
+    return filters.sort === 'distance' ? inside.sort((a, b) => distances.get(a.id)! - distances.get(b.id)!) : inside;
+  }, [filtered, near, radius, distances, filters.sort]);
+  const unlocated = near ? filtered.filter((l) => distances.get(l.id) == null && geoPlace(l) && !(geoPlace(l)!.key in geoCache)).length : 0;
   const visible = list.slice(0, limit);
   const counts = useMemo(() => Object.fromEntries(TABS.map((t) => [t.id, baseSet(leads, t.id, meta)])), [leads, meta]);
   const tabCounts = useMemo(() => Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, v.length])), [counts]);
@@ -246,7 +271,7 @@ export function RadarView() {
     setFilters({ ...filters, ...patch });
     setLimit(PAGE);
   };
-  const activeFilters = [filters.zone, filters.city, filters.minChance, filters.status, filters.onlyNew, filters.withEmail, filters.fresh].filter(Boolean).length;
+  const activeFilters = [filters.zone, filters.city, filters.minChance, filters.status, filters.onlyNew, filters.withEmail, filters.fresh, near].filter(Boolean).length;
   const veilleAge = meta.date ? -(daysTo(meta.date) || 0) : null;
 
   const jump = useCallback(
@@ -566,6 +591,7 @@ export function RadarView() {
                   <SelectItem value="deadline">Tri : échéance</SelectItem>
                   <SelectItem value="added">Tri : ajout récent</SelectItem>
                   <SelectItem value="name">Tri : A → Z</SelectItem>
+                  {near && <SelectItem value="distance">Tri : distance</SelectItem>}
                 </SelectContent>
               </Select>
               <div className="flex rounded-md border p-0.5" role="group" aria-label="Affichage">
@@ -626,6 +652,21 @@ export function RadarView() {
                     ))}
                   </SelectContent>
                 </Select>
+                <div className="flex items-center gap-1.5">
+                  <PlacePicker value={near} onChange={(p) => setF({ near: p, ...(p ? {} : filters.sort === 'distance' ? { sort: 'smart' } : {}) })} />
+                  <Select value={String(radius)} onValueChange={(v) => setF({ radius: Number(v) })}>
+                    <SelectTrigger className="h-8 w-auto text-xs" title="Rayon autour du lieu">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[25, 50, 100, 150, 200, 300, 500, 800, 1000, 1500].map((km) => (
+                        <SelectItem key={km} value={String(km)}>
+                          {km} km
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Select value={String(filters.minChance)} onValueChange={(v) => setF({ minChance: Number(v) })}>
                   <SelectTrigger className="h-8 w-auto text-xs">
                     <SelectValue />
@@ -673,6 +714,18 @@ export function RadarView() {
                 )}
               </div>
             )}
+            {near && (
+              <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <span className="rounded-full border border-primary/50 bg-primary/10 px-2 py-0.5 font-medium text-foreground">
+                  Autour de {near.label} · {radius} km
+                </span>
+                {list.length} piste{list.length > 1 ? 's' : ''} dans le rayon
+                {geoProgress ? ` · localisation des villes ${geoProgress.done}/${geoProgress.total}…` : unlocated ? ` · ${unlocated} non localisée${unlocated > 1 ? 's' : ''}` : ''}
+                <button type="button" className="flex items-center gap-0.5 hover:text-foreground" onClick={() => setF({ near: null, ...(filters.sort === 'distance' ? { sort: 'smart' } : {}) })}>
+                  <X className="h-3 w-3" /> retirer
+                </button>
+              </p>
+            )}
             <p className="hidden lg:block text-[11px] text-muted-foreground">
               Raccourcis : <Kbd>/</Kbd> chercher · <Kbd>j</Kbd>
               <Kbd>k</Kbd> naviguer · <Kbd>↵</Kbd> ouvrir · <Kbd>e</Kbd> email · <Kbd>p</Kbd> pipeline · <Kbd>x</Kbd> écarter · <Kbd>t</Kbd> trier
@@ -683,8 +736,10 @@ export function RadarView() {
           {view === 'map' && list.length > 0 ? (
             <RadarMap
               leads={list}
-              geo={geo}
-              geoExists={geoExists}
+              cache={geoCache}
+              progress={geoProgress}
+              near={near}
+              radius={radius}
               onOpen={(id) => {
                 setComposeId(null);
                 setOpenId(id);
@@ -705,6 +760,7 @@ export function RadarView() {
                   idx={idx}
                   picked={picked.has(l.id)}
                   focused={i === focusIdx}
+                  distanceKm={near ? distances.get(l.id) : undefined}
                   onPick={(on) => {
                     const s = new Set(picked);
                     if (on) s.add(l.id);

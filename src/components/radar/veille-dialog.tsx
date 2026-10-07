@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRadarWrite } from '@/hooks/use-radar';
+import { PlacePicker } from './place-picker';
 import { CATS, fmtDate, inCrm, norm, normCity, today, type RadarIndex } from '@/lib/radar/logic';
 import type { Lead, RadarCat, RadarLearned, RadarRun, RadarScope } from '@/lib/radar/types';
 
@@ -45,7 +46,7 @@ export function VeilleDialog({
   const save = async () => {
     const full: Record<string, { on: boolean; max: number }> = {};
     for (const c of CATS) full[c.id] = { on: cats[c.id]?.on !== false, max: Math.max(0, Math.min(20, cats[c.id]?.max ?? 5)) };
-    await write.mutateAsync({ op: 'set', collection: 'config', id: 'scope', data: { focus: draft.focus || '', exclude: draft.exclude || '', next: draft.next || '', cats: full, updatedAt: today() } });
+    await write.mutateAsync({ op: 'set', collection: 'config', id: 'scope', data: { ...scope, focus: draft.focus || '', exclude: draft.exclude || '', next: draft.next || '', cats: full, zone: draft.zone ?? null, updatedAt: today() } });
     toast.success('Réglages enregistrés · appliqués à la prochaine veille');
   };
 
@@ -118,6 +119,39 @@ export function VeilleDialog({
                 <Label className="text-xs">À exclure</Label>
                 <Textarea value={draft.exclude || ''} onChange={(e) => setDraft({ ...draft, exclude: e.target.value })} placeholder="Ex : lieux > 500 places ; tremplins payants…" className="min-h-[90px]" />
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Zone de recherche</Label>
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 text-sm">
+                {draft.zone ? (
+                  <>
+                    <span>Autour de</span>
+                    <PlacePicker value={draft.zone} onChange={(p) => setDraft({ ...draft, zone: p ? { ...p, radiusKm: draft.zone?.radiusKm ?? 300 } : null })} />
+                    <span>dans un rayon de</span>
+                    <Select value={String(draft.zone.radiusKm)} onValueChange={(v) => setDraft({ ...draft, zone: { ...draft.zone!, radiusKm: Number(v) } })}>
+                      <SelectTrigger className="h-8 w-auto text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[50, 100, 150, 200, 300, 500, 800, 1000, 1500].map((km) => (
+                          <SelectItem key={km} value={String(km)}>
+                            {km} km
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-muted-foreground">Toute l&apos;Europe.</span>
+                    <span className="text-muted-foreground">Pour cibler une région (ex. une tournée) :</span>
+                    <PlacePicker value={null} onChange={(p) => p && setDraft({ ...draft, zone: { ...p, radiusKm: 300 } })} placeholder="Ville centre…" />
+                  </>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Pour les salles, festivals, 1res parties et tremplins. Labels, tourneurs et médias restent cherchés partout.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Consigne pour la prochaine recherche (effacée une fois traitée)</Label>

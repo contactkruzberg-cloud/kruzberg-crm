@@ -1,5 +1,6 @@
 // Booking Radar logic, ported from the claude.ai artifact (same rules, typed,
 // with the state passed in instead of globals).
+import type { NearPlace } from './geo';
 import { ASSESS } from './assess';
 import { emailsOf } from './mail-templates';
 import type { Lead, RadarCat, RadarMeta } from './types';
@@ -313,12 +314,16 @@ export interface RadarFilters {
   city: string;
   minChance: number;
   status: string;
-  sort: 'smart' | 'chance' | 'deadline' | 'added' | 'name';
+  /** 'distance' needs `near` (the sort itself is done in the view, which has the city coordinates). */
+  sort: 'smart' | 'chance' | 'deadline' | 'added' | 'name' | 'distance';
   onlyNew: boolean;
   withEmail: boolean;
   fresh: boolean;
+  /** "Autour de" filter: only leads within `radius` km of this place. */
+  near?: NearPlace | null;
+  radius?: number;
 }
-export const DEFAULT_FILTERS: RadarFilters = { q: '', zone: '', city: '', minChance: 0, status: '', sort: 'smart', onlyNew: false, withEmail: false, fresh: false };
+export const DEFAULT_FILTERS: RadarFilters = { q: '', zone: '', city: '', minChance: 0, status: '', sort: 'smart', onlyNew: false, withEmail: false, fresh: false, near: null, radius: 100 };
 
 export function filterLeads(leads: Lead[], tab: TabId, f: RadarFilters, meta: RadarMeta, idx: RadarIndex): Lead[] {
   let s = baseSet(leads, tab, meta);
@@ -367,6 +372,7 @@ export function filterLeads(leads: Lead[], tab: TabId, f: RadarFilters, meta: Ra
     deadline: (a, b) => kd(a) - kd(b) || (b.fit || 1) - (a.fit || 1),
     added: (a, b) => (b.addedAt || '').localeCompare(a.addedAt || '') || (b.fit || 1) - (a.fit || 1),
     name: (a, b) => a.name.localeCompare(b.name),
+    distance: (a, b) => prio(b, meta) - prio(a, meta) || kd(a) - kd(b) || a.name.localeCompare(b.name),
   };
   return s.sort(cmp[f.sort]);
 }

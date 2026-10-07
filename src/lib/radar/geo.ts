@@ -34,3 +34,26 @@ export function geoPlace(l: Lead): GeoPlace | null {
   if (!/^[A-Z]{2}$/.test(cc)) cc = 'FR';
   return { key: `${norm(city)}|${cc}`, query: city, country: cc.toLowerCase(), label: city };
 }
+
+/** A chosen place (filter "autour de", search zone of the veille). */
+export interface NearPlace {
+  label: string;
+  lat: number;
+  lng: number;
+}
+
+/** Great-circle distance in km. */
+export function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad;
+  const dLng = (b.lng - a.lng) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+
+/** Distance from `near` to the lead's city, or null if the city is not located (yet). */
+export function leadDistanceKm(l: Lead, cache: GeoCache, near: NearPlace): number | null {
+  const p = geoPlace(l);
+  const pos = p && cache[p.key];
+  return pos ? distanceKm(near, { lat: pos[0], lng: pos[1] }) : null;
+}

@@ -76,6 +76,8 @@ export interface RadarScope {
   exclude?: string;
   next?: string;
   cats?: Partial<Record<RadarCat, { on?: boolean; max?: number }>>;
+  /** Search zone: only places within radiusKm of this town. Empty = all of Europe. */
+  zone?: { label: string; lat: number; lng: number; radiusKm: number } | null;
   updatedAt?: string;
 }
 

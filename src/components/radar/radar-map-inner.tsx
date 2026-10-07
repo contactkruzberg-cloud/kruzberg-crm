@@ -2,10 +2,11 @@
 
 // Leaflet part of the radar map, loaded client-side only (see radar-map.tsx).
 import { useEffect } from 'react';
-import { CircleMarker, MapContainer, Popup, Tooltip, useMap } from 'react-leaflet';
+import { Circle, CircleMarker, MapContainer, Popup, Tooltip, useMap } from 'react-leaflet';
 import { latLngBounds } from 'leaflet';
 import { MapTiles } from '@/components/shared/map-tiles';
 import { CATL, chance, TIER, type Tier } from '@/lib/radar/logic';
+import type { NearPlace } from '@/lib/radar/geo';
 import type { Lead } from '@/lib/radar/types';
 
 export interface MapGroup {
@@ -18,10 +19,22 @@ export interface MapGroup {
 const TIER_HEX: Record<Tier, string> = { hi: '#22c55e', mid: '#a78bfa', lo: '#f97316', vlo: '#64748b' };
 
 /** Zoom to the markers whenever the set of places changes (tab / filters). */
-function FitBounds({ groups }: { groups: MapGroup[] }) {
+function FitBounds({ groups, near, radius }: { groups: MapGroup[]; near?: NearPlace | null; radius?: number }) {
   const map = useMap();
-  const sig = groups.map((g) => g.key).join(',');
+  const sig = groups.map((g) => g.key).join(',') + (near ? `|${near.lat},${near.lng},${radius}` : '');
   useEffect(() => {
+    if (near && radius) {
+      // The search circle: ~radius km around the place.
+      const d = radius / 111;
+      map.fitBounds(
+        [
+          [near.lat - d, near.lng - d / Math.cos((near.lat * Math.PI) / 180)],
+          [near.lat + d, near.lng + d / Math.cos((near.lat * Math.PI) / 180)],
+        ],
+        { padding: [20, 20] },
+      );
+      return;
+    }
     if (!groups.length) return;
     if (groups.length === 1) map.setView(groups[0].pos, 11);
     else map.fitBounds(latLngBounds(groups.map((g) => g.pos)), { padding: [30, 30], maxZoom: 11 });
@@ -30,11 +43,33 @@ function FitBounds({ groups }: { groups: MapGroup[] }) {
   return null;
 }
 
-export default function RadarMapInner({ groups, onOpen }: { groups: MapGroup[]; onOpen: (id: string) => void }) {
+export default function RadarMapInner({
+  groups,
+  near,
+  radius,
+  onOpen,
+}: {
+  groups: MapGroup[];
+  near?: NearPlace | null;
+  radius?: number;
+  onOpen: (id: string) => void;
+}) {
   return (
     <MapContainer center={[46.6, 4.5]} zoom={5} className="h-full w-full" scrollWheelZoom>
       <MapTiles />
-      <FitBounds groups={groups} />
+      <FitBounds groups={groups} near={near} radius={radius} />
+      {near && radius && (
+        <>
+          <Circle center={[near.lat, near.lng]} radius={radius * 1000} pathOptions={{ color: '#38bdf8', weight: 1.5, fillOpacity: 0.05, dashArray: '6 6' }} />
+          <CircleMarker center={[near.lat, near.lng]} radius={4} pathOptions={{ color: '#38bdf8', fillColor: '#38bdf8', fillOpacity: 1 }}>
+            <Tooltip permanent direction="top" offset={[0, -6]}>
+              <span className="text-xs">
+                {near.label} · {radius} km
+              </span>
+            </Tooltip>
+          </CircleMarker>
+        </>
+      )}
       {groups.map((g) => {
         const scored = g.leads.map((l) => ({ l, sc: chance(l).sc })).sort((a, b) => b.sc - a.sc);
         const color = TIER_HEX[TIER(scored[0].sc)[1]];

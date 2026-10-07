@@ -58,3 +58,20 @@ export async function geocodeCity(city: string, countryCode: string): Promise<Ge
   if (!data.length) return null;
   return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), displayName: data[0].display_name };
 }
+
+/** Up to 5 places matching free text, anywhere (place picker: "Berlin", "Gand", "Lyon 7e"…). */
+export async function searchPlaces(q: string): Promise<{ label: string; lat: number; lng: number }[]> {
+  const url = new URL('https://nominatim.openstreetmap.org/search');
+  url.searchParams.set('q', q);
+  url.searchParams.set('format', 'json');
+  url.searchParams.set('limit', '5');
+  url.searchParams.set('accept-language', 'fr');
+  const res = await fetch(url.toString(), { headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`Nominatim error: ${res.status}`);
+  const data: Array<{ lat: string; lon: string; display_name: string }> = await res.json();
+  return data.map((d) => {
+    const parts = d.display_name.split(',').map((s) => s.trim());
+    const label = parts.length > 1 ? `${parts[0]}, ${parts[parts.length - 1]}` : parts[0];
+    return { label, lat: Math.round(parseFloat(d.lat) * 1e4) / 1e4, lng: Math.round(parseFloat(d.lon) * 1e4) / 1e4 };
+  });
+}
