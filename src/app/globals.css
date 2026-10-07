@@ -203,6 +203,10 @@ body {
 .leaflet-container {
   background: hsl(var(--card)) !important;
   border-radius: var(--radius);
+  /* Keep Leaflet's z-indexes (panes 400-700, controls 1000) inside the map,
+     so side panels and dialogs (z-50) open above it. */
+  isolation: isolate;
+  z-index: 0;
 }
 
 /* ===== "Enregistré ✓" indicator: visible ~2 s then fades ===== */
