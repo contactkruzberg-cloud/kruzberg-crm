@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { crmInput, STATUS_TO_STAGE, today } from '@/lib/radar/logic';
 import { markKnown, type KnownData } from '@/lib/radar/known';
+import type { GeoCache } from '@/lib/radar/geo';
 import type { Lead, OutboxItem, RadarLearned, RadarMeta, RadarRun, RadarScope } from '@/lib/radar/types';
 
 // Booking Radar data (table radar_docs via /api/radar/*). Refreshed every 30 s:
@@ -61,6 +62,9 @@ export function useRadar() {
     meta: (configById.get('meta') ?? {}) as RadarMeta,
     scope: (configById.get('scope') ?? {}) as RadarScope,
     learned: (configById.get('learned') ?? {}) as RadarLearned,
+    /** City coordinates for the map (see src/lib/radar/geo.ts). */
+    geo: (configById.get('geo') ?? {}) as GeoCache,
+    geoExists: configById.has('geo'),
     runs: ((runs.data ?? []).map((d) => ({ ...d.data, id: d.id })) as unknown as (RadarRun & { id: string })[])
       .sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.id.localeCompare(a.id))
       .slice(0, 90),

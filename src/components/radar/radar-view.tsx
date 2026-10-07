@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { AlertTriangle, ClipboardCopy, Filter, Mail, MoreHorizontal, Plus, Radar, Search, Settings2, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, ClipboardCopy, Filter, List, Mail, Map as MapIcon, MoreHorizontal, Plus, Radar, Search, Settings2, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -46,6 +46,7 @@ import {
 import { buildMail, emailsOf, kindOf, langOf } from '@/lib/radar/mail-templates';
 import type { Lead } from '@/lib/radar/types';
 import { LeadPanel } from './lead-panel';
+import { RadarMap } from './radar-map';
 import { TriageDialog } from './triage-dialog';
 import { VeilleDialog } from './veille-dialog';
 import { ChanceBadge, Kbd, Tag } from './radar-ui';
@@ -199,9 +200,10 @@ function LeadRow({
 // ---------------------------------------------------------------- view
 
 export function RadarView() {
-  const { leads, meta, scope, learned, runs, outbox, isLoading, error, known, knownError } = useRadar();
+  const { leads, meta, scope, learned, runs, outbox, isLoading, error, known, knownError, geo, geoExists } = useRadar();
   const actions = useRadarActions();
   const [tab, setTab] = usePersistentState<TabId>('radar:tab', 'todo');
+  const [view, setView] = usePersistentState<'list' | 'map'>('radar:view', 'list');
   const [filters, setFilters] = usePersistentState<RadarFilters>('radar:filters', DEFAULT_FILTERS);
   const [openId, setOpenId] = useState<string | null>(null);
   const [composeId, setComposeId] = useState<string | null>(null);
@@ -566,6 +568,25 @@ export function RadarView() {
                   <SelectItem value="name">Tri : A → Z</SelectItem>
                 </SelectContent>
               </Select>
+              <div className="flex rounded-md border p-0.5" role="group" aria-label="Affichage">
+                {(
+                  [
+                    ['list', List, 'Liste'],
+                    ['map', MapIcon, 'Carte'],
+                  ] as const
+                ).map(([v, Icon, label]) => (
+                  <Button
+                    key={v}
+                    size="sm"
+                    variant={view === v ? 'secondary' : 'ghost'}
+                    className="h-8 gap-1.5 px-2.5"
+                    aria-pressed={view === v}
+                    onClick={() => setView(v)}
+                  >
+                    <Icon className="h-4 w-4" /> {label}
+                  </Button>
+                ))}
+              </div>
               <Button variant={showFilters || activeFilters ? 'secondary' : 'outline'} className="gap-1.5" onClick={() => setShowFilters(!showFilters)}>
                 <Filter className="h-4 w-4" /> Filtres{activeFilters ? ` (${activeFilters})` : ''}
               </Button>
@@ -659,7 +680,17 @@ export function RadarView() {
           </div>
 
           {/* List */}
-          {list.length === 0 ? (
+          {view === 'map' && list.length > 0 ? (
+            <RadarMap
+              leads={list}
+              geo={geo}
+              geoExists={geoExists}
+              onOpen={(id) => {
+                setComposeId(null);
+                setOpenId(id);
+              }}
+            />
+          ) : list.length === 0 ? (
             <div className="rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground">
               {leads.length ? 'Aucune piste ne correspond aux filtres.' : 'Aucune piste pour l’instant.'}
             </div>
