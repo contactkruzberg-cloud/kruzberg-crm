@@ -110,7 +110,7 @@ export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: 
             {doc?.basedOn
               ? doc.basedOn.lastSent
                 ? `À partir de ton mail « ${doc.basedOn.lastSent.subject} » du ${formatDate(doc.basedOn.lastSent.date)}${doc.basedOn.relances ? ` · relance n° ${doc.basedOn.relances + 1}` : ''}.`
-                : 'Aucun mail envoyé retrouvé dans booking@ pour ce contact : à partir de la fiche et de l’historique.'
+                : `Aucun mail envoyé à ${doc.basedOn.addresses?.join(', ') || 'ce contact'} retrouvé dans booking@ (dossiers fouillés : ${doc.basedOn.searchedIn || '?'}) : à partir de la fiche et de l’historique.`
               : 'Relance personnalisée rédigée par Claude.'}
           </DialogDescription>
         </DialogHeader>

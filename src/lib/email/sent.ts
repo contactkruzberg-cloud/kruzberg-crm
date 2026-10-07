@@ -11,6 +11,17 @@ export interface SentRecipient {
 }
 
 const SENT_NAMES = /^(inbox[./])?(sent|sent items|sent messages|envoy&aok-s|[ée]l[ée]ments envoy[ée]s|envoy[ée]s)$/i;
+const NOT_SENT = /draft|brouillon|trash|corbeille|junk|spam|ind[ée]sirable|archive/i;
+
+/**
+ * Every folder that can hold sent mail: the \\Sent one, but also the
+ * "Sent Messages" folder Apple Mail creates when it isn't mapped to OVH's "Sent".
+ */
+export function sentFolders(boxes: { path: string; name?: string; specialUse?: string }[]) {
+  return boxes.filter(
+    (b) => b.specialUse === '\\Sent' || SENT_NAMES.test(b.path) || (/sent|envoy/i.test(`${b.name ?? ''} ${b.path}`) && !NOT_SENT.test(b.path)),
+  );
+}
 
 export async function fetchSentRecipients(sinceDays = 3 * 365): Promise<SentRecipient[]> {
   if (!process.env.IMAP_PASSWORD) throw new Error('IMAP_PASSWORD not configured');
@@ -27,10 +38,10 @@ export async function fetchSentRecipients(sinceDays = 3 * 365): Promise<SentReci
   const byAddr = new Map<string, SentRecipient>();
   try {
     await client.connect();
-    const boxes = await client.list();
-    const sent = boxes.find((b) => b.specialUse === '\\Sent') ?? boxes.find((b) => SENT_NAMES.test(b.path));
-    if (!sent) throw new Error('Dossier « Envoyés » introuvable');
+    const folders = sentFolders(await client.list());
+    if (!folders.length) throw new Error('Dossier « Envoyés » introuvable');
 
+    for (const sent of folders) {
     const lock = await client.getMailboxLock(sent.path);
     try {
       const since = new Date(Date.now() - sinceDays * 864e5);
@@ -54,6 +65,7 @@ export async function fetchSentRecipients(sinceDays = 3 * 365): Promise<SentReci
       }
     } finally {
       lock.release();
+    }
     }
     await client.logout();
   } catch (error) {
@@ -139,9 +151,24 @@ const addr = (a?: { address?: string }) => (a?.address || '').trim().toLowerCase
  * folder, last 18 months), or null. Scans envelopes like fetchSentRecipients
  * (server-side SEARCH TO is not reliable on every mailbox).
  */
+/** Where the lookup searched (shown in the CRM when nothing is found). */
+export interface SentSearch {
+  folders: { path: string; messages: number }[];
+  found: SentMessage | null;
+}
+
 export async function fetchLastSentTo(addresses: string[]): Promise<SentMessage | null> {
+  return (await searchLastSentTo(addresses)).found;
+}
+
+/**
+ * Latest message sent from booking@ to one of these addresses, in every
+ * sent-mail folder (last 18 months). Scans envelopes like fetchSentRecipients
+ * (server-side SEARCH TO is not reliable on every mailbox).
+ */
+export async function searchLastSentTo(addresses: string[]): Promise<SentSearch> {
   const targets = new Set(addresses.map((a) => a.trim().toLowerCase()).filter((a) => a.includes('@')));
-  if (!targets.size || !process.env.IMAP_PASSWORD) return null;
+  if (!targets.size || !process.env.IMAP_PASSWORD) return { folders: [], found: null };
   const own = (process.env.IMAP_USER || 'booking@kruzberg.com').toLowerCase();
   const client = new ImapFlow({
     host: process.env.IMAP_HOST || 'ssl0.ovh.net',
@@ -152,26 +179,36 @@ export async function fetchLastSentTo(addresses: string[]): Promise<SentMessage 
   });
   try {
     await client.connect();
-    const boxes = await client.list();
-    const sent = boxes.find((b) => b.specialUse === '\\Sent') ?? boxes.find((b) => SENT_NAMES.test(b.path));
-    if (!sent) throw new Error('Dossier « Envoyés » introuvable');
-    const lock = await client.getMailboxLock(sent.path);
-    try {
-      type Hit = { uid: number; date: Date; env: MessageEnvelopeObject; matched: string };
-      let best: Hit | null = null;
-      const since = new Date(Date.now() - 548 * 864e5);
-      for await (const msg of client.fetch({ since }, { envelope: true, uid: true })) {
-        const env = msg.envelope;
-        if (!env) continue;
-        const rcpts = [...(env.to ?? []), ...(env.cc ?? []), ...(env.bcc ?? [])].map(addr);
-        const matched = rcpts.find((r) => targets.has(r));
-        if (!matched) continue;
-        const date = env.date ? new Date(env.date) : new Date(0);
-        if (!best || date > best.date) best = { uid: msg.uid, date, env, matched };
+    const folders = sentFolders(await client.list());
+    const searched: SentSearch['folders'] = [];
+    type Hit = { folder: string; uid: number; date: Date; env: MessageEnvelopeObject; matched: string };
+    let best: Hit | null = null;
+    const since = new Date(Date.now() - 548 * 864e5);
+    for (const f of folders) {
+      const lock = await client.getMailboxLock(f.path);
+      try {
+        const exists = typeof client.mailbox === 'object' && client.mailbox ? client.mailbox.exists : 0;
+        searched.push({ path: f.path, messages: exists });
+        if (!exists) continue;
+        for await (const msg of client.fetch({ since }, { envelope: true, uid: true })) {
+          const env = msg.envelope;
+          if (!env) continue;
+          const rcpts = [...(env.to ?? []), ...(env.cc ?? []), ...(env.bcc ?? [])].map(addr);
+          const matched = rcpts.find((r) => targets.has(r));
+          if (!matched) continue;
+          const date = env.date ? new Date(env.date) : new Date(0);
+          if (!best || date > best.date) best = { folder: f.path, uid: msg.uid, date, env, matched };
+        }
+      } finally {
+        lock.release();
       }
-      if (!best || !best.env) return null;
+    }
+    if (!best) return { folders: searched, found: null };
 
-      const one = await client.fetchOne(String(best.uid), { bodyStructure: true, headers: ['references'] }, { uid: true });
+    const hit: Hit = best;
+    const lock = await client.getMailboxLock(hit.folder);
+    try {
+      const one = await client.fetchOne(String(hit.uid), { bodyStructure: true, headers: ['references'] }, { uid: true });
       const body = one ? (one.bodyStructure as BodyNode) : undefined;
       const refs = one && one.headers ? one.headers.toString('utf8').replace(/^references:\s*/i, '').replace(/\s+/g, ' ').trim() : '';
       const plain = findPart(body, 'text/plain');
@@ -179,24 +216,27 @@ export async function fetchLastSentTo(addresses: string[]): Promise<SentMessage 
       let text = '';
       const part = plain || html;
       if (part) {
-        const dl = await client.download(String(best.uid), part, { uid: true });
+        const dl = await client.download(String(hit.uid), part, { uid: true });
         const chunks: Buffer[] = [];
         for await (const c of dl.content) chunks.push(Buffer.from(c));
         text = Buffer.concat(chunks).toString('utf8');
         if (html) text = stripHtml(text);
       }
-      const env = best.env;
+      const env = hit.env;
       const f = env.from?.[0];
       return {
-        subject: env.subject || '',
-        date: best.date.toISOString(),
-        to: best.matched,
-        toAll: (env.to ?? []).map(addr).filter((a) => a && a !== own),
-        cc: (env.cc ?? []).map(addr).filter((a) => a && a !== own),
-        messageId: env.messageId || null,
-        references: refs || null,
-        from: f ? (f.name ? `${f.name} <${f.address}>` : f.address || own) : own,
-        text: ownText(text),
+        folders: searched,
+        found: {
+          subject: env.subject || '',
+          date: hit.date.toISOString(),
+          to: hit.matched,
+          toAll: (env.to ?? []).map(addr).filter((a) => a && a !== own),
+          cc: (env.cc ?? []).map(addr).filter((a) => a && a !== own),
+          messageId: env.messageId || null,
+          references: refs || null,
+          from: f ? (f.name ? `${f.name} <${f.address}>` : f.address || own) : own,
+          text: ownText(text),
+        },
       };
     } finally {
       lock.release();

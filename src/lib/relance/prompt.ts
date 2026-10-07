@@ -37,7 +37,7 @@ export interface RelanceDoc {
   instructions: string;
   /** Everything Claude needs (built by buildRelancePrompt), so the routine has nothing to look up. */
   prompt: string;
-  basedOn: { lastSent: { subject: string; date: string } | null; relances: number };
+  basedOn: { lastSent: { subject: string; date: string } | null; relances: number; searchedIn?: string; addresses?: string[] };
   requestedAt: string;
   /** The email the follow-up answers (same thread): headers, recipients, quoted text. */
   thread?: { messageId: string | null; references: string | null; date: string; from: string; text: string; toAll: string[]; cc: string[] } | null;
