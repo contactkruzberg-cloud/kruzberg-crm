@@ -27,7 +27,7 @@ describe('relance prompt', () => {
         { type: 'status_change', channel: null, content: 'Stage changed from a_contacter to contacte', created_at: '2026-09-20T10:00:00Z' },
         { type: 'email_sent', channel: 'email', content: 'À : prog@x.fr', created_at: '2026-09-20T10:00:00Z' },
       ],
-      lastSent: { subject: '1re partie Corpus Delicti 21/11 – KRUZBERG', date: '2026-09-20T10:00:00Z', to: 'booking@rockneat.com', text: 'Bonjour, …' },
+      lastSent: { subject: '1re partie Corpus Delicti 21/11 – KRUZBERG', date: '2026-09-20T10:00:00Z', to: 'booking@rockneat.com', toAll: ['booking@rockneat.com'], cc: [], messageId: '<a@b>', references: null, from: 'KRUZBERG <booking@kruzberg.com>', text: 'Bonjour, …' },
       lead: { cat: 'support', name: 'Corpus Delicti', eventDate: '2026-11-21' },
       today: '2026-10-07',
     });

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Check, Copy, Loader2, Mail, RefreshCw, Sparkles } from 'lucide-react';
+import { Check, Copy, Loader2, Mail, RefreshCw, Reply, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,7 +48,26 @@ export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: 
   const [note, setNote] = useState('');
   const [opened, setOpened] = useState(false);
 
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
   const ready = freshDraft(doc, deal);
+  const threaded = !!doc?.thread?.messageId;
+  const createDraft = async () => {
+    if (!edit) return;
+    setSavingDraft(true);
+    try {
+      const res = await fetch('/api/relance/draft', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ dealId: deal.id, ...edit }) });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error || `Erreur ${res.status}`);
+      setDraftId(body.messageId);
+      setOpened(true);
+      toast.success('Brouillon de réponse créé dans Mail (Brouillons)');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Brouillon impossible');
+    } finally {
+      setSavingDraft(false);
+    }
+  };
   const writing = doc?.state === 'requested';
 
   // On opening: ask for a draft unless one is ready or being written.
@@ -56,6 +75,7 @@ export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: 
     if (!open) {
       asked.current = false;
       setOpened(false);
+      setDraftId(null);
       setNote('');
       return;
     }
@@ -137,11 +157,24 @@ export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: 
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Button asChild className="gap-1.5">
-                <a href={mailto(edit)} onClick={() => setOpened(true)}>
-                  <Mail className="h-4 w-4" /> Ouvrir dans Mail
-                </a>
-              </Button>
+              {threaded ? (
+                <>
+                  <Button className="gap-1.5" disabled={savingDraft} onClick={createDraft}>
+                    {savingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Reply className="h-4 w-4" />} Créer la réponse dans Mail
+                  </Button>
+                  <Button asChild variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" title="Nouveau message, hors du fil">
+                    <a href={mailto(edit)} onClick={() => setOpened(true)}>
+                      <Mail className="h-3.5 w-3.5" /> Nouveau message
+                    </a>
+                  </Button>
+                </>
+              ) : (
+                <Button asChild className="gap-1.5">
+                  <a href={mailto(edit)} onClick={() => setOpened(true)}>
+                    <Mail className="h-4 w-4" /> Ouvrir dans Mail
+                  </a>
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="gap-1.5"
@@ -155,6 +188,24 @@ export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: 
                 <Copy className="h-4 w-4" /> Copier
               </Button>
             </div>
+            {threaded ? (
+              <p className="text-xs text-muted-foreground">
+                La réponse est déposée dans <b>Brouillons</b> de booking@, dans le même fil que ton mail du {formatDate(doc!.thread!.date)} (citation incluse).
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">Mail initial introuvable dans booking@ : la relance part en nouveau message.</p>
+            )}
+            {draftId && (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm">
+                <Check className="h-4 w-4 text-green-600" /> Brouillon créé dans Mail → Brouillons (booking@).
+                <Button asChild size="sm" variant="outline" className="h-7 gap-1">
+                  <a href={`message://${encodeURIComponent(draftId)}`}>
+                    <Mail className="h-3.5 w-3.5" /> L’ouvrir dans Mail
+                  </a>
+                </Button>
+                <span className="text-xs text-muted-foreground">(si Mail ne l’affiche pas encore, attends quelques secondes la synchro)</span>
+              </div>
+            )}
 
             {opened && (
               <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">

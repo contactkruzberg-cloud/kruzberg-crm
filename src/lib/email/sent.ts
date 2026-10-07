@@ -1,4 +1,4 @@
-import { ImapFlow } from 'imapflow';
+import { ImapFlow, type MessageEnvelopeObject } from 'imapflow';
 
 // Recipients of everything sent from booking@kruzberg.com (OVH "Sent" folder),
 // so the radar never proposes an address that was already written to.
@@ -87,8 +87,17 @@ export async function sentRecipientsCached(force = false): Promise<{ data: SentR
 export interface SentMessage {
   subject: string;
   date: string; // ISO
+  /** Address of the deal's contact it was sent to. */
   to: string;
-  /** Plain-text body, quoted history and signature noise trimmed, max ~4000 chars. */
+  /** All recipients (to + cc), to reply to everyone. */
+  toAll: string[];
+  cc: string[];
+  /** Threading: Message-ID and References of that message. */
+  messageId: string | null;
+  references: string | null;
+  /** "Name <address>" of the sender (for the quote line). */
+  from: string;
+  /** Plain-text body, quoted history trimmed, max ~4000 chars. */
   text: string;
 }
 
@@ -117,43 +126,56 @@ const stripHtml = (h: string) =>
     .replace(/&quot;/g, '"');
 
 /** Drop the quoted history ("> …", "Le … a écrit :") so only what we wrote remains. */
-function ownText(t: string) {
+export function ownText(t: string) {
   const lines = t.replace(/\r/g, '').split('\n');
   const cut = lines.findIndex((l) => /^(>|Le .+ a écrit\s*:|On .+ wrote:|-----Original Message|De\s*:.+@)/i.test(l.trim()));
   return (cut >= 0 ? lines.slice(0, cut) : lines).join('\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, 4000);
 }
 
-/** Latest message sent from booking@ to one of these addresses (OVH "Sent" folder), or null. */
+const addr = (a?: { address?: string }) => (a?.address || '').trim().toLowerCase();
+
+/**
+ * Latest message sent from booking@ to one of these addresses (OVH "Sent"
+ * folder, last 18 months), or null. Scans envelopes like fetchSentRecipients
+ * (server-side SEARCH TO is not reliable on every mailbox).
+ */
 export async function fetchLastSentTo(addresses: string[]): Promise<SentMessage | null> {
-  const targets = [...new Set(addresses.map((a) => a.trim().toLowerCase()).filter((a) => a.includes('@')))];
-  if (!targets.length || !process.env.IMAP_PASSWORD) return null;
+  const targets = new Set(addresses.map((a) => a.trim().toLowerCase()).filter((a) => a.includes('@')));
+  if (!targets.size || !process.env.IMAP_PASSWORD) return null;
+  const own = (process.env.IMAP_USER || 'booking@kruzberg.com').toLowerCase();
   const client = new ImapFlow({
     host: process.env.IMAP_HOST || 'ssl0.ovh.net',
     port: parseInt(process.env.IMAP_PORT || '993'),
     secure: true,
-    auth: { user: process.env.IMAP_USER || 'booking@kruzberg.com', pass: process.env.IMAP_PASSWORD },
+    auth: { user: own, pass: process.env.IMAP_PASSWORD },
     logger: false,
   });
   try {
     await client.connect();
     const boxes = await client.list();
     const sent = boxes.find((b) => b.specialUse === '\\Sent') ?? boxes.find((b) => SENT_NAMES.test(b.path));
-    if (!sent) return null;
+    if (!sent) throw new Error('Dossier « Envoyés » introuvable');
     const lock = await client.getMailboxLock(sent.path);
     try {
-      let best: { uid: number; date: Date; subject: string; to: string; body?: BodyNode } | null = null;
-      for (const addr of targets) {
-        const uids = await client.search({ to: addr }, { uid: true });
-        if (!uids || !uids.length) continue;
-        // The highest UIDs are the most recent; check the last few for the latest date.
-        for await (const msg of client.fetch(uids.slice(-5), { envelope: true, bodyStructure: true }, { uid: true })) {
-          const date = msg.envelope?.date ? new Date(msg.envelope.date) : new Date(0);
-          if (!best || date > best.date) best = { uid: msg.uid, date, subject: msg.envelope?.subject || '', to: addr, body: msg.bodyStructure as BodyNode };
-        }
+      type Hit = { uid: number; date: Date; env: MessageEnvelopeObject; matched: string };
+      let best: Hit | null = null;
+      const since = new Date(Date.now() - 548 * 864e5);
+      for await (const msg of client.fetch({ since }, { envelope: true, uid: true })) {
+        const env = msg.envelope;
+        if (!env) continue;
+        const rcpts = [...(env.to ?? []), ...(env.cc ?? []), ...(env.bcc ?? [])].map(addr);
+        const matched = rcpts.find((r) => targets.has(r));
+        if (!matched) continue;
+        const date = env.date ? new Date(env.date) : new Date(0);
+        if (!best || date > best.date) best = { uid: msg.uid, date, env, matched };
       }
-      if (!best) return null;
-      const plain = findPart(best.body, 'text/plain');
-      const html = plain ? null : findPart(best.body, 'text/html');
+      if (!best || !best.env) return null;
+
+      const one = await client.fetchOne(String(best.uid), { bodyStructure: true, headers: ['references'] }, { uid: true });
+      const body = one ? (one.bodyStructure as BodyNode) : undefined;
+      const refs = one && one.headers ? one.headers.toString('utf8').replace(/^references:\s*/i, '').replace(/\s+/g, ' ').trim() : '';
+      const plain = findPart(body, 'text/plain');
+      const html = plain ? null : findPart(body, 'text/html');
       let text = '';
       const part = plain || html;
       if (part) {
@@ -163,7 +185,19 @@ export async function fetchLastSentTo(addresses: string[]): Promise<SentMessage 
         text = Buffer.concat(chunks).toString('utf8');
         if (html) text = stripHtml(text);
       }
-      return { subject: best.subject, date: best.date.toISOString(), to: best.to, text: ownText(text) };
+      const env = best.env;
+      const f = env.from?.[0];
+      return {
+        subject: env.subject || '',
+        date: best.date.toISOString(),
+        to: best.matched,
+        toAll: (env.to ?? []).map(addr).filter((a) => a && a !== own),
+        cc: (env.cc ?? []).map(addr).filter((a) => a && a !== own),
+        messageId: env.messageId || null,
+        references: refs || null,
+        from: f ? (f.name ? `${f.name} <${f.address}>` : f.address || own) : own,
+        text: ownText(text),
+      };
     } finally {
       lock.release();
     }

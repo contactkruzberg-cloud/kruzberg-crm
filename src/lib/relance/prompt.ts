@@ -39,6 +39,10 @@ export interface RelanceDoc {
   prompt: string;
   basedOn: { lastSent: { subject: string; date: string } | null; relances: number };
   requestedAt: string;
+  /** The email the follow-up answers (same thread): headers, recipients, quoted text. */
+  thread?: { messageId: string | null; references: string | null; date: string; from: string; text: string; toAll: string[]; cc: string[] } | null;
+  /** Reply draft saved in booking@'s Drafts folder (Message-ID, to open it in Mail). */
+  draft?: { messageId: string; savedAt: string } | null;
   subject?: string;
   body?: string;
   readyAt?: string;

@@ -42,7 +42,10 @@ export async function POST(request: NextRequest) {
 
   const addresses = [d.contact?.email, d.venue?.email, typeof lead?.email === 'string' ? lead.email : null].filter(Boolean) as string[];
   // The mailbox is a bonus: never block the request on it.
-  const lastSent = await fetchLastSentTo(addresses).catch(() => null);
+  const lastSent = await fetchLastSentTo(addresses).catch((e) => {
+    console.error('relance: lecture du dossier Envoyés impossible', e);
+    return null;
+  });
   const ctx = { deal: d, venue: d.venue, contact: d.contact, activities: activities ?? [], lastSent, lead, today: new Date().toISOString().slice(0, 10) };
 
   const doc: RelanceDoc = {
@@ -50,7 +53,11 @@ export async function POST(request: NextRequest) {
     state: 'requested',
     dealId,
     label: d.title || d.venue?.name || d.contact?.name || 'Opportunité',
-    to: lastSent?.to || [d.contact?.email, d.venue?.email].find((e) => e && e.includes('@')) || '',
+    // Reply to everyone the first email went to (same thread).
+    to: lastSent?.toAll.length ? lastSent.toAll.join(', ') : [d.contact?.email, d.venue?.email].find((e) => e && e.includes('@')) || '',
+    thread: lastSent
+      ? { messageId: lastSent.messageId, references: lastSent.references, date: lastSent.date, from: lastSent.from, text: lastSent.text, toAll: lastSent.toAll, cc: lastSent.cc }
+      : null,
     instructions: RELANCE_INSTRUCTIONS,
     prompt: buildRelancePrompt(ctx) + (note?.trim() ? `\n\nCONSIGNE DE GREG POUR CETTE VERSION : ${note.trim().slice(0, 500)}` : ''),
     basedOn: { lastSent: lastSent ? { subject: lastSent.subject, date: lastSent.date } : null, relances: relanceCount(ctx) },
