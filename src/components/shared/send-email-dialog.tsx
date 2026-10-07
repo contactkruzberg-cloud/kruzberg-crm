@@ -47,7 +47,7 @@ export function SendEmailDialog({
     date_dernier_mail: deal?.last_message_at
       ? formatDate(deal.last_message_at)
       : '[DATE]',
-    single: 'Where I Belong',
+    single: 'Two½ Hotel Stars',
     nom_groupe: 'KRUZBERG',
   };
 

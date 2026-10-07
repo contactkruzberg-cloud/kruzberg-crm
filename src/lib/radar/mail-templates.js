@@ -137,11 +137,11 @@ Est-ce que vous écoutez des démos en ce moment ? Et comment travaillez-vous ha
 
 Comment procédez-vous habituellement ?`; break;
       case "presse": subj="Presse - Kruzberg - Post-Punk";
-        ask=`Notre dernier single, Where I Belong, est sorti en 2026 : ${K.listen}
+        ask=`Notre dernier single, Two½ Hotel Stars, est sorti le 17 juillet 2026 et clôt notre triptyque (après BlackMud Manor et Where I Belong) : ${K.listen}
 
 On serait ravis que vous puissiez l'écouter et, pourquoi pas, en parler dans ${N}. Je peux vous envoyer les visuels, la bio et les fichiers si besoin.`; break;
       case "radio": subj="Proposition radio - Kruzberg - Post-Punk";
-        ask=`Notre dernier single, Where I Belong, est sorti en 2026 : ${K.listen}
+        ask=`Notre dernier single, Two½ Hotel Stars, est sorti le 17 juillet 2026 et clôt notre triptyque (après BlackMud Manor et Where I Belong) : ${K.listen}
 
 On serait ravis qu'il puisse passer sur ${N}. Je peux vous envoyer le WAV, la bio et les visuels si besoin. Est-ce que vous passez par une adresse ou une émission en particulier pour les groupes locaux ?`; break;
     }
@@ -185,11 +185,11 @@ Are you listening to demos at the moment? And how do you usually work with a ban
 
 How do you usually work with bands from abroad?`; break;
     case "presse": subj="Press - Kruzberg - Post-Punk (Lyon, FR)";
-      ask=`Our latest single, Where I Belong, came out in 2026: ${K.listen}
+      ask=`Our latest single, Two½ Hotel Stars, came out on July 17, 2026, completing our triptych (after BlackMud Manor and Where I Belong): ${K.listen}
 
 We'd be really happy if you could give it a listen and maybe feature it on ${N}. I can send artwork, bio and files if needed.`; break;
     case "radio": subj="Radio submission - Kruzberg - Post-Punk (Lyon, FR)";
-      ask=`Our latest single, Where I Belong, came out in 2026: ${K.listen}
+      ask=`Our latest single, Two½ Hotel Stars, came out on July 17, 2026, completing our triptych (after BlackMud Manor and Where I Belong): ${K.listen}
 
 We'd be really happy if it could get some airplay on ${N}. I can send the WAV, bio and artwork if needed.`; break;
   }
