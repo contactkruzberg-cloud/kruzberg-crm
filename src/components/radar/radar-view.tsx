@@ -41,6 +41,7 @@ import {
   triQueue,
   type RadarFilters,
   type TabId,
+  isClosed,
 } from '@/lib/radar/logic';
 import { buildMail, emailsOf, kindOf, langOf } from '@/lib/radar/mail-templates';
 import type { Lead } from '@/lib/radar/types';
@@ -144,6 +145,7 @@ function LeadRow({
           {!C && lead.draftState !== 'pending' && lead.draftAt && <Tag tone="ok">brouillon {fmtDate(lead.draftAt)}</Tag>}
           {!C && (lead.email ? <Tag>✉</Tag> : lead.contactForm ? <Tag>formulaire</Tag> : null)}
           {expired(lead) && !lead.dismissed && !C && <Tag tone="muted">périmée</Tag>}
+          {isClosed(lead) && !lead.dismissed && !C && <Tag tone="muted">fermée · ne pas démarcher</Tag>}
           {lead.dismissed && <Tag tone="muted">écartée{lead.dismissReason ? ` · ${lead.dismissReason}` : ''}</Tag>}
           {dups.length > 0 && <Tag tone="warn">doublon ? {dups[0].name}</Tag>}
           {used.length > 0 && <Tag tone="warn">adresse déjà sollicitée</Tag>}

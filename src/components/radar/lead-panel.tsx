@@ -58,6 +58,7 @@ import {
   TIER,
   zone,
   type RadarIndex,
+  closedReason,
 } from '@/lib/radar/logic';
 import { buildMail, emailsOf, KINDS, kindOf, langOf, mailtoOf, type MailKind, type MailLang } from '@/lib/radar/mail-templates';
 import type { Lead } from '@/lib/radar/types';
@@ -240,6 +241,7 @@ export function LeadPanel({
   const k = keyDate(lead);
   const C = inCrm(lead);
   const ex = expired(lead);
+  const closed = closedReason(lead);
   const st = lead.status || 'nouveau';
   const dups = live(lead) ? dupsOf(idx, lead) : [];
   const neighbours = live(lead) && lead.city ? (idx.city.get(normCity(lead.city))?.items ?? []).filter((x) => x.id !== lead.id) : [];
@@ -326,6 +328,16 @@ export function LeadPanel({
               <RotateCcw className="h-3.5 w-3.5" /> Pas un doublon
             </Button>
           </>
+        ) : closed && !lead.dismissed ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            title="La date est finalement ouverte : la piste revient dans le radar"
+            onClick={() => actions.patch(lead.id, { closed: false, closedReason: '', closedAt: '' }).then(() => toast.success('Piste rouverte'))}
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Rouvrir (la date est ouverte)
+          </Button>
         ) : lead.dismissed || ex ? (
           lead.dismissed && (
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => actions.restore(lead)}>
@@ -398,6 +410,7 @@ export function LeadPanel({
             {isKnown(lead) && <Tag tone="warn">Déjà connue : {lead._known!.why}</Tag>}
             {lead.dismissed && <Tag tone="muted">Écartée{lead.dismissReason ? ` : ${lead.dismissReason}` : ''}</Tag>}
             {ex && !lead.dismissed && !C && <Tag tone="muted">périmée</Tag>}
+            {closed && !C && <Tag tone="muted">fermée</Tag>}
             {hasDraft(lead) && !C && <Tag tone={lead.draftState === 'pending' ? 'warn' : 'ok'}>{lead.draftState === 'pending' ? 'brouillon en file' : `brouillon ${fmtDate(lead.draftAt)}`}</Tag>}
             {dups.map((d) => (
               <Tag key={d.id} tone="warn" className="cursor-pointer underline decoration-dotted" onClick={() => onJump(d.id)}>
@@ -405,6 +418,13 @@ export function LeadPanel({
               </Tag>
             ))}
           </div>
+
+          {closed && !C && (
+            <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm">
+              <span className="block font-semibold text-red-600 dark:text-red-400">Ne pas démarcher : date fermée</span>
+              {closed}
+            </div>
+          )}
 
           {composing && !C && <MailComposer lead={lead} idx={idx} onClose={() => setComposing(false)} />}
 
@@ -450,8 +470,10 @@ export function LeadPanel({
             <div className="space-y-2">
               {lead.why && <p className="text-sm">{lead.why}</p>}
               {lead.action && (
-                <div className="rounded-lg border-l-2 border-primary bg-primary/5 px-3 py-2 text-sm">
-                  <span className="mb-0.5 block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Prochaine action</span>
+                <div className={cn('rounded-lg border-l-2 px-3 py-2 text-sm', closed ? 'border-muted-foreground/30 text-muted-foreground line-through decoration-muted-foreground/40' : 'border-primary bg-primary/5')}>
+                  <span className="mb-0.5 block text-[11px] font-medium uppercase tracking-wide text-muted-foreground no-underline">
+                    {closed ? 'Action prévue (caduque)' : 'Prochaine action'}
+                  </span>
                   {lead.action}
                 </div>
               )}

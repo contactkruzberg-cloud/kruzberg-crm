@@ -54,6 +54,10 @@ export interface Lead {
   crmUrl?: string;
   crmStage?: string;
   crmAt?: string;
+  /** Date / opportunity closed (support slot given, line-up full, date cancelled): set by the search, sends the lead to Archives. */
+  closed?: boolean;
+  closedReason?: string;
+  closedAt?: string;
   /** Greg said "not a duplicate": the anti-duplicate check skips this lead. */
   knownIgnore?: boolean;
   /** Computed in the browser (never stored): already in the CRM or already written to. */

@@ -587,7 +587,8 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
         `Écrit jusqu'à ${MAX_RADAR_BATCH} documents du Booking Radar en un appel. op "set" crée ou remplace, op "update" fusionne des champs (un champ {"__delete__": true} est supprimé). ` +
         'Toute écriture sur un document existant exige if_version = la version lue ; si une version manque ou a changé, RIEN n\'est écrit et l\'erreur indique quoi relire. ' +
         'Sur leads, un update ne peut pas toucher les champs de Greg (status, notes, dismissed*, addedAt, draft*, crm*, contactedAt, contactChannel, chanceAdj) sauf allow_owner_fields=true (uniquement à la demande explicite de Greg). ' +
-        'Aucune suppression de document possible : une piste se retire en la marquant dismissed (côté Greg).',
+        'Aucune suppression de document possible : une piste se retire en la marquant dismissed (côté Greg). ' +
+        'Date FERMÉE (1re partie attribuée, plateau bouclé, date annulée) : mets closed: true, closedReason (une phrase : qui joue / pourquoi), closedAt (AAAA-MM-JJ) ET réécris action (jamais une action de démarchage sur une date fermée) ; la piste passe aux Archives du radar. Si la date se rouvre : closed: false.',
       inputSchema: z.strictObject({
         writes: z
           .array(

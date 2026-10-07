@@ -59,7 +59,7 @@ export const isNew = (l: Lead, meta: RadarMeta) => !!meta.date && (l.addedAt || 
 export const hasDraft = (l: Lead) => !!(l.draftState || l.draftAt);
 export const inCrm = (l: Lead) => !!l.crmId;
 /** Booking lead already in the CRM or already written to from booking@ (see known.ts). */
-export const isKnown = (l: Lead) => !inCrm(l) && !l.dismissed && !expired(l) && !!l._known;
+export const isKnown = (l: Lead) => !inCrm(l) && !l.dismissed && !expired(l) && !isClosed(l) && !!l._known;
 export function expired(l: Lead) {
   if (l.cat === 'support') {
     const e = daysTo(l.eventDate);
@@ -71,9 +71,28 @@ export function expired(l: Lead) {
   }
   return false;
 }
-export const live = (l: Lead) => !inCrm(l) && !l.dismissed && !expired(l) && !l._known;
-export const archived = (l: Lead) => !inCrm(l) && (!!l.dismissed || expired(l));
-export const needsCrm = (l: Lead) => !inCrm(l) && !l.dismissed && !l._known && ADV.includes(l.status || '');
+// Wording the search uses when it finds a date is no longer open, in case it forgot to set `closed`.
+const CLOSED_TEXT =
+  /ne (?:pas|plus) (?:démarcher|candidater)|date ferm[ée]e|plateau boucl[ée]|date annul[ée]e|1re partie (?:de tournée )?déjà attribuée/i;
+/** Why the opportunity is closed (support slot taken, line-up full, date cancelled), or null if still open. */
+export function closedReason(l: Lead): string | null {
+  if (l.closed) return l.closedReason || 'Date fermée';
+  if (l.closed === false) return null; // Greg reopened it
+  for (const t of [l.action, l.contactRoute, l.support]) {
+    const m = typeof t === 'string' ? CLOSED_TEXT.exec(t) : null;
+    if (m) {
+      // The sentence containing the match, e.g. "Date fermée (Choir Boy en 1re partie sur toute la tournée…)".
+      const start = Math.max(t!.lastIndexOf('. ', m.index) + 1, t!.lastIndexOf(' ; ', m.index) + 1, 0);
+      const end = t!.slice(m.index).search(/(?:\. | ; |$)/);
+      return t!.slice(start, m.index + end).trim().replace(/[.;,]$/, '');
+    }
+  }
+  return null;
+}
+export const isClosed = (l: Lead) => !!closedReason(l);
+export const live = (l: Lead) => !inCrm(l) && !l.dismissed && !expired(l) && !isClosed(l) && !l._known;
+export const archived = (l: Lead) => !inCrm(l) && (!!l.dismissed || expired(l) || isClosed(l));
+export const needsCrm = (l: Lead) => !inCrm(l) && !l.dismissed && !isClosed(l) && !l._known && ADV.includes(l.status || '');
 export const norm = (s: unknown) =>
   String(s || '')
     .normalize('NFD')
