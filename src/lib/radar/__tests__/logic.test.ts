@@ -67,6 +67,8 @@ describe('radar logic (ported from the artifact)', () => {
     expect(m.subject).toBe('Programmation - Kruzberg - Post-Punk');
     expect(m.body).toContain('Bonjour Julie,');
     expect(m.body).toContain('venir jouer au Brin de Zinc');
-    expect(m.body).toContain('booking@kruzberg.com');
+    // No signature: Apple Mail adds Greg's own.
+    expect(m.body.trimEnd().endsWith('à bientôt,')).toBe(true);
+    expect(m.body).not.toContain('07 60 08 64 13');
   });
 });

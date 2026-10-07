@@ -11,9 +11,15 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { useTemplates } from '@/hooks/use-templates';
 import { useSendEmail } from '@/hooks/use-send-email';
 import { resolveTemplate, formatDate } from '@/lib/utils';
-import { Send, Copy, Wand2 } from 'lucide-react';
+import { Send, Copy, Wand2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Deal, Contact, Venue, Template } from '@/types/database';
+
+/** "Bonjour ," (no first name known) → "Bonjour,". */
+const fixGreeting = (t: string) => t.replace(/^(Bonjour|Salut|Hello|Hi)\s+,/m, '$1,');
+
+const mailtoOf = (to: string, subject: string, body: string) =>
+  `mailto:${to.split(/[,;\s]+/).filter(Boolean).join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
 interface SendEmailDialogProps {
   open: boolean;
@@ -42,11 +48,13 @@ export function SendEmailDialog({
 
   // Build variables for template resolution
   const variables: Record<string, string> = {
-    nom_contact: contact?.name || 'Contact',
+    // First name only ("Julie Martin" → "Julie"); empty → "Bonjour," (see fixGreeting).
+    nom_contact: (contact?.name || deal?.contact?.name || '').trim().split(/\s+/)[0] || '',
     nom_lieu: venue?.name || deal?.venue?.name || '',
     date_dernier_mail: deal?.last_message_at
       ? formatDate(deal.last_message_at)
       : '[DATE]',
+    date_concert: deal?.concert_date ? formatDate(deal.concert_date) : '[DATE]',
     single: 'Two½ Hotel Stars',
     nom_groupe: 'KRUZBERG',
   };
@@ -79,7 +87,7 @@ export function SendEmailDialog({
     if (!template) return;
 
     setSubject(resolveTemplate(template.subject, variables));
-    setBody(resolveTemplate(template.body, variables));
+    setBody(fixGreeting(resolveTemplate(template.body, variables)));
   }, [selectedTemplateId, templates]);
 
   const handleSend = () => {
@@ -205,10 +213,17 @@ export function SendEmailDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Annuler
               </Button>
+              <Button asChild variant="outline" className="gap-2" title="Ouvre le message dans Apple Mail (ta signature Mail s'ajoute)">
+                <a href={mailtoOf(to, subject, body)}>
+                  <Mail className="h-4 w-4" />
+                  Ouvrir dans Mail
+                </a>
+              </Button>
               <Button
                 onClick={handleSend}
                 disabled={sendEmail.isPending || !to}
                 className="gap-2"
+                title="Envoyé directement par le CRM, avec ta signature ajoutée automatiquement"
               >
                 <Send className="h-4 w-4" />
                 {sendEmail.isPending ? 'Envoi...' : 'Envoyer'}

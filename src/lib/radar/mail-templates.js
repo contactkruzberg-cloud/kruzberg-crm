@@ -86,20 +86,9 @@ A few more demos:
 • 1, 2, 3, 4 !: ${K.one}
 
 Listen & info: ${K.site} / ${K.insta} / ${K.listen}`; }
-const SIG_FR=`Merci d'avance pour votre retour et à bientôt,
-Cordialement,
-Greg
-
-Grégoire Paillas — KRUZBERG
-booking@kruzberg.com · 07 60 08 64 13
-AV117 Production · The Blend Corp`;
-const SIG_EN=`Thanks in advance, hope to hear from you soon.
-Best,
-Greg
-
-Grégoire Paillas — KRUZBERG
-booking@kruzberg.com · +33 7 60 08 64 13
-AV117 Production · The Blend Corp`;
+// No signature: Apple Mail adds Greg's own (2026-10-07).
+const SIG_FR=`Merci d'avance pour votre retour et à bientôt,`;
+const SIG_EN=`Thanks in advance, hope to hear from you soon.`;
 
 function buildMail(l,kind,lang){
   const N=l.name, Y=yearOf(l), fr=lang!=="en";

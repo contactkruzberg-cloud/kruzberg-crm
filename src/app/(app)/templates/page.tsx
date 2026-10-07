@@ -21,10 +21,11 @@ import { toast } from 'sonner';
 import { useActivities } from '@/hooks/use-activities';
 
 const SAMPLE_VARIABLES: Record<string, string> = {
-  nom_contact: 'Marie Martin',
+  nom_contact: 'Marie',
   nom_lieu: 'Le Petit Bain',
   date_dernier_mail: '15 mars 2026',
-  single: 'Fractures',
+  date_concert: '21 nov. 2026',
+  single: 'Two½ Hotel Stars',
   nom_groupe: 'KRUZBERG',
 };
 
@@ -60,7 +61,7 @@ export default function TemplatesPage() {
       name: 'Nouveau template',
       category: 'first_contact',
       subject: 'Demande de concert — KRUZBERG',
-      body: 'Bonjour {{nom_contact}},\n\nJe me permets de vous contacter au nom de KRUZBERG...\n\nCordialement,\nKRUZBERG',
+      body: 'Bonjour {{nom_contact}},\nJ\'espère que vous allez bien.\n\n…\n\nMerci d\'avance pour votre retour et à bientôt,',
     });
     selectTemplate(t);
     toast.success('Template créé');

@@ -21,3 +21,12 @@ describe('reply draft', () => {
     expect(raw).toContain('Subject: Re: Booking - Kruzberg - Post-Punk');
   });
 });
+
+import { withSignature } from '../signature';
+describe('signature on CRM-sent mail', () => {
+  it('is added once', () => {
+    const once = withSignature('Bonjour,\n\nMerci,');
+    expect(once).toContain('Grégoire Paillas — KRUZBERG');
+    expect(withSignature(once)).toBe(once);
+  });
+});

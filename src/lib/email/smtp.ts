@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { ImapFlow } from 'imapflow';
+import { withSignature } from './signature';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'ssl0.ovh.net',
@@ -27,6 +28,8 @@ export async function sendEmail({ to, subject, body, replyTo }: SendEmailParams)
   }
 
   const from = `"KRUZBERG" <${process.env.SMTP_USER || 'booking@kruzberg.com'}>`;
+  // Sent by the CRM itself: Apple Mail won't add Greg's signature, so we do.
+  body = withSignature(body);
 
   const info = await transporter.sendMail({
     from,

@@ -6,7 +6,7 @@ import type { SentMessage } from '@/lib/email/sent';
 export const RELANCE_INSTRUCTIONS = `Tu rédiges des mails de relance de booking pour KRUZBERG, au nom de Greg (Greg Nacht), qui s'occupe du booking.
 
 LE GROUPE (faits vérifiés : n'invente rien d'autre, ne déforme rien)
-- KRUZBERG : quatuor lyonnais de post-punk noisy (guitares saturées, basse pulsante, batterie nerveuse, voix entre passages scandés et chantés), entre Joy Division et IDLES ; influences citées dans nos mails : Fontaines D.C., IDLES, Shame. En live, une montée en pression tenue du premier au dernier morceau.
+- KRUZBERG : quatuor lyonnais formé en 2025, post-punk noisy (guitares saturées, basse pulsante, batterie nerveuse, voix entre passages scandés et chantés), entre Joy Division et IDLES ; influences citées dans nos mails : Fontaines D.C., IDLES, Shame. En live, une montée en pression tenue du premier au dernier morceau.
 - Accompagnement pro : Le Labo du Conservatoire (Lyon). En préparation : un EP pour 2027.
 - SORTIES, dans l'ordre (un triptyque de trois singles, désormais complet) :
   1. « BlackMud Manor » — 12 septembre 2025 (premier single)
