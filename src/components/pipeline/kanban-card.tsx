@@ -5,7 +5,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@/components/ui/badge';
 import { cn, getRelanceUrgency, daysUntil, formatRelativeDate, dealLabel } from '@/lib/utils';
 import type { Deal } from '@/types/database';
-import { Clock, MapPin, Star } from 'lucide-react';
+import { Check, Clock, MapPin, Star } from 'lucide-react';
 import { DealQuickActions } from './deal-quick-actions';
 
 interface KanbanCardProps {
@@ -14,9 +14,13 @@ interface KanbanCardProps {
   isDragging?: boolean;
   /** Why this deal matched the search ("Contact : Jean Dupont"). */
   hint?: string;
+  selected?: boolean;
+  /** Some cards are selected: a click toggles the selection instead of opening the deal. */
+  selectionMode?: boolean;
+  onToggleSelect?: () => void;
 }
 
-export function KanbanCard({ deal, onClick, isDragging, hint }: KanbanCardProps) {
+export function KanbanCard({ deal, onClick, isDragging, hint, selected, selectionMode, onToggleSelect }: KanbanCardProps) {
   const {
     attributes,
     listeners,
@@ -40,16 +44,39 @@ export function KanbanCard({ deal, onClick, isDragging, hint }: KanbanCardProps)
       style={style}
       {...attributes}
       {...listeners}
-      onClick={onClick}
+      onClick={selectionMode && onToggleSelect ? onToggleSelect : onClick}
       className={cn(
-        'rounded-lg border bg-card p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/30',
+        'group relative rounded-lg border bg-card p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/30',
         (isDragging || isSortDragging) && 'opacity-50 rotate-2 shadow-xl',
         urgency === 'overdue' && 'border-red-500/40',
-        urgency === 'urgent' && 'border-orange-500/30'
+        urgency === 'urgent' && 'border-orange-500/30',
+        selected && 'border-primary ring-1 ring-primary bg-primary/5'
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <h4 className="text-sm font-medium truncate">
+        {onToggleSelect && (
+          <span
+            role="checkbox"
+            aria-checked={!!selected}
+            aria-label="Sélectionner"
+            title="Sélectionner"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelect();
+            }}
+            className={cn(
+              'mt-0.5 -ml-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all',
+              selected
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-muted-foreground/40 bg-background',
+              !selectionMode && '-mr-6 opacity-0 group-hover:mr-0 group-hover:opacity-100'
+            )}
+          >
+            {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+          </span>
+        )}
+        <h4 className="text-sm font-medium truncate flex-1">
           {dealLabel(deal, 'Sans lieu')}
         </h4>
         {deal.priority === 'high' && (

@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useDeals } from '@/hooks/use-deals';
+import { useBulkUpdateDeals, useDeals } from '@/hooks/use-deals';
+import { STAGES } from '@/types/database';
 import { useVenues } from '@/hooks/use-venues';
 import { useContacts } from '@/hooks/use-contacts';
 import { contactsByVenue, matchesQuery, searchDeals } from '@/lib/search';
@@ -10,6 +11,7 @@ import { KanbanBoard } from '@/components/pipeline/kanban-board';
 import { PipelineTable } from '@/components/pipeline/pipeline-table';
 import { DealSidePanel } from '@/components/pipeline/deal-side-panel';
 import { CreateDealDialog } from '@/components/pipeline/create-deal-dialog';
+import { BulkActionsBar } from '@/components/pipeline/bulk-actions-bar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -56,6 +58,39 @@ export default function PipelinePage() {
         .slice(0, 5),
     };
   }, [search, deals, venues, contacts]);
+
+  // Multi-selection for mass updates. Only deals still visible (search / filters) count.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const selectedDeals = useMemo(() => filteredDeals.filter((d) => selected.has(d.id)), [filteredDeals, selected]);
+  const visibleSelectedIds = useMemo(() => new Set(selectedDeals.map((d) => d.id)), [selectedDeals]);
+  const clearSelection = useCallback(() => setSelected(new Set()), []);
+  const selectDeals = useCallback((ids: string[], on: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) {
+        if (on) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  }, []);
+  const bulkUpdate = useBulkUpdateDeals();
+  const moveSelected = (stage: (typeof STAGES)[number]['key']) =>
+    bulkUpdate.mutate({
+      deals: selectedDeals.filter((d) => d.stage !== stage),
+      patch: { stage },
+      message: `Déplacé vers « ${STAGES.find((s) => s.key === stage)?.label ?? stage} »`,
+    });
+
+  useEffect(() => {
+    if (selected.size === 0) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || document.querySelector('[role="dialog"], [role="menu"], [role="alertdialog"]')) return;
+      clearSelection();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selected.size, clearSelection]);
 
   const openCreate = (p: { venueId?: string; contactId?: string } = {}) => {
     setPrefill((prev) => ({ ...p, n: prev.n + 1 }));
@@ -204,16 +239,27 @@ export default function PipelinePage() {
               hints={hints}
               hideEmptyColumns={!!search.trim() || filteredDeals.length !== (deals || []).length}
               onDealClick={(id) => setSelectedDealId(id)}
+              selectedIds={visibleSelectedIds}
+              onSelect={selectDeals}
+              onMoveSelected={moveSelected}
             />
           ) : (
             <PipelineTable
               deals={filteredDeals}
               hints={hints}
               onDealClick={(id) => setSelectedDealId(id)}
+              selectedIds={visibleSelectedIds}
+              onSelect={selectDeals}
             />
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* Mass updates */}
+      <AnimatePresence>
+        {selectedDeals.length > 0 && <BulkActionsBar deals={selectedDeals} onClear={clearSelection} />}
+      </AnimatePresence>
+      {selectedDeals.length > 0 && <div className="h-16" aria-hidden />}
 
       {/* Side panel */}
       {activeDealId && (

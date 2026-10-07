@@ -28,9 +28,15 @@ interface KanbanBoardProps {
   hints?: Map<string, string>;
   /** While searching, only show the stages that have results. */
   hideEmptyColumns?: boolean;
+  selectedIds: Set<string>;
+  /** Select / deselect these deals. */
+  onSelect: (ids: string[], selected: boolean) => void;
+  /** A selected card was dropped on a column: move the whole selection. */
+  onMoveSelected: (stage: DealStage) => void;
 }
 
-export function KanbanBoard({ deals, onDealClick, hints, hideEmptyColumns }: KanbanBoardProps) {
+export function KanbanBoard({ deals, onDealClick, hints, hideEmptyColumns, selectedIds, onSelect, onMoveSelected }: KanbanBoardProps) {
+  const selectionMode = selectedIds.size > 0;
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
   const updateDeal = useUpdateDeal();
 
@@ -50,6 +56,11 @@ export function KanbanBoard({ deals, onDealClick, hints, hideEmptyColumns }: Kan
 
     const dealId = active.id as string;
     const newStage = over.id as DealStage;
+
+    if (selectedIds.has(dealId) && selectedIds.size > 1) {
+      onMoveSelected(newStage);
+      return;
+    }
 
     const deal = deals.find((d) => d.id === dealId);
     if (!deal || deal.stage === newStage) return;
@@ -86,11 +97,28 @@ export function KanbanBoard({ deals, onDealClick, hints, hideEmptyColumns }: Kan
         {STAGES.map((stage) => {
           const stageDeals = deals.filter((d) => d.stage === stage.key);
           if (hideEmptyColumns && stageDeals.length === 0) return null;
+          const selectedInColumn = stageDeals.filter((d) => selectedIds.has(d.id)).length;
+          const allSelected = stageDeals.length > 0 && selectedInColumn === stageDeals.length;
           return (
             <KanbanColumn
               key={stage.key}
               stage={stage}
               count={stageDeals.length}
+              headerAction={
+                stageDeals.length > 0 && (
+                  <input
+                    type="checkbox"
+                    className="h-3.5 w-3.5 cursor-pointer accent-[hsl(var(--primary))]"
+                    title={allSelected ? 'Tout désélectionner dans cette colonne' : 'Tout sélectionner dans cette colonne'}
+                    aria-label="Tout sélectionner dans cette colonne"
+                    checked={allSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = selectedInColumn > 0 && !allSelected;
+                    }}
+                    onChange={() => onSelect(stageDeals.map((d) => d.id), !allSelected)}
+                  />
+                )
+              }
             >
               <SortableContext
                 items={stageDeals.map((d) => d.id)}
@@ -102,6 +130,9 @@ export function KanbanBoard({ deals, onDealClick, hints, hideEmptyColumns }: Kan
                     deal={deal}
                     hint={hints?.get(deal.id)}
                     onClick={() => onDealClick(deal.id)}
+                    selected={selectedIds.has(deal.id)}
+                    selectionMode={selectionMode}
+                    onToggleSelect={() => onSelect([deal.id], !selectedIds.has(deal.id))}
                   />
                 ))}
               </SortableContext>
@@ -116,7 +147,16 @@ export function KanbanBoard({ deals, onDealClick, hints, hideEmptyColumns }: Kan
       </div>
 
       <DragOverlay>
-        {activeDeal && <KanbanCard deal={activeDeal} onClick={() => {}} isDragging />}
+        {activeDeal && (
+          <div className="relative">
+            <KanbanCard deal={activeDeal} onClick={() => {}} isDragging selected={selectedIds.has(activeDeal.id)} />
+            {selectedIds.has(activeDeal.id) && selectedIds.size > 1 && (
+              <span className="absolute -top-2 -right-2 rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
+                {selectedIds.size}
+              </span>
+            )}
+          </div>
+        )}
       </DragOverlay>
     </DndContext>
   );

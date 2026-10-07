@@ -8,10 +8,12 @@ import type { DealStage } from '@/types/database';
 interface KanbanColumnProps {
   stage: { key: DealStage; label: string; color: string };
   count: number;
+  /** Selection checkbox for the whole column. */
+  headerAction?: React.ReactNode;
   children: React.ReactNode;
 }
 
-export function KanbanColumn({ stage, count, children }: KanbanColumnProps) {
+export function KanbanColumn({ stage, count, headerAction, children }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
 
   return (
@@ -29,9 +31,12 @@ export function KanbanColumn({ stage, count, children }: KanbanColumnProps) {
           }} />
           <h3 className="text-sm font-medium">{stage.label}</h3>
         </div>
-        <Badge variant="secondary" className="text-xs">
-          {count}
-        </Badge>
+        <div className="flex items-center gap-1.5">
+          {headerAction}
+          <Badge variant="secondary" className="text-xs">
+            {count}
+          </Badge>
+        </div>
       </div>
       <div className="space-y-2 min-h-[100px]">{children}</div>
     </div>

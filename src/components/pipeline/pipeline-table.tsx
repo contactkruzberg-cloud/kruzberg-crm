@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { usePersistentState } from '@/lib/persistent-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,11 +14,14 @@ interface PipelineTableProps {
   onDealClick: (id: string) => void;
   /** Why a deal matched the search, when not visible in the row. */
   hints?: Map<string, string>;
+  selectedIds: Set<string>;
+  /** Select / deselect these deals. */
+  onSelect: (ids: string[], selected: boolean) => void;
 }
 
 type SortField = 'venue' | 'city' | 'stage' | 'priority' | 'next_relance' | 'last_message';
 
-export function PipelineTable({ deals, onDealClick, hints }: PipelineTableProps) {
+export function PipelineTable({ deals, onDealClick, hints, selectedIds, onSelect }: PipelineTableProps) {
   const [sortField, setSortField] = usePersistentState<SortField>('pipeline:table-sort', 'next_relance');
   const [sortDir, setSortDir] = usePersistentState<'asc' | 'desc'>('pipeline:table-dir', 'asc');
   const [stageFilter, setStageFilter] = usePersistentState<DealStage | 'all'>('pipeline:table-stage', 'all');
@@ -62,6 +65,23 @@ export function PipelineTable({ deals, onDealClick, hints }: PipelineTableProps)
     return result;
   }, [deals, stageFilter, sortField, sortDir]);
 
+  // Shift+click selects the whole range since the last checkbox clicked.
+  const lastClicked = useRef<string | null>(null);
+  const toggleRow = (id: string, shift: boolean) => {
+    const selected = !selectedIds.has(id);
+    const from = lastClicked.current ? filtered.findIndex((d) => d.id === lastClicked.current) : -1;
+    const to = filtered.findIndex((d) => d.id === id);
+    if (shift && from !== -1 && to !== -1) {
+      const [a, b] = from < to ? [from, to] : [to, from];
+      onSelect(filtered.slice(a, b + 1).map((d) => d.id), selected);
+    } else {
+      onSelect([id], selected);
+    }
+    lastClicked.current = id;
+  };
+  const selectedVisible = filtered.filter((d) => selectedIds.has(d.id)).length;
+  const allSelected = filtered.length > 0 && selectedVisible === filtered.length;
+
   const SortHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button
       className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -103,6 +123,19 @@ export function PipelineTable({ deals, onDealClick, hints }: PipelineTableProps)
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
+                <th className="w-10 p-3">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 cursor-pointer accent-[hsl(var(--primary))] align-middle"
+                    aria-label="Tout sélectionner"
+                    title="Tout sélectionner"
+                    checked={allSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = selectedVisible > 0 && !allSelected;
+                    }}
+                    onChange={() => onSelect(filtered.map((d) => d.id), !allSelected)}
+                  />
+                </th>
                 <th className="text-left p-3"><SortHeader field="venue">Lieu</SortHeader></th>
                 <th className="text-left p-3"><SortHeader field="city">Ville</SortHeader></th>
                 <th className="text-left p-3"><SortHeader field="stage">Stage</SortHeader></th>
@@ -117,12 +150,31 @@ export function PipelineTable({ deals, onDealClick, hints }: PipelineTableProps)
               {filtered.map((deal) => {
                 const urgency = getRelanceUrgency(deal.next_relance_at);
                 const stageData = STAGES.find((s) => s.key === deal.stage);
+                const isSelected = selectedIds.has(deal.id);
                 return (
                   <tr
                     key={deal.id}
                     onClick={() => onDealClick(deal.id)}
-                    className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
+                    className={cn(
+                      'border-b hover:bg-muted/30 cursor-pointer transition-colors',
+                      isSelected && 'bg-primary/5 hover:bg-primary/10'
+                    )}
                   >
+                    <td
+                      className="w-10 p-3"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleRow(deal.id, e.shiftKey);
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer accent-[hsl(var(--primary))] align-middle pointer-events-none"
+                        aria-label="Sélectionner"
+                        checked={isSelected}
+                        readOnly
+                      />
+                    </td>
                     <td className="p-3 font-medium">
                       {dealLabel(deal, '—')}
                       {deal.title?.trim() && (deal.venue || deal.contact) && (
@@ -187,7 +239,7 @@ export function PipelineTable({ deals, onDealClick, hints }: PipelineTableProps)
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={9} className="p-8 text-center text-muted-foreground">
                     Aucune opportunité trouvée
                   </td>
                 </tr>
