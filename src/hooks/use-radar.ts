@@ -68,7 +68,7 @@ export function useRadar() {
     runs: ((runs.data ?? []).map((d) => ({ ...d.data, id: d.id })) as unknown as (RadarRun & { id: string })[])
       .sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.id.localeCompare(a.id))
       .slice(0, 90),
-    outbox: (outbox.data ?? []).map((d) => ({ ...(d.data as Omit<OutboxItem, 'id'>), id: d.id }) as OutboxItem).filter((o) => o.state === 'pending'),
+    outbox: (outbox.data ?? []).map((d) => ({ ...(d.data as Omit<OutboxItem, 'id'>), id: d.id }) as OutboxItem).filter((o) => o.state === 'pending' && (o as { kind?: string }).kind !== 'relance'),
   };
 }
 

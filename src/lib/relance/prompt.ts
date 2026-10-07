@@ -23,7 +23,29 @@ CE QU'EST UNE BONNE RELANCE
 - 2e relance ou plus : encore plus court, et propose de clore poliment (« si ce n'est pas le moment, un simple non me va très bien »).
 - Salutation avec le prénom du contact s'il est connu ; signature : « Greg — KRUZBERG » puis « booking@kruzberg.com ».
 - Objet : si un premier mail existe, « Re: <son objet exact> » ; sinon un objet court et précis (lieu + date ou type de demande).
+- Corps en texte brut : pas de Markdown, pas de gras, pas de titres.
 - N'invente AUCUN fait : ni date, ni chiffre d'écoute, ni concert passé, ni nom, ni lien absent de ces consignes ou du contexte. N'utilise pas de placeholder entre crochets.`;
+
+/** Request / result stored in the radar outbox (id relance-<dealId>), written back by the Claude routine. */
+export interface RelanceDoc {
+  kind: 'relance';
+  state: 'requested' | 'ready' | 'error' | 'sent';
+  dealId: string;
+  label: string;
+  to: string;
+  /** How to write it (RELANCE_INSTRUCTIONS, kept in the code so it can evolve without editing the routine). */
+  instructions: string;
+  /** Everything Claude needs (built by buildRelancePrompt), so the routine has nothing to look up. */
+  prompt: string;
+  basedOn: { lastSent: { subject: string; date: string } | null; relances: number };
+  requestedAt: string;
+  subject?: string;
+  body?: string;
+  readyAt?: string;
+  error?: string;
+}
+
+export const relanceDocId = (dealId: string) => `relance-${dealId}`;
 
 export interface RelanceContext {
   deal: Deal;

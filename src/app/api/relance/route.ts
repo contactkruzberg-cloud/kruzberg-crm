@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateText, Output } from 'ai';
-import { GatewayError } from '@ai-sdk/gateway';
-import { z } from 'zod';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { fetchLastSentTo } from '@/lib/email/sent';
-import { buildRelancePrompt, relanceCount, RELANCE_INSTRUCTIONS } from '@/lib/relance/prompt';
+import { buildRelancePrompt, relanceCount, relanceDocId, RELANCE_INSTRUCTIONS, type RelanceDoc } from '@/lib/relance/prompt';
+import { wakeRelanceWorker } from '@/lib/relance/wake';
 import type { Deal } from '@/types/database';
 
-// Claude through Vercel AI Gateway (OIDC auth on Vercel, no key to manage).
-const MODEL = process.env.RELANCE_MODEL || 'anthropic/claude-sonnet-5.5';
+// "Relancer": the CRM gathers everything (deal, history, radar lead, the email
+// sent from booking@) into a request, stored in the radar outbox
+// (outbox/relance-<dealId>, kind "relance"). A Claude routine, on Greg's
+// subscription, writes the email and puts it back (state "ready").
 
-export const maxDuration = 60;
+export const maxDuration = 30;
 
-/** { dealId } → { to, subject, body, basedOn } : a follow-up email drafted by Claude. */
+/** { dealId } → the request document (state "requested"). */
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
   const {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
 
-  const { dealId } = (await request.json().catch(() => ({}))) as { dealId?: string };
+  const { dealId, note } = (await request.json().catch(() => ({}))) as { dealId?: string; note?: string };
   if (!dealId) return NextResponse.json({ error: 'dealId manquant' }, { status: 400 });
 
   const { data: deal, error } = await supabase.from('deals').select('*, venue:venues(*), contact:contacts(*)').eq('id', dealId).single();
@@ -40,48 +40,27 @@ export async function POST(request: NextRequest) {
       : Promise.resolve(null),
   ]);
 
-  const to = [d.contact?.email, d.venue?.email].find((e) => e && e.includes('@')) || '';
   const addresses = [d.contact?.email, d.venue?.email, typeof lead?.email === 'string' ? lead.email : null].filter(Boolean) as string[];
-  // The mailbox is a bonus: never block the draft on it.
+  // The mailbox is a bonus: never block the request on it.
   const lastSent = await fetchLastSentTo(addresses).catch(() => null);
-
   const ctx = { deal: d, venue: d.venue, contact: d.contact, activities: activities ?? [], lastSent, lead, today: new Date().toISOString().slice(0, 10) };
 
-  try {
-    const { output } = await generateText({
-      model: MODEL,
-      instructions: RELANCE_INSTRUCTIONS,
-      prompt: buildRelancePrompt(ctx),
-      output: Output.object({
-        schema: z.object({
-          subject: z.string().describe("Objet du mail"),
-          body: z.string().describe('Corps du mail en texte brut, avec salutation et signature'),
-        }),
-      }),
-    });
-    return NextResponse.json({
-      to: lastSent?.to || to,
-      subject: output.subject,
-      body: output.body,
-      basedOn: {
-        lastSent: lastSent ? { subject: lastSent.subject, date: lastSent.date } : null,
-        relances: relanceCount(ctx),
-      },
-    });
-  } catch (err) {
-    if (GatewayError.isInstance(err)) {
-      const status = err.statusCode;
-      const msg = /credit card/i.test(err.message)
-        ? "L'IA de Vercel (AI Gateway) demande une carte bancaire enregistrée pour débloquer ses crédits gratuits : Vercel → onglet AI Gateway → « Add credit card »."
-        : status === 401 || status === 403
-          ? "Accès à l'IA refusé : active AI Gateway sur le projet Vercel."
-          : status === 402
-            ? "Plus de crédit IA sur Vercel (AI Gateway) : ajoute des crédits."
-            : status === 429
-              ? 'Trop de demandes à la fois, réessaie dans une minute.'
-              : `Erreur IA : ${err.message}`;
-      return NextResponse.json({ error: msg }, { status: 502 });
-    }
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Rédaction impossible' }, { status: 500 });
-  }
+  const doc: RelanceDoc = {
+    kind: 'relance',
+    state: 'requested',
+    dealId,
+    label: d.title || d.venue?.name || d.contact?.name || 'Opportunité',
+    to: lastSent?.to || [d.contact?.email, d.venue?.email].find((e) => e && e.includes('@')) || '',
+    instructions: RELANCE_INSTRUCTIONS,
+    prompt: buildRelancePrompt(ctx) + (note?.trim() ? `\n\nCONSIGNE DE GREG POUR CETTE VERSION : ${note.trim().slice(0, 500)}` : ''),
+    basedOn: { lastSent: lastSent ? { subject: lastSent.subject, date: lastSent.date } : null, relances: relanceCount(ctx) },
+    requestedAt: new Date().toISOString(),
+  };
+  const { error: wErr } = await supabase
+    .from('radar_docs')
+    .upsert({ user_id: user.id, collection: 'outbox', id: relanceDocId(dealId), data: doc }, { onConflict: 'user_id,collection,id' });
+  if (wErr) return NextResponse.json({ error: wErr.message }, { status: 500 });
+
+  const woke = await wakeRelanceWorker().catch(() => false);
+  return NextResponse.json({ ...doc, woke });
 }

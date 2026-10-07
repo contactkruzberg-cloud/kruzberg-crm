@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AlarmClock, Check, Sparkles } from 'lucide-react';
+import { AlarmClock, Check, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,7 +14,8 @@ import {
 import { canQuickRelance, useQuickRelance, useSnoozeRelance } from '@/hooks/use-deals';
 import { RELANCE_METHODS, type Deal, type RelanceMethod } from '@/types/database';
 import { cn } from '@/lib/utils';
-import { RelanceDialog } from './relance-dialog';
+import { useRelanceDoc } from '@/hooks/use-relance';
+import { freshDraft, RelanceDialog } from './relance-dialog';
 
 // Channels offered first in the "Relancé" menu (most used in booking).
 const MAIN_CHANNELS: RelanceMethod[] = ['email', 'instagram', 'phone', 'sms', 'whatsapp', 'facebook', 'website_form', 'in_person', 'linkedin', 'other'];
@@ -31,7 +32,10 @@ export function DealQuickActions({ deal, size = 'xs', className }: { deal: Deal;
   const relance = useQuickRelance();
   const snooze = useSnoozeRelance();
   const [relanceOpen, setRelanceOpen] = useState(false);
+  const relanceDoc = useRelanceDoc(deal.id);
   if (!canQuickRelance(deal)) return null;
+  const draftReady = freshDraft(relanceDoc, deal);
+  const drafting = relanceDoc?.state === 'requested';
   const first = deal.stage === 'a_contacter';
   const h = size === 'xs' ? 'h-6 text-[11px] px-2' : 'h-8 text-xs px-3';
 
@@ -56,9 +60,14 @@ export function DealQuickActions({ deal, size = 'xs', className }: { deal: Deal;
       </DropdownMenu>
       {!first && (
         <>
-          <Button variant="outline" className={cn('gap-1', h)} onClick={() => setRelanceOpen(true)} title="Claude rédige une relance personnalisée, à ouvrir dans Mail">
-            <Sparkles className="h-3 w-3" />
-            Relancer
+          <Button
+            variant={draftReady ? 'default' : 'outline'}
+            className={cn('gap-1', h)}
+            onClick={() => setRelanceOpen(true)}
+            title={draftReady ? 'Relance rédigée par Claude : ouvrir' : 'Claude rédige une relance personnalisée, à ouvrir dans Mail'}
+          >
+            {drafting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+            {draftReady ? 'Relance prête' : drafting ? 'Rédaction…' : 'Relancer'}
           </Button>
           <RelanceDialog deal={deal} open={relanceOpen} onOpenChange={setRelanceOpen} />
         </>
