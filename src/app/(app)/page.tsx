@@ -9,7 +9,6 @@ import { VenueMap } from '@/components/dashboard/venue-map';
 import { WeeklySparklines } from '@/components/dashboard/weekly-sparklines';
 import { PendingTasks } from '@/components/dashboard/pending-tasks';
 import { NextTour } from '@/components/dashboard/next-tour';
-import { BriefingCard } from '@/components/dashboard/briefing-card';
 import { ApplicationDeadlines } from '@/components/dashboard/application-deadlines';
 import { CollapsibleSection } from '@/components/dashboard/collapsible-section';
 
@@ -46,11 +45,6 @@ export default function DashboardPage() {
           {greeting}, <span className="text-primary">KRUZBERG</span>
         </h1>
         <p className="text-muted-foreground mt-1 capitalize">{dateStr}</p>
-      </motion.div>
-
-      {/* Weekly briefing by Claude */}
-      <motion.div variants={item}>
-        <BriefingCard />
       </motion.div>
 
       {/* To do now */}
