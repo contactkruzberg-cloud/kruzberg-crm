@@ -16,7 +16,7 @@ SET search_path = public
 AS $$
 DECLARE
   uid UUID := auth.uid();
-  batch UUID := uuid_generate_v4();
+  batch UUID := gen_random_uuid();
   ts TIMESTAMPTZ := NOW();
   tbl TEXT;
   owner UUID;
