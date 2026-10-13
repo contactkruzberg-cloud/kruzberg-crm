@@ -81,6 +81,13 @@ export interface RadarScope {
   updatedAt?: string;
 }
 
+/** Last search launched from the CRM (config/launch); doneAt is written by the search when it ends. */
+export interface RadarLaunch {
+  requestedAt?: string;
+  sessionUrl?: string;
+  doneAt?: string;
+}
+
 export interface RadarRun {
   date: string;
   /** Search slot of the day: matin / midi / soir. */

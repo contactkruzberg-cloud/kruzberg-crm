@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { AlertTriangle, ClipboardCopy, Filter, List, Mail, Map as MapIcon, MoreHorizontal, Plus, Radar, Search, Settings2, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, ClipboardCopy, Filter, List, Loader2, Mail, Map as MapIcon, MoreHorizontal, Play, Plus, Radar, Search, Settings2, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useRadar } from '@/hooks/use-radar';
+import { useLaunchVeille, useRadar } from '@/hooks/use-radar';
 import { usePersistentState } from '@/lib/persistent-state';
 import { cn } from '@/lib/utils';
 import {
@@ -42,6 +42,7 @@ import {
   type RadarFilters,
   type TabId,
   isClosed,
+  searchRunning,
 } from '@/lib/radar/logic';
 import { buildMail, emailsOf, kindOf, langOf } from '@/lib/radar/mail-templates';
 import type { Lead } from '@/lib/radar/types';
@@ -207,7 +208,9 @@ function LeadRow({
 // ---------------------------------------------------------------- view
 
 export function RadarView() {
-  const { leads, meta, scope, learned, runs, outbox, isLoading, error, known, knownError, geo, geoExists } = useRadar();
+  const { leads, meta, scope, learned, launch, runs, outbox, isLoading, error, known, knownError, geo, geoExists } = useRadar();
+  const launchVeille = useLaunchVeille();
+  const searching = launchVeille.isPending || searchRunning(launch);
   const actions = useRadarActions();
   const [tab, setTab] = usePersistentState<TabId>('radar:tab', 'todo');
   const [view, setView] = usePersistentState<'list' | 'map'>('radar:view', 'list');
@@ -458,7 +461,7 @@ export function RadarView() {
               <>
                 Dernière veille : <span className="text-foreground">{fmtDate(meta.date)}</span>
                 {meta.added != null && ` · ${meta.added} ajout${meta.added > 1 ? 's' : ''}`}
-                {veilleAge != null && veilleAge >= 2 && <span className="text-red-500"> · aucune veille depuis {veilleAge} j</span>}
+                {veilleAge != null && veilleAge >= 7 && <span className="text-amber-600"> · aucune recherche depuis {veilleAge} j</span>}
               </>
             ) : (
               'Aucune veille encore enregistrée.'
@@ -466,6 +469,23 @@ export function RadarView() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => launchVeille.mutate(false)}
+            disabled={searching}
+            className="gap-1.5"
+            title="Lance la veille booking (10 à 20 min) avec les réglages du bouton « Veille »"
+          >
+            {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+            {searching ? 'Recherche en cours…' : 'Lancer une recherche'}
+          </Button>
+          {searching && launch.sessionUrl && (
+            <Button variant="ghost" asChild className="px-2 text-xs text-muted-foreground">
+              <a href={launch.sessionUrl} target="_blank" rel="noopener noreferrer">
+                Suivre
+              </a>
+            </Button>
+          )}
           <Button onClick={() => setTriageOpen(true)} disabled={!triCount} className="gap-1.5">
             <Sparkles className="h-4 w-4" /> {triCount ? `Trier les nouvelles (${triCount})` : 'Rien à trier'}
           </Button>

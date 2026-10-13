@@ -432,3 +432,10 @@ export function crmInput(l: Lead): Record<string, unknown> {
   Object.keys(o).forEach((k) => o[k] === undefined && delete o[k]);
   return o;
 }
+
+/** A search launched from the CRM is running until it writes doneAt (45 min at most, in case it failed). */
+export function searchRunning(launch: { requestedAt?: string; doneAt?: string }): boolean {
+  if (!launch.requestedAt) return false;
+  if (launch.doneAt && launch.doneAt >= launch.requestedAt) return false;
+  return Date.now() - Date.parse(launch.requestedAt) < 45 * 60_000;
+}

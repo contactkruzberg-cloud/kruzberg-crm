@@ -1,11 +1,18 @@
-// Wakes the Claude routine that writes the queued follow-ups (API trigger of
-// the routine, on Greg's Claude subscription), so a request is handled within
-// minutes instead of waiting for the hourly run.
-// Env: RELANCE_ROUTINE_ID (trig_…), RELANCE_ROUTINE_TOKEN (token of its API trigger, Sensitive).
-export async function wakeRelanceWorker(): Promise<boolean> {
-  const id = process.env.RELANCE_ROUTINE_ID;
-  const token = process.env.RELANCE_ROUTINE_TOKEN;
-  if (!id || !token) return false;
+// Wakes a Claude routine through its API trigger (on Greg's Claude
+// subscription). The routines have no schedule: they only run when the CRM
+// fires them, so nothing is consumed between two clicks.
+// Env per routine: <NAME>_ROUTINE_ID (trig_…) and <NAME>_ROUTINE_TOKEN (token
+// of its API trigger, Sensitive).
+
+export interface FireResult {
+  ok: boolean;
+  /** claude.ai link of the run, to follow it live. */
+  sessionUrl?: string;
+  status?: number;
+}
+
+export async function fireRoutine(id: string | undefined, token: string | undefined, text: string): Promise<FireResult> {
+  if (!id || !token) return { ok: false };
   const res = await fetch(`https://api.anthropic.com/v1/claude_code/routines/${encodeURIComponent(id)}/fire`, {
     method: 'POST',
     headers: {
@@ -14,9 +21,24 @@ export async function wakeRelanceWorker(): Promise<boolean> {
       'anthropic-version': '2023-06-01',
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ text: 'Nouvelle demande de relance en file.' }),
+    body: JSON.stringify({ text }),
     signal: AbortSignal.timeout(10_000),
   });
-  if (!res.ok) console.error('relance worker fire failed', res.status, (await res.text().catch(() => '')).slice(0, 300));
-  return res.ok;
+  if (!res.ok) {
+    console.error('routine fire failed', id, res.status, (await res.text().catch(() => '')).slice(0, 300));
+    return { ok: false, status: res.status };
+  }
+  const body = (await res.json().catch(() => null)) as { claude_code_session_url?: string } | null;
+  return { ok: true, sessionUrl: body?.claude_code_session_url, status: res.status };
+}
+
+/** Routine that writes the queued follow-ups ("Relancer"). */
+export async function wakeRelanceWorker(): Promise<boolean> {
+  const r = await fireRoutine(process.env.RELANCE_ROUTINE_ID, process.env.RELANCE_ROUTINE_TOKEN, 'Nouvelle demande de relance en file.');
+  return r.ok;
+}
+
+/** Booking search ("Lancer une recherche" on the radar page). */
+export function fireVeille(): Promise<FireResult> {
+  return fireRoutine(process.env.VEILLE_ROUTINE_ID, process.env.VEILLE_ROUTINE_TOKEN, 'Recherche lancée depuis le CRM.');
 }

@@ -14,7 +14,7 @@ import { PlacePicker } from './place-picker';
 import { CATS, fmtDate, inCrm, norm, normCity, today, type RadarIndex } from '@/lib/radar/logic';
 import type { Lead, RadarCat, RadarLearned, RadarRun, RadarScope } from '@/lib/radar/types';
 
-/** Search settings (read by every search, 3 times a day), what it learned, manual lead, search log. */
+/** Search settings (read by every search launched from the radar page), what it learned, manual lead, search log. */
 export function VeilleDialog({
   open,
   onOpenChange,
@@ -98,7 +98,7 @@ export function VeilleDialog({
         <DialogHeader>
           <DialogTitle>Veille</DialogTitle>
           <DialogDescription>
-            Recherche automatique 3 fois par jour (7 h · 13 h · 19 h), qui apprend de tes choix{scope.updatedAt ? ` · réglages modifiés le ${fmtDate(scope.updatedAt)}` : ''}.
+            Recherche lancée à la demande (bouton « Lancer une recherche »), qui apprend de tes choix{scope.updatedAt ? ` · réglages modifiés le ${fmtDate(scope.updatedAt)}` : ''}.
           </DialogDescription>
         </DialogHeader>
         <Tabs defaultValue="scope">

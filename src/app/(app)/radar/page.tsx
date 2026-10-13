@@ -1,8 +1,7 @@
 import { RadarView } from '@/components/radar/radar-view';
 
-// KRUZBERG Booking Radar: leads found every morning by the daily search,
-// triaged, written to and handed to the pipeline from here. Kept in two-way
-// sync with the radar of the claude.ai artifact (see src/lib/mcp/radar-sync.ts).
+// KRUZBERG Booking Radar: leads found by the booking search (launched from here),
+// triaged, written to and handed to the pipeline from here.
 export default function RadarPage() {
   return <RadarView />;
 }
