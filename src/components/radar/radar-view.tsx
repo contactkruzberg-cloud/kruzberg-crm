@@ -18,6 +18,7 @@ import {
   baseSet,
   buildIndex,
   CATL,
+  CATS,
   chance,
   daysTo,
   DEFAULT_FILTERS,
@@ -45,7 +46,7 @@ import {
   searchRunning,
 } from '@/lib/radar/logic';
 import { buildMail, emailsOf, kindOf, langOf } from '@/lib/radar/mail-templates';
-import type { Lead } from '@/lib/radar/types';
+import type { Lead, RadarCat } from '@/lib/radar/types';
 import { LeadPanel } from './lead-panel';
 import { RadarMap } from './radar-map';
 import { PlacePicker } from './place-picker';
@@ -213,6 +214,8 @@ export function RadarView() {
   const searching = launchVeille.isPending || searchRunning(launch);
   const actions = useRadarActions();
   const [tab, setTab] = usePersistentState<TabId>('radar:tab', 'todo');
+  // In a rubric's menu the search covers only that rubric; anywhere else, all of them.
+  const searchScope = CATS.some((c) => c.id === tab) ? (tab as RadarCat) : 'all';
   const [view, setView] = usePersistentState<'list' | 'map'>('radar:view', 'list');
   const [filters, setFilters] = usePersistentState<RadarFilters>('radar:filters', DEFAULT_FILTERS);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -471,13 +474,21 @@ export function RadarView() {
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            onClick={() => launchVeille.mutate(false)}
+            onClick={() => launchVeille.mutate(searchScope)}
             disabled={searching}
             className="gap-1.5"
-            title="Lance la veille booking (10 à 20 min) avec les réglages du bouton « Veille »"
+            title={
+              searchScope === 'all'
+                ? 'Recherche sur toutes les rubriques actives (réglages du bouton « Veille »)'
+                : `Recherche uniquement en ${CATL[searchScope]}`
+            }
           >
             {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-            {searching ? 'Recherche en cours…' : 'Lancer une recherche'}
+            {searching
+              ? `Recherche en cours${launch.scope && launch.scope !== 'all' ? ` (${CATL[launch.scope]})` : ''}…`
+              : searchScope === 'all'
+                ? 'Lancer une recherche'
+                : `Rechercher : ${CATL[searchScope]}`}
           </Button>
           {searching && launch.sessionUrl && (
             <Button variant="ghost" asChild className="px-2 text-xs text-muted-foreground">

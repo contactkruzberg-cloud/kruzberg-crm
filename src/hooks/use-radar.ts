@@ -2,10 +2,10 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { crmInput, STATUS_TO_STAGE, today } from '@/lib/radar/logic';
+import { CATL, crmInput, STATUS_TO_STAGE, today } from '@/lib/radar/logic';
 import { markKnown, type KnownData } from '@/lib/radar/known';
 import type { GeoCache } from '@/lib/radar/geo';
-import type { Lead, OutboxItem, RadarLaunch, RadarLearned, RadarMeta, RadarRun, RadarScope } from '@/lib/radar/types';
+import type { Lead, OutboxItem, RadarCat, RadarLaunch, RadarLearned, RadarMeta, RadarRun, RadarScope } from '@/lib/radar/types';
 
 // Booking Radar data (table radar_docs via /api/radar/*). Refreshed every 30 s:
 // the search launched from this page writes there too.
@@ -77,8 +77,9 @@ export function useRadar() {
 export function useLaunchVeille() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (force?: boolean) => api<RadarLaunch>('/api/radar/veille', { method: 'POST', body: JSON.stringify({ force: !!force }) }),
-    onSuccess: () => toast.success('Recherche lancée : les nouvelles pistes arrivent ici dans 10 à 20 minutes.'),
+    mutationFn: (scope: 'all' | RadarCat) => api<RadarLaunch>('/api/radar/veille', { method: 'POST', body: JSON.stringify({ scope }) }),
+    onSuccess: (r) =>
+      toast.success(`Recherche lancée${r.scope && r.scope !== 'all' ? ` (${CATL[r.scope]})` : ' sur toutes les rubriques'} : les nouvelles pistes arrivent ici dans 10 à 20 minutes.`),
     onError: (err) => toast.error(err instanceof Error ? err.message : 'Impossible de lancer la recherche.'),
     onSettled: () => qc.invalidateQueries({ queryKey: ['radar', 'config'] }),
   });

@@ -84,6 +84,8 @@ export interface RadarScope {
 /** Last search launched from the CRM (config/launch); doneAt is written by the search when it ends. */
 export interface RadarLaunch {
   requestedAt?: string;
+  /** "all" = every active rubric; otherwise the one rubric searched (the radar menu Greg was in). */
+  scope?: 'all' | RadarCat;
   sessionUrl?: string;
   doneAt?: string;
 }

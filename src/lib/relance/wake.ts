@@ -38,7 +38,7 @@ export async function wakeRelanceWorker(): Promise<boolean> {
   return r.ok;
 }
 
-/** Booking search ("Lancer une recherche" on the radar page). */
-export function fireVeille(): Promise<FireResult> {
-  return fireRoutine(process.env.VEILLE_ROUTINE_ID, process.env.VEILLE_ROUTINE_TOKEN, 'Recherche lancée depuis le CRM.');
+/** Booking search ("Lancer une recherche" on the radar page); its scope is read from config/launch. */
+export function fireVeille(scopeLabel: string): Promise<FireResult> {
+  return fireRoutine(process.env.VEILLE_ROUTINE_ID, process.env.VEILLE_ROUTINE_TOKEN, `Recherche lancée depuis le CRM : ${scopeLabel}.`);
 }
