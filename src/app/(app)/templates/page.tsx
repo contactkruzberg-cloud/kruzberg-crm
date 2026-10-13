@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useTemplates, useCreateTemplate, useUpdateTemplate, useDeleteTemplate, useTemplateSends } from '@/hooks/use-templates';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -381,9 +382,16 @@ export default function TemplatesPage() {
                         <Copy className="h-3.5 w-3.5 mr-1.5" />
                         Copier
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={handleDelete} className="text-destructive">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <ConfirmDialog
+                        title={`Supprimer le modèle « ${selectedTemplate?.name ?? ''} » ?`}
+                        description="Récupérable dans Réglages → Corbeille (et via « Annuler » juste après)."
+                        confirmLabel="Supprimer"
+                        onConfirm={handleDelete}
+                      >
+                        <Button variant="ghost" size="sm" className="text-destructive" title="Supprimer le modèle">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </ConfirmDialog>
                     </div>
                   </div>
 

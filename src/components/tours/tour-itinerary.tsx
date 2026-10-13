@@ -9,6 +9,7 @@ import { geocodeAddress } from '@/lib/geocode';
 import { TourRouteMap } from './tour-route-map';
 import { AddStopDialog } from './add-stop-dialog';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -255,14 +256,16 @@ export function TourItinerary({ tour, stops }: TourItineraryProps) {
                     >
                       <ArrowDown className="h-3.5 w-3.5" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => deleteStop.mutate({ id: stop.id, tourId: tour.id })}
+                    <ConfirmDialog
+                      title={`Supprimer l'étape « ${stop.venue?.name || stop.city || 'sans nom'} » ?`}
+                      description="Ses dépenses sont supprimées avec elle. Récupérable dans Réglages → Corbeille (et via « Annuler » juste après)."
+                      confirmLabel="Supprimer"
+                      onConfirm={() => deleteStop.mutate({ id: stop.id, tourId: tour.id })}
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" title="Supprimer l'étape">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </ConfirmDialog>
                   </div>
                 </div>
 

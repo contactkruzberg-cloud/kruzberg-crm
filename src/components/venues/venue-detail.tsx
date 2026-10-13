@@ -7,6 +7,7 @@ import { useCreateContact } from '@/hooks/use-contacts';
 import { useVenueActivities } from '@/hooks/use-activities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -141,9 +142,16 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={handleDelete} className="text-muted-foreground hover:text-destructive">
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <ConfirmDialog
+            title={`Supprimer « ${venue.name} » ?`}
+            description="Ses contacts, opportunités et tâches passent à la corbeille avec lui. Récupérable dans Réglages → Corbeille (et via « Annuler » juste après)."
+            confirmLabel="Supprimer"
+            onConfirm={handleDelete}
+          >
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" title="Supprimer">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </ConfirmDialog>
         </div>
       </CardHeader>
       <CardContent className="space-y-5">

@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/alert-dialog';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Plus, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
@@ -255,14 +256,16 @@ function ExpenseRow({ expense, onDelete }: { expense: TourExpense; onDelete: () 
       <span className="text-xs text-muted-foreground w-20 shrink-0">{cat?.label}</span>
       <span className="flex-1 truncate">{expense.label || '—'}</span>
       <span className="font-medium">{euro(expense.amount)}</span>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-6 text-muted-foreground hover:text-destructive"
-        onClick={onDelete}
+      <ConfirmDialog
+        title={`Supprimer la dépense « ${expense.label || cat?.label || 'sans nom'} » ?`}
+        description="Récupérable dans Réglages → Corbeille (et via « Annuler » juste après)."
+        confirmLabel="Supprimer"
+        onConfirm={onDelete}
       >
-        <Trash2 className="h-3.5 w-3.5" />
-      </Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" title="Supprimer la dépense">
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </ConfirmDialog>
     </div>
   );
 }

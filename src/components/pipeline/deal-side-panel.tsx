@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useDeal, useUpdateDeal, useDeleteDeal } from '@/hooks/use-deals';
 import { useActivities, useCreateActivity } from '@/hooks/use-activities';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -234,16 +235,22 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                   Tournée
                 </Button>
               )}
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 ml-auto text-muted-foreground hover:text-destructive"
-                title="Supprimer l'opportunité (annulable)"
-                disabled={deleteDeal.isPending}
-                onClick={() => deleteDeal.mutate(deal.id, { onSuccess: onClose })}
+              <ConfirmDialog
+                title={`Supprimer « ${dealLabel(deal)} » ?`}
+                description="L'opportunité, ses tâches et son historique passent à la corbeille. Récupérable dans Réglages → Corbeille (et via « Annuler » juste après)."
+                confirmLabel="Supprimer"
+                onConfirm={() => deleteDeal.mutate(deal.id, { onSuccess: onClose })}
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 ml-auto text-muted-foreground hover:text-destructive"
+                  title="Supprimer l'opportunité"
+                  disabled={deleteDeal.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </ConfirmDialog>
             </div>
 
             <Tabs value={tab} onValueChange={setTab}>
@@ -662,12 +669,16 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                                 </p>
                               )}
                             </div>
-                            <button
-                              className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                              onClick={() => deleteTask.mutate(task.id)}
+                            <ConfirmDialog
+                              title={`Supprimer la tâche « ${task.title} » ?`}
+                              description="Récupérable dans Réglages → Corbeille (et via « Annuler » juste après)."
+                              confirmLabel="Supprimer"
+                              onConfirm={() => deleteTask.mutate(task.id)}
                             >
-                              <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
-                            </button>
+                              <button className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0" title="Supprimer la tâche">
+                                <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                              </button>
+                            </ConfirmDialog>
                           </div>
                         );
                       })}

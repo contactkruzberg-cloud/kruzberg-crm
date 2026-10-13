@@ -7,6 +7,7 @@ import { Users, Plus, Trash2, MapPin, AtSign, Mail, Phone, Globe, ArrowLeftRight
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,15 +50,16 @@ function BandDetail({ band }: { band: Band }) {
             </p>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-destructive"
-          title="Supprimer (annulable)"
-          onClick={() => remove.mutate(band.id)}
+        <ConfirmDialog
+          title={`Supprimer le groupe « ${band.name} » ?`}
+          description="Récupérable dans Réglages → Corbeille (et via « Annuler » juste après)."
+          confirmLabel="Supprimer"
+          onConfirm={() => remove.mutate(band.id)}
         >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" title="Supprimer">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </ConfirmDialog>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-1.5">

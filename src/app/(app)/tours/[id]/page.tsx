@@ -12,6 +12,7 @@ import { generateRoadbook } from '@/lib/tour-roadbook';
 import { TOUR_STATUSES, type TourStatus } from '@/types/database';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
@@ -132,15 +133,16 @@ export default function TourDetailPage() {
             <FileText className="h-4 w-4" />
             Feuille de route PDF
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 text-muted-foreground hover:text-destructive"
-            onClick={handleDelete}
-            title="Supprimer la tournée"
+          <ConfirmDialog
+            title={`Supprimer la tournée « ${tour.name} » ?`}
+            description="Ses étapes et dépenses partent avec elle (les opportunités restent dans le pipeline). Récupérable dans Réglages → Corbeille (et via « Annuler » juste après)."
+            confirmLabel="Supprimer"
+            onConfirm={handleDelete}
           >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" title="Supprimer la tournée">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </ConfirmDialog>
         </div>
       </div>
 
