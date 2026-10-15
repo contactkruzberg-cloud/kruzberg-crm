@@ -48,6 +48,10 @@ import {
 import { depsFor, runTool, takeFor, type McpContext } from './tools';
 import { MAX_RADAR_BATCH, radarBatch, radarGet, radarList, RADAR_COLLECTIONS } from './radar';
 import { radarFeedback, radarKnownCheck, type Candidate } from './radar-insights';
+import { claimNext, EngineError, submit as submitConstellationJob } from '@/lib/constellation/engine';
+import { ConflictError } from '@/lib/constellation/docs';
+import { kick as kickConstellation } from '@/lib/constellation/launch';
+import { ToolError } from './service';
 import { radarSyncAck, radarSyncBaseline, radarSyncPush, radarSyncRefetch, radarSyncStatus } from './radar-sync';
 import type { Row } from './store';
 
@@ -729,5 +733,57 @@ export function registerFullCrmTools(server: McpServer, ctx: McpContext) {
       annotations: IDEMPOTENT_WRITE,
     },
     run('radar_sync_refetch', (deps, a: Parameters<typeof radarSyncRefetch>[1]) => radarSyncRefetch(deps, a)),
+  );
+
+  // ---------------- Constellation (page /constellation du CRM) : file des recherches de la routine
+
+  // Les erreurs du moteur (recherche introuvable, résultat illisible, conflit) reviennent comme erreurs d'outil explicites.
+  const engine = <T>(fn: () => Promise<T>) =>
+    fn().catch((e: unknown) => {
+      if (e instanceof ConflictError || e instanceof EngineError) throw new ToolError(e.message);
+      throw e;
+    });
+
+  server.registerTool(
+    'constellation_next_job',
+    {
+      title: 'Constellation : prendre la prochaine recherche',
+      description:
+        'Pour la routine Constellation. Prend la prochaine recherche en file (exploration d’un groupe, découverte de groupes, catalogue d’un tourneur ou d’un label, synthèse) et la passe « en cours ». ' +
+        'Renvoie job (id, type, libellé), instructions (la consigne complète de recherche), output_schema (le JSON Schema du résultat attendu), web_search (true : la recherche web est nécessaire) et remaining (recherches encore en file). ' +
+        'Fais la recherche en suivant instructions, puis rends le résultat avec constellation_submit_job. job: null = plus rien à faire.',
+      inputSchema: z.strictObject({}),
+      annotations: WRITE,
+    },
+    run('constellation_next_job', (deps) => engine(() => claimNext(deps.store))),
+  );
+
+  server.registerTool(
+    'constellation_submit_job',
+    {
+      title: 'Constellation : rendre une recherche',
+      description:
+        'Pour la routine Constellation. Rend le résultat d’une recherche prise avec constellation_next_job : output = l’objet JSON conforme à output_schema (faits sourcés uniquement, une URL de source par fait). ' +
+        'Si la recherche n’a pas pu aboutir (aucune source, groupe introuvable), passe error (une phrase) à la place de output. Le CRM range les faits dans la constellation et renvoie remaining.',
+      inputSchema: z.strictObject({
+        job_id: z.string().min(1).max(100),
+        output: z.record(z.string(), z.unknown()).optional(),
+        error: z.string().max(500).optional(),
+      }),
+      annotations: WRITE,
+    },
+    run('constellation_submit_job', (deps, a: { job_id: string; output?: Record<string, unknown>; error?: string }) => engine(() => submitConstellationJob(deps.store, a))),
+  );
+
+  server.registerTool(
+    'constellation_handoff',
+    {
+      title: 'Constellation : passer le relais',
+      description:
+        'Pour la routine Constellation, juste avant de s’arrêter quand des recherches restent en file (remaining > 0) : lance une nouvelle routine qui prendra la suite. Ne pas appeler si remaining vaut 0.',
+      inputSchema: z.strictObject({}),
+      annotations: WRITE,
+    },
+    run('constellation_handoff', (deps) => engine(() => kickConstellation(deps.store, { handoff: true }))),
   );
 }

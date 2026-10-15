@@ -23,6 +23,7 @@ const DEFAULTS: Record<Table, Row> = {
   briefings: { title: '', content: '' },
   radar_docs: { data: {}, version: 1 },
   radar_sync: { base: {}, artifact_version: null, crm_version: null, pending: null },
+  constellation_docs: { data: {}, version: 1 },
   mcp_audit_log: {},
 };
 
@@ -142,7 +143,7 @@ export function createMemoryStore() {
           nextRelance(next, old, patch);
         }
         if ('updated_at' in row) next.updated_at = tick();
-        if (table === 'radar_docs') next.version = Number(row.version) + 1; // radar_docs_bump trigger
+        if (table === 'radar_docs' || table === 'constellation_docs') next.version = Number(row.version) + 1; // *_docs_bump trigger
         Object.assign(row, next);
         if (table === 'deals' && old.stage !== row.stage) {
           // Mirrors the deal_stage_change_log trigger.

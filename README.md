@@ -180,3 +180,41 @@ Deploy to Vercel by connecting your GitHub repository. Add environment variables
 ## License
 
 Private — KRUZBERG internal tool.
+
+## Constellation (`/constellation`)
+
+La carte des noms qui reviennent chez les groupes de la niche post-punk (tourneurs, labels, salles, festivals,
+premières parties, médias, dispositifs), à partir de recherches sourcées. Reprise de l'outil local
+`~/Projects/constellation` : idée de Marion Richeux, méthode de Francis Richert.
+
+- Interface : `src/components/constellation/` (page `src/app/(app)/constellation/page.tsx`), logique dans
+  `src/lib/constellation/` (classement, liens entre acteurs, consignes de recherche). Le classement est calculé
+  dans le navigateur à partir des données brutes de `/api/constellation/state` ; les actions passent par
+  `/api/constellation/action`, avec la session du CRM (propriétaire uniquement).
+- Données : table `constellation_docs` (migration 019), même modèle que `radar_docs` : collections `bands`
+  (un document par groupe), `findings` (un document par groupe : ses faits sourcés), `overrides` (fusions, mises à
+  l'écart, notes par acteur), `watch` (acteurs notés en séance), `jobs` (file des recherches), `config`
+  (`synthesis`, `launch`). Badge « CRM » : jointure directe sur `venues`.
+- Recherches : elles attendent en file (`jobs`). Chaque action qui met en file réveille la routine Constellation
+  (`CONSTELLATION_ROUTINE_ID` / `CONSTELLATION_ROUTINE_TOKEN`, déclencheur API, sans horaire), jusqu'à 3 en
+  parallèle ; la page relance une routine arrêtée en route. La routine prend les recherches une à une avec
+  `constellation_next_job` (consigne complète + JSON Schema du résultat) et les rend avec
+  `constellation_submit_job` ; le CRM range les faits. Après 8 recherches, elle passe le relais à une nouvelle
+  routine (`constellation_handoff`), pour garder un contexte court. Une recherche prise depuis plus de 25 min repart en file.
+- Import depuis l'outil local : bouton « Importer » de la page, fichier `data/constellation.json`.
+
+Consigne de la routine (claude.ai → Routines, connecteur du CRM activé, recherche web autorisée, déclencheur API) :
+
+```
+Tu fais les recherches de Constellation, l'outil de KRUZBERG qui relève les acteurs (tourneurs, labels, salles,
+festivals…) chez les groupes de sa niche post-punk. Tout passe par le connecteur du CRM KRUZBERG.
+
+1. Appelle constellation_next_job. Si job est null, arrête-toi : il n'y a plus rien à faire.
+2. Fais la recherche demandée en suivant exactement instructions (recherche web si web_search est true).
+   Ne relève que ce que tu as trouvé dans une source consultée, avec son URL.
+3. Rends le résultat avec constellation_submit_job : job_id, et output = un objet JSON conforme à output_schema.
+   Si la recherche n'a rien donné de fiable, passe error (une phrase) à la place de output.
+   Si le CRM refuse le résultat (schéma non respecté), corrige-le et rends-le à nouveau.
+4. Recommence à l'étape 1. Après 8 recherches, s'il en reste (remaining > 0), appelle constellation_handoff
+   (une nouvelle routine prend la suite), puis arrête-toi.
+```

@@ -217,3 +217,19 @@ body {
 .animate-fade-out-late {
   animation: fade-out-late 2.5s ease-out forwards;
 }
+
+/* Constellation : étiquettes de la carte (SVG) */
+.graph-label {
+  font-size: 10px;
+  fill: hsl(var(--muted-foreground));
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: hsl(var(--background));
+  stroke-width: 3px;
+}
+
+.graph-label.strong {
+  fill: hsl(var(--foreground));
+  font-weight: 600;
+  font-size: 11px;
+}

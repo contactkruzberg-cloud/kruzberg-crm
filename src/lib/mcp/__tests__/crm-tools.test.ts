@@ -86,6 +86,7 @@ describe('tools/list', () => {
       'list_application_deadlines', 'link_band_to_deal', 'unlink_band_from_deal', 'save_briefing', 'get_briefing',
       'radar_list', 'radar_get', 'radar_batch', 'radar_known_check', 'radar_feedback',
       'radar_sync_status', 'radar_sync_push', 'radar_sync_ack', 'radar_sync_baseline', 'radar_sync_refetch',
+      'constellation_next_job', 'constellation_submit_job', 'constellation_handoff',
     ];
     expect(Object.keys(tools).sort()).toEqual([...expected].sort());
     for (const name of expected) {

@@ -20,6 +20,7 @@ export type Table =
   | 'briefings'
   | 'radar_docs'
   | 'radar_sync'
+  | 'constellation_docs'
   | 'mcp_audit_log';
 
 export type Filter =
