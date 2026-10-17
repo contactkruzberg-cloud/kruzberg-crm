@@ -6,12 +6,12 @@ import { entityKey } from '@/lib/constellation/normalize';
 import type { BandLink } from '@/lib/constellation/links';
 import { KIND_COLOR, ORIGIN_LABEL, STAGE_COLOR, STAGE_LABEL, type Band, type EntityKind } from '@/lib/constellation/types';
 import { Badge, Button, Dot, KindBadge, cn, host } from './ui';
-import type { State } from './use-constellation';
+import { useDetail, type State } from './use-constellation';
 
 const ORDER: EntityKind[] = ['tourneur', 'label', 'festival', 'salle', 'organisateur', 'tete_affiche', 'plateau', 'media', 'dispositif'];
 
 export function BandPanel({
-  band: b,
+  band: slim,
   data,
   act,
   near,
@@ -27,15 +27,29 @@ export function BandPanel({
   onEntity: (key: string) => void;
   onBand: (id: string) => void;
 }) {
+  // Résumé, leçon, sources des étapes et contexte des faits : chargés à l'ouverture de la fiche.
+  const { detail, loading } = useDetail({ band: slim.id }, data.stamp);
+  const b: Band = detail?.band ? { ...slim, ...detail.band } : slim;
+  const facts = detail?.facts;
   // Les faits du groupe, retrouvés dans les acteurs agrégés (fusions comprises).
   const rows = useMemo(() => {
     const out: { entityKey: string; entityName: string; recurrence: number; kind: EntityKind; when?: string; detail?: string; city?: string; src: string; id: string }[] = [];
     for (const e of data.entities)
       for (const f of e.findings)
         if (f.bandId === b.id)
-          out.push({ entityKey: e.key, entityName: e.name, recurrence: e.bandIds.length, kind: f.kind, when: f.when, detail: f.detail, city: f.city, src: f.sourceUrl, id: f.id });
+          out.push({
+            entityKey: e.key,
+            entityName: e.name,
+            recurrence: e.bandIds.length,
+            kind: f.kind,
+            when: f.when,
+            detail: facts?.[f.id]?.detail ?? f.detail,
+            city: f.city,
+            src: facts?.[f.id]?.sourceUrl ?? f.sourceUrl,
+            id: f.id,
+          });
     return out;
-  }, [data.entities, b.id]);
+  }, [data.entities, b.id, facts]);
   const busy = b.status === 'queued' || b.status === 'running';
 
   return (
@@ -69,6 +83,11 @@ export function BandPanel({
       </div>
       <div className="flex-1 space-y-5 overflow-y-auto p-5">
         {b.why && <p className="text-sm text-muted-foreground">{b.why}</p>}
+        {loading && !detail && (
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Loader2 className="size-3.5 animate-spin" /> Chargement du parcours…
+          </p>
+        )}
         {b.summary && (
           <section>
             <h3 className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Parcours</h3>
@@ -107,9 +126,11 @@ export function BandPanel({
                   <div className="text-foreground/85">
                     {m.title}
                     {m.actor ? <span className="text-muted-foreground"> ({m.actor})</span> : null}{' '}
-                    <a href={m.sourceUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
-                      {host(m.sourceUrl)}
-                    </a>
+                    {m.sourceUrl && (
+                      <a href={m.sourceUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
+                        {host(m.sourceUrl)}
+                      </a>
+                    )}
                   </div>
                 </li>
               ))}
@@ -136,9 +157,11 @@ export function BandPanel({
                       </button>
                       <div className="text-xs text-muted-foreground">
                         {[r.when, r.city, r.detail].filter(Boolean).join(' · ')}{' '}
-                        <a href={r.src} target="_blank" rel="noreferrer" className="hover:underline">
-                          ({host(r.src)})
-                        </a>
+                        {r.src && (
+                          <a href={r.src} target="_blank" rel="noreferrer" className="hover:underline">
+                            ({host(r.src)})
+                          </a>
+                        )}
                       </div>
                     </div>
                     {r.recurrence >= 2 && <Badge className="border-primary/40 text-primary" title="Nombre de groupes de la niche chez qui on le retrouve">×{r.recurrence}</Badge>}
