@@ -5,7 +5,7 @@ import { Check, Copy, Database, EyeOff, ExternalLink, Library, Loader2, Merge, S
 import { relationOrder, relationTitle, type EntityLink } from '@/lib/constellation/links';
 import type { Entity, Finding } from '@/lib/constellation/types';
 import { Badge, Button, KindBadge, cn, host } from './ui';
-import type { State } from './use-constellation';
+import { useDetail, type State } from './use-constellation';
 
 function year(f: Finding) {
   return f.when?.slice(0, 4);
@@ -89,6 +89,8 @@ export function EntityPanel({
     }
   };
 
+  // Contexte et source des preuves : chargés à l'ouverture de la fiche.
+  const { detail, loading } = useDetail({ entity: e.key }, data.stamp);
   const byBand = e.bandIds.map((id) => ({ id, fs: e.findings.filter((f) => f.bandId === id).sort((a, b) => (b.when ?? '').localeCompare(a.when ?? '')) }));
 
   return (
@@ -181,7 +183,9 @@ export function EntityPanel({
 
         {byBand.length > 0 && (
           <section>
-            <h3 className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Preuves, groupe par groupe</h3>
+            <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              Preuves, groupe par groupe {loading && <Loader2 className="size-3 animate-spin" />}
+            </h3>
             <div className="space-y-3">
               {byBand.map(({ id, fs }) => (
                 <div key={id} className="rounded-lg border border-border">
@@ -190,14 +194,19 @@ export function EntityPanel({
                     <span className="text-xs text-muted-foreground">{bands.get(id)?.city}</span>
                   </button>
                   <ul className="space-y-1.5 border-t border-border px-3 py-2">
-                    {fs.map((f) => (
-                      <li key={f.id} className="text-xs">
-                        <span className="text-foreground/90">{[f.when, f.detail, f.kind !== e.kind ? f.name : null].filter(Boolean).join(' · ') || 'Mention'}</span>{' '}
-                        <a href={f.sourceUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                          {host(f.sourceUrl)}
-                        </a>
-                      </li>
-                    ))}
+                    {fs.map((f) => {
+                      const full = { ...f, ...detail?.facts[f.id] };
+                      return (
+                        <li key={f.id} className="text-xs">
+                          <span className="text-foreground/90">{[full.when, full.detail, full.kind !== e.kind ? full.name : null].filter(Boolean).join(' · ') || 'Mention'}</span>{' '}
+                          {full.sourceUrl && (
+                            <a href={full.sourceUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                              {host(full.sourceUrl)}
+                            </a>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               ))}

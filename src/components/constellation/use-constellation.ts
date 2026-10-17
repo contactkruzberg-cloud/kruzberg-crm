@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { aggregate, type CrmKnown } from '@/lib/constellation/aggregate';
 import type { Band, Db, Entity, EntityKind, EntityOverride, Finding, Job, Synthesis, Watch } from '@/lib/constellation/types';
+import { unpackFindings, unslimBand, type BandExtra, type Facts, type PackedFindings, type SlimBand } from '@/lib/constellation/wire';
 
 export interface Routine {
   configured: boolean;
@@ -12,6 +13,8 @@ export interface Routine {
 }
 
 export interface State {
+  /** Change à chaque modification de la constellation. */
+  stamp: string;
   bands: Band[];
   entities: Entity[];
   hidden: { key: string; name: string; kind: EntityKind }[];
@@ -21,10 +24,10 @@ export interface State {
   routine: Routine;
 }
 
-interface Raw {
+interface Wire {
   stamp: string;
-  bands: Band[];
-  findings: Finding[];
+  bands: SlimBand[];
+  findings: PackedFindings;
   overrides: Record<string, EntityOverride>;
   watch: Watch[];
   jobs: Job[];
@@ -33,9 +36,18 @@ interface Raw {
   routine: Routine;
 }
 
+type Raw = Omit<Wire, 'bands' | 'findings'> & { bands: Band[]; findings: Finding[] };
+
 const URL = '/api/constellation/state';
 
-// Le serveur envoie les données brutes ; le classement est calculé ici. Pendant
+async function fetchJson<T>(url: string): Promise<T> {
+  const r = await fetch(url, { cache: 'no-store' });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j as { error?: string }).error ?? `Erreur ${r.status}`);
+  return j as T;
+}
+
+// Le serveur envoie les données allégées (wire.ts) ; le classement est calculé ici. Pendant
 // les recherches, on n'interroge que la file (léger) et on ne recharge tout
 // que si quelque chose a changé.
 export function useConstellation() {
@@ -44,16 +56,10 @@ export function useConstellation() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stamp = useRef<string | null>(null);
 
-  const fetchJson = async <T>(url: string): Promise<T> => {
-    const r = await fetch(url, { cache: 'no-store' });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error((j as { error?: string }).error ?? `Erreur ${r.status}`);
-    return j as T;
-  };
-
   const load = useCallback(async () => {
     try {
-      const d = await fetchJson<Raw>(URL);
+      const w = await fetchJson<Wire>(URL);
+      const d: Raw = { ...w, bands: w.bands.map(unslimBand), findings: unpackFindings(w.findings) };
       stamp.current = d.stamp;
       setRaw(d);
       setError(null);
@@ -98,6 +104,7 @@ export function useConstellation() {
     if (!raw) return null;
     const db: Db = { version: 1, bands: raw.bands, findings: raw.findings, overrides: raw.overrides, watch: raw.watch, jobs: raw.jobs, synthesis: raw.synthesis };
     return {
+      stamp: raw.stamp,
       bands: raw.bands,
       entities: aggregate(db, raw.crm),
       hidden: aggregate(db, raw.crm, { includeHidden: true })
@@ -122,4 +129,33 @@ export function useConstellation() {
   );
 
   return { data, error, act, reload: load };
+}
+
+export interface Detail {
+  /** Résumé, leçon et étapes sourcées (fiche d'un groupe). */
+  band?: BandExtra;
+  /** Contexte et source des faits, par id de fait. */
+  facts: Facts;
+}
+
+/**
+ * Ce que la fiche d'un groupe (?band=) ou d'un acteur (?entity=) charge à son
+ * ouverture, rechargé quand la constellation change (stamp).
+ */
+export function useDetail(query: { band: string } | { entity: string }, stamp: string) {
+  const qs = new URLSearchParams(query).toString();
+  const [got, setGot] = useState<{ qs: string; stamp: string; detail?: Detail; error?: string } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetchJson<Detail>(`/api/constellation/detail?${qs}`).then(
+      (detail) => alive && setGot({ qs, stamp, detail }),
+      (e) => alive && setGot({ qs, stamp, error: e instanceof Error ? e.message : String(e) }),
+    );
+    return () => {
+      alive = false;
+    };
+  }, [qs, stamp]);
+  // L'ancienne fiche reste affichée pendant le rechargement, pas celle d'un autre groupe.
+  const mine = got?.qs === qs ? got : null;
+  return { detail: mine?.detail, error: mine?.error, loading: !mine || mine.stamp !== stamp };
 }
