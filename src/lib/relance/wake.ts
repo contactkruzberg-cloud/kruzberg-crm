@@ -42,3 +42,12 @@ export async function wakeRelanceWorker(): Promise<boolean> {
 export function fireVeille(scopeLabel: string): Promise<FireResult> {
   return fireRoutine(process.env.VEILLE_ROUTINE_ID, process.env.VEILLE_ROUTINE_TOKEN, `Recherche lancée depuis le CRM : ${scopeLabel}.`);
 }
+
+/** Constellation: a routine run takes the queued searches one by one through the connector. */
+export function fireConstellation(queued: number): Promise<FireResult> {
+  return fireRoutine(
+    process.env.CONSTELLATION_ROUTINE_ID,
+    process.env.CONSTELLATION_ROUTINE_TOKEN,
+    `Constellation : ${queued} recherche${queued > 1 ? 's' : ''} en file.`,
+  );
+}
