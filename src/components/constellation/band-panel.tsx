@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { ExternalLink, Lightbulb, Loader2, RefreshCw, Trophy, X } from 'lucide-react';
 import { entityKey } from '@/lib/constellation/normalize';
+import { isEstablished } from '@/lib/constellation/tier';
 import type { BandLink } from '@/lib/constellation/links';
 import { KIND_COLOR, ORIGIN_LABEL, STAGE_COLOR, STAGE_LABEL, type Band, type EntityKind } from '@/lib/constellation/types';
 import { Badge, Button, Dot, KindBadge, cn, host } from './ui';
@@ -50,6 +51,9 @@ export function BandPanel({
               </Badge>
             )}
             {b.fit && <Badge className="text-muted-foreground" title="Proximité avec KRUZBERG estimée par la découverte">proximité {b.fit}/5</Badge>}
+            <Badge className="text-muted-foreground" title="Les groupes établis sont exclus de la vue « Groupes émergents » du classement">
+              {isEstablished(b) ? 'Groupe établi' : 'Groupe émergent'}
+            </Badge>
           </div>
           <h2 className="mt-2 text-lg font-semibold">{b.name}</h2>
           <p className="text-sm text-muted-foreground">{[b.genre, b.city, b.country, b.formedYear ? `formé en ${b.formedYear}` : null].filter(Boolean).join(' · ')}</p>
@@ -85,13 +89,16 @@ export function BandPanel({
         )}
         {b.error && <p className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs">{b.error}</p>}
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button size="sm" disabled={busy} onClick={() => act({ type: 'exploreBand', id: b.id })}>
             {busy ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
             {busy ? (b.status === 'running' ? 'Recherche en cours…' : 'En file d’attente') : b.exploredAt ? 'Relancer la recherche' : 'Explorer'}
           </Button>
           <Button size="sm" variant="ghost" onClick={() => act({ type: 'setReference', id: b.id, reference: !b.reference })}>
             <Trophy className="size-3.5" /> {b.reference ? 'Retirer des groupes à succès' : 'Groupe à succès'}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => act({ type: 'setTier', id: b.id, tier: isEstablished(b) ? 'emergent' : 'etabli' })}>
+            {isEstablished(b) ? 'Passer en émergent' : 'Passer en établi'}
           </Button>
         </div>
         {b.exploredAt && <p className="-mt-3 text-xs text-muted-foreground">Exploré le {new Date(b.exploredAt).toLocaleDateString('fr-FR')}</p>}

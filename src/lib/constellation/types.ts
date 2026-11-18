@@ -39,6 +39,8 @@ export interface Band {
   links?: { website?: string; bandcamp?: string; instagram?: string };
   /** Groupe « à succès » dont on étudie le parcours (Last Train, Fontaines D.C.…). */
   reference?: boolean;
+  /** Taille du groupe, pour la vue « Groupes émergents » ; absent = valeur par défaut (voir tier.ts). */
+  tier?: 'emergent' | 'etabli';
   /** Proximité avec KRUZBERG estimée par la découverte (1 à 5). */
   fit?: number;
   formedYear?: number;
