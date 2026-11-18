@@ -1,10 +1,13 @@
 import { loadDb, mutate } from '@/lib/constellation/docs';
 import { seed } from '@/lib/constellation/engine';
 import { crmKnown, kick, ownerStore, routineConfigured } from '@/lib/constellation/server';
+import { packFindings, slimBand } from '@/lib/constellation/wire';
 
 // Données de la page /constellation. La page calcule elle-même le classement
-// (aggregate) : on n'envoie les faits qu'une fois. Avec ?light=1, seulement la
-// file des recherches et un tampon : la page ne recharge tout que s'il a changé.
+// (aggregate) : on n'envoie les faits qu'une fois, en version allégée (wire.ts) ;
+// les fiches chargent le reste à leur ouverture (../detail). Avec ?light=1,
+// seulement la file des recherches et un tampon : la page ne recharge tout que
+// s'il a changé.
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -34,8 +37,8 @@ export async function GET(request: Request) {
   const crm = await crmKnown(store);
   return json({
     stamp,
-    bands: db.bands,
-    findings: db.findings,
+    bands: db.bands.map(slimBand),
+    findings: packFindings(db.findings),
     overrides: db.overrides,
     watch: db.watch,
     jobs,
