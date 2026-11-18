@@ -176,6 +176,7 @@ export function workersToFire(db: Db, launch: Launch, now = Date.now()): number 
 export type Action =
   | { type: 'addBand'; name: string; city?: string; country?: string; why?: string; reference?: boolean }
   | { type: 'setReference'; id: string; reference: boolean }
+  | { type: 'setTier'; id: string; tier: 'emergent' | 'etabli' }
   | { type: 'discover'; angle: DiscoverAngle; autoExplore?: boolean }
   | { type: 'discoverAll'; autoExplore?: boolean }
   | { type: 'synthesis' }
@@ -237,6 +238,12 @@ export function applyAction(l: Loaded, a: Action): Record<string, unknown> {
         if (a.reference) b.reference = true;
         else delete b.reference;
       }
+      return { ok: true };
+    }
+    case 'setTier': {
+      if (a.tier !== 'emergent' && a.tier !== 'etabli') throw new ActionError('Taille inconnue');
+      const b = db.bands.find((x) => x.id === a.id);
+      if (b) b.tier = a.tier;
       return { ok: true };
     }
     case 'roster':

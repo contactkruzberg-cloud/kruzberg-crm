@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { Database, MapPin, Search, Star, Trophy } from 'lucide-react';
+import { isEstablished } from '@/lib/constellation/tier';
 import { KIND_COLOR, KIND_PLURAL, type Entity, type EntityKind } from '@/lib/constellation/types';
 import { Badge, Button, Dot, Empty, KindBadge, cn } from './ui';
 import type { State } from './use-constellation';
@@ -17,7 +18,11 @@ export function reachable(e: Entity) {
   return true;
 }
 
-export function Ranking({ data, onOpen, onBand, selected, goBands }: { data: State; onOpen: (key: string) => void; onBand: (id: string) => void; selected: string | null; goBands: () => void }) {
+export function Ranking({ data: all, onOpen, onBand, selected, goBands }: { data: State; onOpen: (key: string) => void; onBand: (id: string) => void; selected: string | null; goBands: () => void }) {
+  // Général : tous les groupes. Émergents : sans les groupes établis (plus gros qu'Enola Gay, DITZ, Johnnie Carwash…).
+  const [scope, setScope] = useState<'general' | 'emerging'>('general');
+  const data = useMemo(() => (scope === 'emerging' ? { ...all, bands: all.bands.filter((b) => !isEstablished(b)), entities: all.entitiesEmerging } : all), [all, scope]);
+  const established = useMemo(() => all.bands.filter((b) => b.status === 'done' && isEstablished(b)).sort((a, b) => a.name.localeCompare(b.name)), [all.bands]);
   const [kind, setKind] = useState<EntityKind | 'all'>('all');
   // Par défaut, seulement les noms qui reviennent : les 600+ vus une seule fois noyaient le classement.
   const [min, setMin] = useState(2);
@@ -67,6 +72,30 @@ export function Ranking({ data, onOpen, onBand, selected, goBands }: { data: Sta
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center rounded-md border border-border bg-card p-0.5 text-sm">
+          <button onClick={() => setScope('general')} className={cn('rounded px-3 py-1.5', scope === 'general' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
+            Classement général
+          </button>
+          <button onClick={() => setScope('emerging')} className={cn('rounded px-3 py-1.5', scope === 'emerging' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
+            Groupes émergents
+          </button>
+        </div>
+        {scope === 'emerging' && (
+          <p className="min-w-0 flex-1 text-xs text-muted-foreground">
+            Sans les {established.length} groupes établis, plus gros qu’Enola Gay, DITZ, Johnnie Carwash ou Johnny Mafia :{' '}
+            {established.map((b, i) => (
+              <span key={b.id}>
+                <button onClick={() => onBand(b.id)} className="underline-offset-2 hover:text-foreground hover:underline">
+                  {b.name}
+                </button>
+                {i < established.length - 1 ? ', ' : ''}
+              </span>
+            ))}
+            . La fiche de chaque groupe permet de le changer de catégorie.
+          </p>
+        )}
+      </div>
       <TopActors
         data={data}
         onOpen={onOpen}

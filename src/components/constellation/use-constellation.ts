@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { aggregate, type CrmKnown } from '@/lib/constellation/aggregate';
+import { emergingOnly } from '@/lib/constellation/tier';
 import type { Band, Db, Entity, EntityKind, EntityOverride, Finding, Job, Synthesis, Watch } from '@/lib/constellation/types';
 
 export interface Routine {
@@ -14,6 +15,8 @@ export interface Routine {
 export interface State {
   bands: Band[];
   entities: Entity[];
+  /** Le même classement, calculé seulement sur les groupes émergents. */
+  entitiesEmerging: Entity[];
   hidden: { key: string; name: string; kind: EntityKind }[];
   jobs: Job[];
   crmCount: number;
@@ -100,6 +103,7 @@ export function useConstellation() {
     return {
       bands: raw.bands,
       entities: aggregate(db, raw.crm),
+      entitiesEmerging: aggregate(emergingOnly(db), raw.crm),
       hidden: aggregate(db, raw.crm, { includeHidden: true })
         .filter((e) => raw.overrides[e.key]?.hidden)
         .map((e) => ({ key: e.key, name: e.name, kind: e.kind })),
