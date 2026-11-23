@@ -50,7 +50,11 @@ export function RelanceAlerts() {
           Relances à faire
         </CardTitle>
         {allAlerts.length > 0 && (
-          <Badge variant="destructive">{allAlerts.length}</Badge>
+          <Button asChild size="sm" className="h-7 gap-1 text-xs">
+            <Link href="/relances">
+              Ouvrir la file <Badge variant="secondary" className="h-4 px-1 text-[10px]">{allAlerts.length}</Badge>
+            </Link>
+          </Button>
         )}
       </CardHeader>
       <CardContent>

@@ -38,6 +38,46 @@ function Elapsed({ since }: { since: string }) {
  * opens in Mail.
  */
 export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: boolean; onOpenChange: (o: boolean) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" /> Relancer · {dealLabel(deal, '')}
+          </DialogTitle>
+          <DialogDescription>
+            <RelanceBasis deal={deal} />
+          </DialogDescription>
+        </DialogHeader>
+        {open && <RelanceEditor deal={deal} autoRequest onDone={() => onOpenChange(false)} />}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Where the draft comes from (the email it follows up, or the deal's history). */
+export function RelanceBasis({ deal }: { deal: Deal }) {
+  const doc = useRelanceDocs().data?.get(deal.id);
+  if (!doc?.basedOn) return <>Relance personnalisée rédigée par Claude.</>;
+  return doc.basedOn.lastSent ? (
+    <>
+      À partir de ton mail « {doc.basedOn.lastSent.subject} » du {formatDate(doc.basedOn.lastSent.date)}
+      {doc.basedOn.relances ? ` · relance n° ${doc.basedOn.relances + 1}` : ''}.
+    </>
+  ) : (
+    <>
+      Aucun mail envoyé à {doc.basedOn.addresses?.join(', ') || 'ce contact'} retrouvé dans booking@ (dossiers fouillés : {doc.basedOn.searchedIn || '?'}) : à partir de
+      la fiche et de l’historique.
+    </>
+  );
+}
+
+/**
+ * The follow-up itself: waits for Claude's draft, lets Greg edit it, put it in
+ * Mail and note it as sent. Used by the "Relancer" dialog and the relance queue.
+ * Mount it with a `key` per deal: its state belongs to one deal.
+ */
+export function RelanceEditor({ deal, autoRequest = false, onDone }: { deal: Deal; autoRequest?: boolean; onDone?: () => void }) {
   const docs = useRelanceDocs();
   const doc = docs.data?.get(deal.id);
   const asked = useRef(false);
@@ -70,20 +110,13 @@ export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: 
   };
   const writing = doc?.state === 'requested';
 
-  // On opening: ask for a draft unless one is ready or being written.
+  // On mount (dialog): ask for a draft unless one is ready or being written.
   useEffect(() => {
-    if (!open) {
-      asked.current = false;
-      setOpened(false);
-      setDraftId(null);
-      setNote('');
-      return;
-    }
-    if (asked.current || !docs.isSuccess) return;
+    if (!autoRequest || asked.current || !docs.isSuccess) return;
     asked.current = true;
     if (!ready && !writing) request.mutate({ dealId: deal.id }, { onError: (e) => toast.error(e.message) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, docs.isSuccess]);
+  }, [docs.isSuccess]);
 
   // Editable copy of the draft, reset when a new version arrives.
   const draftKey = ready ? `${doc!.readyAt}` : '';
@@ -100,20 +133,7 @@ export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: 
     );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" /> Relancer · {dealLabel(deal, '')}
-          </DialogTitle>
-          <DialogDescription>
-            {doc?.basedOn
-              ? doc.basedOn.lastSent
-                ? `À partir de ton mail « ${doc.basedOn.lastSent.subject} » du ${formatDate(doc.basedOn.lastSent.date)}${doc.basedOn.relances ? ` · relance n° ${doc.basedOn.relances + 1}` : ''}.`
-                : `Aucun mail envoyé à ${doc.basedOn.addresses?.join(', ') || 'ce contact'} retrouvé dans booking@ (dossiers fouillés : ${doc.basedOn.searchedIn || '?'}) : à partir de la fiche et de l’historique.`
-              : 'Relance personnalisée rédigée par Claude.'}
-          </DialogDescription>
-        </DialogHeader>
+    <div className="space-y-4">
 
         {(writing || request.isPending) && (
           <div className="space-y-2 py-10 text-center text-sm">
@@ -220,7 +240,7 @@ export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: 
                       {
                         onSuccess: () => {
                           markSent.mutate(deal.id);
-                          onOpenChange(false);
+                          onDone?.();
                         },
                       },
                     )
@@ -246,7 +266,6 @@ export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: 
             </div>
           </div>
         )}
-      </DialogContent>
-    </Dialog>
+    </div>
   );
 }

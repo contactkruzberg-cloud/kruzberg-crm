@@ -45,6 +45,29 @@ export function useRequestRelance() {
   });
 }
 
+/** Queue drafts for several deals at once; the routine is woken once, with the last one. */
+export function useRequestRelances() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (dealIds: string[]) => {
+      const done: RelanceDoc[] = [];
+      for (const [i, dealId] of dealIds.entries()) {
+        const res = await fetch('/api/relance', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ dealId, wake: i === dealIds.length - 1 }),
+        });
+        const body = await res.json().catch(() => null);
+        if (!res.ok) throw new Error(body?.error || `Erreur ${res.status}`);
+        done.push(body as RelanceDoc);
+        qc.setQueryData<Map<string, RelanceDoc>>(KEY, (m) => new Map(m ?? []).set(dealId, body as RelanceDoc));
+      }
+      return done;
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
 /** Mark the draft as sent (it stops showing as "Relance prête"). */
 export function useMarkRelanceSent() {
   const qc = useQueryClient();

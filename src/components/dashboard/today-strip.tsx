@@ -1,12 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { AlertTriangle, Calendar, ListTodo, Radar, type LucideIcon } from 'lucide-react';
 import { useDeals } from '@/hooks/use-deals';
 import { useTasks } from '@/hooks/use-tasks';
 import { useRadar } from '@/hooks/use-radar';
-import { usePipelineFilters } from '@/components/pipeline/pipeline-filters';
 import { baseSet, triQueue } from '@/lib/radar/logic';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, daysUntil, dealLabel, formatDate } from '@/lib/utils';
@@ -62,8 +60,6 @@ function Tile({
 
 /** Ce qui compte aujourd'hui, en un coup d'œil : chaque case mène là où on agit. */
 export function TodayStrip() {
-  const router = useRouter();
-  const [filters, setFilters] = usePipelineFilters();
   const { data: deals, isLoading: dealsLoading } = useDeals();
   const { data: tasks, isLoading: tasksLoading } = useTasks();
   const radar = useRadar();
@@ -102,10 +98,7 @@ export function TodayStrip() {
         value={relances.length}
         sub={relances.length ? (relancesLate ? `dont ${relancesLate} en retard` : "à faire aujourd'hui") : 'rien à relancer'}
         tone={relancesLate ? 'alert' : relances.length ? 'warn' : 'ok'}
-        onClick={() => {
-          setFilters({ ...filters, due: true });
-          router.push('/pipeline');
-        }}
+        href="/relances"
       />
       <Tile
         icon={ListTodo}

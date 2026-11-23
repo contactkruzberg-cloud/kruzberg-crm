@@ -19,6 +19,7 @@ import {
   Zap,
   X,
   Radar,
+  Send,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -27,6 +28,7 @@ import { SettingsDialog } from '@/components/layout/settings-dialog';
 
 export const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/relances', label: 'Relances', icon: Send },
   { href: '/radar', label: 'Radar', icon: Radar },
   { href: '/pipeline', label: 'Pipeline', icon: Kanban },
   { href: '/tours', label: 'Tournées', icon: Route },

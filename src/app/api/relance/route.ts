@@ -12,7 +12,7 @@ import type { Deal } from '@/types/database';
 
 export const maxDuration = 30;
 
-/** { dealId } → the request document (state "requested"). */
+/** { dealId, note?, wake? } → the request document (state "requested"). wake:false queues it without waking the routine (batch: wake once at the end). */
 export async function POST(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
   const {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
 
-  const { dealId, note } = (await request.json().catch(() => ({}))) as { dealId?: string; note?: string };
+  const { dealId, note, wake = true } = (await request.json().catch(() => ({}))) as { dealId?: string; note?: string; wake?: boolean };
   if (!dealId) return NextResponse.json({ error: 'dealId manquant' }, { status: 400 });
 
   const { data: deal, error } = await supabase.from('deals').select('*, venue:venues(*), contact:contacts(*)').eq('id', dealId).single();
@@ -76,6 +76,6 @@ export async function POST(request: NextRequest) {
     .upsert({ user_id: user.id, collection: 'outbox', id: relanceDocId(dealId), data: doc }, { onConflict: 'user_id,collection,id' });
   if (wErr) return NextResponse.json({ error: wErr.message }, { status: 500 });
 
-  const woke = await wakeRelanceWorker().catch(() => false);
+  const woke = wake ? await wakeRelanceWorker().catch(() => false) : false;
   return NextResponse.json({ ...doc, woke });
 }
