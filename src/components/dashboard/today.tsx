@@ -8,6 +8,9 @@ import { useDeals } from '@/hooks/use-deals';
 import { useCreateTask, useTasks, useUpdateTask } from '@/hooks/use-tasks';
 import { useVenues } from '@/hooks/use-venues';
 import { useRadar } from '@/hooks/use-radar';
+import { useContacts } from '@/hooks/use-contacts';
+import { useEmails } from '@/hooks/use-emails';
+import { buildConversations } from '@/lib/email/messages';
 import { applicationWindow } from '@/lib/application-dates';
 import { triQueue } from '@/lib/radar/logic';
 import { cn, daysUntil, dealLabel } from '@/lib/utils';
@@ -44,9 +47,23 @@ function useTodayRows() {
   const { data: tasks } = useTasks();
   const { data: venues } = useVenues();
   const radar = useRadar();
+  const { data: emails } = useEmails();
+  const { data: contacts } = useContacts();
 
   return useMemo(() => {
     const rows: Row[] = [];
+
+    // Unread mail from people the CRM knows.
+    const unread = buildConversations((emails ?? []).filter((e) => e.direction === 'in' && !e.seen), venues ?? [], contacts ?? []).filter((c) => c.kind !== 'address');
+    if (unread.length)
+      rows.push({
+        key: 'messages',
+        level: 'today',
+        title: `${unread.length} message${unread.length > 1 ? 's' : ''} non lu${unread.length > 1 ? 's' : ''}`,
+        detail: unread.slice(0, 3).map((c) => c.title).join(', ') + (unread.length > 3 ? '…' : ''),
+        meta: 'Messages',
+        href: unread.length === 1 ? `/messages?c=${encodeURIComponent(unread[0].key)}` : '/messages',
+      });
 
     // Relances: one row for the whole queue — it is handled in /relances.
     const due = (deals || []).filter((d) => !CLOSED.includes(d.stage) && d.next_relance_at && daysUntil(d.next_relance_at) <= 0);
@@ -109,7 +126,7 @@ function useTodayRows() {
     }
 
     return rows.sort((a, b) => RANK[a.level] - RANK[b.level]);
-  }, [deals, tasks, venues, radar.isLoading, radar.error, radar.leads, radar.meta]);
+  }, [deals, tasks, venues, radar.isLoading, radar.error, radar.leads, radar.meta, emails, contacts]);
 }
 
 function TaskCheck({ task }: { task: Task }) {

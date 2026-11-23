@@ -39,28 +39,3 @@ export function useSendEmail() {
     },
   });
 }
-
-export function useSyncEmails() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      const res = await fetch('/api/email/sync');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur sync');
-      return data as { emailsChecked: number; newReplies: number };
-    },
-    onSuccess: (data) => {
-      if (data.newReplies > 0) {
-        toast.success(`${data.newReplies} nouvelle(s) réponse(s) détectée(s) !`);
-        queryClient.invalidateQueries({ queryKey: ['deals'] });
-        queryClient.invalidateQueries({ queryKey: ['activities'] });
-      } else {
-        toast.info(`${data.emailsChecked} emails vérifiés — aucune nouvelle réponse`);
-      }
-    },
-    onError: (error: Error) => {
-      toast.error(`Erreur sync : ${error.message}`);
-    },
-  });
-}

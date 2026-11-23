@@ -1,141 +1,62 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { fetchNewEmails } from '@/lib/email/imap';
+import { NextResponse } from 'next/server';
+import { syncMailbox } from '@/lib/email/mailbox';
+import { buildConversations, type EmailRow } from '@/lib/email/messages';
+import { emailContext, isMissingTable, SETUP_MESSAGE } from '@/lib/email/server-context';
 
-// This route can be called by Vercel Cron or manually
-export async function GET(request: NextRequest) {
+// Copies new mail from booking@ into the CRM (all useful folders), then marks
+// as « Répondu » the opportunities whose venue / contact just wrote back.
+// Called by the app (button, every few minutes) and by Vercel Cron.
+
+export const maxDuration = 60;
+
+export async function GET(request: Request) {
+  const ctx = await emailContext(request);
+  if (!ctx) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+  const { db, userId } = ctx;
+
   try {
-    // Verify cron secret or auth
-    const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET;
+    const r = await syncMailbox(db, userId);
 
-    let userId: string | null = null;
-
-    if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
-      // Called by cron — get the first user (single-user app)
-      const supabase = await createServerSupabaseClient();
-      const { data } = await supabase.from('venues').select('user_id').limit(1).single();
-      userId = data?.user_id || null;
-    } else {
-      // Called by authenticated user
-      const supabase = await createServerSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      userId = user?.id || null;
-    }
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
-    }
-
-    const supabase = await createServerSupabaseClient();
-
-    // Fetch emails from the last 7 days
-    const since = new Date();
-    since.setDate(since.getDate() - 7);
-
-    const emails = await fetchNewEmails(since);
-
-    // Get all contacts with emails for matching
-    const { data: contacts } = await supabase
-      .from('contacts')
-      .select('id, email, venue_id, name')
-      .eq('user_id', userId)
-      .not('email', 'is', null);
-
-    // Get all venues with emails for matching
-    const { data: venues } = await supabase
-      .from('venues')
-      .select('id, email, name')
-      .eq('user_id', userId)
-      .not('email', 'is', null);
-
-    // Get existing activities to avoid duplicates
-    const { data: existingActivities } = await supabase
-      .from('activities')
-      .select('content')
-      .eq('user_id', userId)
-      .eq('type', 'reply_received')
-      .gte('created_at', since.toISOString());
-
-    const existingContents = new Set(
-      existingActivities?.map((a) => a.content) || []
-    );
-
+    // Reply detection on what just came in (last 14 days only).
     let newReplies = 0;
-
-    for (const email of emails) {
-      const senderEmail = email.from.toLowerCase();
-
-      // Match sender to a contact
-      const matchedContact = contacts?.find(
-        (c) => c.email?.toLowerCase() === senderEmail
-      );
-
-      // Match sender to a venue
-      const matchedVenue = venues?.find(
-        (v) => v.email?.toLowerCase() === senderEmail
-      );
-
-      const venueId = matchedContact?.venue_id || matchedVenue?.id || null;
-      const contactId = matchedContact?.id || null;
-      const senderName = email.fromName || senderEmail;
-
-      if (!matchedContact && !matchedVenue) continue; // Unknown sender, skip
-
-      // Check for duplicate
-      const activityContent = `Réponse reçue de ${senderName} : "${email.subject}"`;
-      if (existingContents.has(activityContent)) continue;
-
-      // Find linked deal
-      let dealId: string | null = null;
-      if (venueId) {
-        const { data: deals } = await supabase
-          .from('deals')
-          .select('id, stage')
-          .eq('user_id', userId)
-          .eq('venue_id', venueId)
-          .not('stage', 'in', '("confirme","termine","refuse")')
-          .order('updated_at', { ascending: false })
-          .limit(1);
-
-        if (deals && deals.length > 0) {
-          dealId = deals[0].id;
-
-          // Auto-update deal to "repondu" if currently contacte or relance
-          if (['contacte', 'relance'].includes(deals[0].stage)) {
-            await supabase
-              .from('deals')
-              .update({
-                stage: 'repondu',
-                response: `Réponse reçue le ${email.date.toLocaleDateString('fr-FR')}`,
-              })
-              .eq('id', dealId);
-          }
+    const recent = r.newInbound.filter((e) => Date.now() - Date.parse(e.sent_at) < 14 * 864e5);
+    if (recent.length) {
+      const [{ data: venues }, { data: contacts }] = await Promise.all([
+        db.from('venues').select('id, name, city, email, website').eq('user_id', userId),
+        db.from('contacts').select('id, name, email, venue_id').eq('user_id', userId),
+      ]);
+      const conv = buildConversations(recent.map((e, i) => ({ ...e, id: String(i), direction: 'in', seen: false }) as unknown as EmailRow), venues ?? [], contacts ?? []);
+      for (const c of conv) {
+        if (c.kind === 'address') continue;
+        const venueId = c.kind === 'venue' ? c.ref : (contacts ?? []).find((x) => x.id === c.ref)?.venue_id;
+        const q = db.from('deals').select('id, stage').eq('user_id', userId).not('stage', 'in', '("confirme","termine","refuse")').order('updated_at', { ascending: false }).limit(1);
+        const { data: deals } = venueId ? await q.eq('venue_id', venueId) : await q.eq('contact_id', c.ref);
+        const deal = deals?.[0];
+        if (!deal) continue;
+        const when = c.last.sent_at;
+        const update: Record<string, string> = { last_message_at: when };
+        if (['contacte', 'relance'].includes(deal.stage)) {
+          update.stage = 'repondu';
+          update.response = `Réponse reçue le ${new Date(when).toLocaleDateString('fr-FR')}`;
+          newReplies++;
         }
+        await db.from('deals').update(update).eq('id', deal.id);
+        await db.from('activities').insert({
+          user_id: userId,
+          deal_id: deal.id,
+          venue_id: venueId ?? null,
+          contact_id: c.kind === 'contact' ? c.ref : null,
+          type: 'reply_received',
+          content: `Réponse reçue de ${c.last.from_name || c.last.from_addr} : "${c.last.subject}"`,
+        });
       }
-
-      // Log activity
-      await supabase.from('activities').insert({
-        user_id: userId,
-        deal_id: dealId,
-        venue_id: venueId,
-        contact_id: contactId,
-        type: 'reply_received',
-        content: activityContent,
-      });
-
-      existingContents.add(activityContent);
-      newReplies++;
     }
 
-    return NextResponse.json({
-      success: true,
-      emailsChecked: emails.length,
-      newReplies,
-    });
+    return NextResponse.json({ inserted: r.inserted, remaining: r.remaining, newReplies, folders: r.folders });
   } catch (error) {
-    console.error('Email sync error:', error);
     const message = error instanceof Error ? error.message : 'Erreur inconnue';
+    console.error('Email sync error:', error);
+    if (isMissingTable(message)) return NextResponse.json({ error: SETUP_MESSAGE, setup: true }, { status: 503 });
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

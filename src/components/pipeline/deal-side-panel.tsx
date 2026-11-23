@@ -25,6 +25,7 @@ import { AddToTourDialog } from '@/components/tours/add-to-tour-dialog';
 import { useDealTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks';
 import { DealQuickActions } from '@/components/pipeline/deal-quick-actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DealConversation } from '@/components/messages/entity-conversation';
 import { usePersistentState } from '@/lib/persistent-state';
 
 const NONE = '__none__';
@@ -51,7 +52,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
   const [newNote, setNewNote] = useState('');
   const [emailOpen, setEmailOpen] = useState(false);
   const [addToTourOpen, setAddToTourOpen] = useState(false);
-  const [tab, setTab] = usePersistentState<string>('deal-panel:tab', 'infos');
+  const [tab, setTab] = usePersistentState<string>('deal-panel:view', 'messages');
 
   // Escape closes the panel (unless a dialog / menu is open on top of it).
   useEffect(() => {
@@ -253,12 +254,17 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
 
             <Tabs value={tab} onValueChange={setTab}>
               <TabsList className="w-full">
+                <TabsTrigger value="messages" className="flex-1">Messages</TabsTrigger>
                 <TabsTrigger value="infos" className="flex-1">Infos</TabsTrigger>
                 <TabsTrigger value="history" className="flex-1">Historique ({dealActivities.length})</TabsTrigger>
                 <TabsTrigger value="tasks" className="flex-1">
-                  Tâches & plateau ({dealTasks?.filter((t) => !t.completed_at).length || 0})
+                  Tâches ({dealTasks?.filter((t) => !t.completed_at).length || 0})
                 </TabsTrigger>
               </TabsList>
+
+              <TabsContent value="messages" className="mt-2">
+                <DealConversation deal={deal} className="h-[calc(100dvh-15rem)]" />
+              </TabsContent>
 
               <TabsContent value="infos" className="space-y-5 mt-4">
                 {/* Venue info */}

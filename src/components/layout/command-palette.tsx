@@ -26,6 +26,7 @@ import {
   Radar,
   Orbit,
   Send,
+  MessageCircle,
   CalendarDays,
 } from 'lucide-react';
 import { useTours } from '@/hooks/use-tours';
@@ -34,6 +35,7 @@ import type { CreateIntent } from '@/stores/app-store';
 
 const PAGES = [
   { name: 'Aujourd’hui (accueil)', href: '/', icon: LayoutDashboard },
+  { name: 'Messages (mails de booking@)', href: '/messages', icon: MessageCircle },
   { name: 'File de relances', href: '/relances', icon: Send },
   { name: 'Calendrier (concerts, tournées, candidatures)', href: '/calendrier', icon: CalendarDays },
   { name: 'Radar (pistes de la veille)', href: '/radar', icon: Radar },

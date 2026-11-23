@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email/smtp';
+import { addressesIn, domainOf, peersOf } from '@/lib/email/messages';
+import { ownText } from '@/lib/email/sent';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,18 +13,44 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { to, subject, emailBody, dealId, contactId, venueId, templateId } = body;
+    const { to, cc, subject, emailBody, dealId, contactId, venueId, templateId, inReplyTo, references } = body;
 
     if (!to || !subject || !emailBody) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 });
     }
 
     // Send via SMTP
-    const { messageId } = await sendEmail({
-      to,
-      subject,
-      body: emailBody,
-    });
+    const { messageId, body: sentBody } = await sendEmail({ to, cc, subject, body: emailBody, inReplyTo, references });
+
+    // The message shows up in its conversation right away (the Sent copy has the same Message-ID).
+    const own = (process.env.SMTP_USER || 'booking@kruzberg.com').toLowerCase();
+    const toList = addressesIn(to);
+    const ccList = addressesIn(cc);
+    const { peers, domains } = peersOf({ from: own, to: toList, cc: ccList }, domainOf(own));
+    const { error: mailErr } = await supabase.from('emails').upsert(
+      {
+        user_id: user.id,
+        message_key: messageId,
+        message_id: messageId,
+        folder: 'CRM',
+        direction: 'out',
+        from_addr: own,
+        from_name: 'KRUZBERG',
+        to_addrs: toList,
+        cc_addrs: ccList,
+        peers,
+        peer_domains: domains,
+        subject,
+        sent_at: new Date().toISOString(),
+        body_text: ownText(sentBody),
+        full_text: sentBody,
+        in_reply_to: inReplyTo || null,
+        refs: references || null,
+        seen: true,
+      },
+      { onConflict: 'user_id,message_key', ignoreDuplicates: true },
+    );
+    if (mailErr) console.error('emails insert after send failed (migration 020 ?)', mailErr.message);
 
     // Log template send (template_id is required by DB constraint)
     if (templateId) {

@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { ImapFlow } from 'imapflow';
+import MailComposer from 'nodemailer/lib/mail-composer';
 import { withSignature } from './signature';
 
 const transporter = nodemailer.createTransport({
@@ -20,37 +21,51 @@ export interface SendEmailParams {
   subject: string;
   body: string;
   replyTo?: string;
+  cc?: string;
+  /** Threading: the message answered and the chain before it. */
+  inReplyTo?: string | null;
+  references?: string | null;
 }
 
-export async function sendEmail({ to, subject, body, replyTo }: SendEmailParams) {
+export async function sendEmail({ to, subject, body, replyTo, cc, inReplyTo, references }: SendEmailParams) {
   if (!process.env.SMTP_PASSWORD) {
     throw new Error('SMTP_PASSWORD not configured');
   }
 
-  const from = `"KRUZBERG" <${process.env.SMTP_USER || 'booking@kruzberg.com'}>`;
+  const user = process.env.SMTP_USER || 'booking@kruzberg.com';
+  const from = `"KRUZBERG" <${user}>`;
   // Sent by the CRM itself: Apple Mail won't add Greg's signature, so we do.
   body = withSignature(body);
-
-  const info = await transporter.sendMail({
+  // Our own Message-ID: the copy in « Envoyés » and the CRM share it (no duplicate on sync).
+  const messageId = `<crm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@${user.split('@')[1] || 'kruzberg.com'}>`;
+  const mail = {
     from,
     to,
+    cc: cc || undefined,
     subject,
     text: body,
-    replyTo: replyTo || process.env.SMTP_USER || 'booking@kruzberg.com',
-  });
+    replyTo: replyTo || user,
+    messageId,
+    inReplyTo: inReplyTo || undefined,
+    references: references || undefined,
+    date: new Date(),
+  };
 
-  // Save to IMAP Sent folder so it appears in OVH webmail
+  await transporter.sendMail(mail);
+
+  // Save to IMAP Sent folder so it appears in Mail / OVH webmail.
   try {
-    await saveToSentFolder({ from, to, subject, body });
+    const raw = await new MailComposer(mail).compile().build();
+    await saveToSentFolder(raw);
   } catch (err) {
     // Don't fail the send if IMAP save fails
     console.error('Failed to save to Sent folder:', err);
   }
 
-  return { messageId: info.messageId };
+  return { messageId, body };
 }
 
-async function saveToSentFolder({ from, to, subject, body }: { from: string; to: string; subject: string; body: string }) {
+async function saveToSentFolder(rawMessage: Buffer) {
   const imapPassword = process.env.IMAP_PASSWORD || process.env.SMTP_PASSWORD;
   if (!imapPassword) return;
 
@@ -67,49 +82,12 @@ async function saveToSentFolder({ from, to, subject, body }: { from: string; to:
 
   try {
     await client.connect();
-
     const date = new Date();
-    const dateStr = date.toUTCString();
-
-    // Build raw RFC 2822 email
-    const rawMessage = [
-      `From: ${from}`,
-      `To: ${to}`,
-      `Subject: ${subject}`,
-      `Date: ${dateStr}`,
-      `MIME-Version: 1.0`,
-      `Content-Type: text/plain; charset=utf-8`,
-      ``,
-      body,
-    ].join('\r\n');
-
-    // Try common Sent folder names (OVH uses "Sent" or "INBOX.Sent")
-    const sentFolders = ['Sent', 'INBOX.Sent', 'Envoy&AOk-s', 'INBOX.Envoy&AOk-s'];
-    let saved = false;
-
-    for (const folder of sentFolders) {
-      try {
-        await client.append(folder, rawMessage, ['\\Seen'], date);
-        saved = true;
-        break;
-      } catch {
-        // Try next folder name
-      }
-    }
-
-    if (!saved) {
-      // List mailboxes to find the right one
-      const mailboxes = await client.list();
-      const sentBox = mailboxes.find((m) =>
-        m.specialUse === '\\Sent' ||
-        m.path.toLowerCase().includes('sent') ||
-        m.path.toLowerCase().includes('envoy')
-      );
-      if (sentBox) {
-        await client.append(sentBox.path, rawMessage, ['\\Seen'], date);
-      }
-    }
-
+    const mailboxes = await client.list();
+    const sentBox =
+      mailboxes.find((m) => m.specialUse === '\\Sent') ??
+      mailboxes.find((m) => /^(inbox[./])?(sent|sent messages|envoy&aok-s|envoy[ée]s)$/i.test(m.path));
+    if (sentBox) await client.append(sentBox.path, rawMessage, ['\\Seen'], date);
     await client.logout();
   } catch (err) {
     try { await client.logout(); } catch { /* ignore */ }

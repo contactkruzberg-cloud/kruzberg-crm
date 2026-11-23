@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useIsMutating } from '@tanstack/react-query';
 import { useAppStore, type CreateIntent } from '@/stores/app-store';
-import { useSyncEmails } from '@/hooks/use-send-email';
+import { useSyncEmails } from '@/hooks/use-emails';
 import { useSavedAt } from '@/lib/save-status';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -80,7 +80,7 @@ export function Header() {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={() => syncEmails.mutate()} disabled={syncEmails.isPending} className="h-9 w-9">
+            <Button variant="ghost" size="icon" onClick={() => syncEmails.mutate({})} disabled={syncEmails.isPending} className="h-9 w-9">
               <RefreshCw className={cn('h-4 w-4', syncEmails.isPending && 'animate-spin')} />
             </Button>
           </TooltipTrigger>

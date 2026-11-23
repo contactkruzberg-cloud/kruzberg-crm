@@ -20,6 +20,7 @@ import {
   X,
   Radar,
   Send,
+  MessageCircle,
   CalendarDays,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ export const NAV_GROUPS: { title: string | null; items: { href: string; label: s
     title: null,
     items: [
       { href: '/', label: 'Aujourd’hui', icon: LayoutDashboard },
+      { href: '/messages', label: 'Messages', icon: MessageCircle },
       { href: '/relances', label: 'Relances', icon: Send },
       { href: '/calendrier', label: 'Calendrier', icon: CalendarDays },
     ],

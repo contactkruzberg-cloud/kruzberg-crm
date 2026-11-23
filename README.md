@@ -218,3 +218,17 @@ festivals…) chez les groupes de sa niche post-punk. Tout passe par le connecte
 4. Recommence à l'étape 1. Après 8 recherches, s'il en reste (remaining > 0), appelle constellation_handoff
    (une nouvelle routine prend la suite), puis arrête-toi.
 ```
+
+## Messagerie (mails de booking@ dans le CRM)
+
+- Données : table `emails` + `email_sync_state` (migration 020, à exécuter une fois dans Supabase → SQL Editor).
+- Synchro : `/api/email/sync` lit en IMAP la réception, les envoyés, les archives et les dossiers de rangement
+  (pas la corbeille, les spams, les brouillons), écarte newsletters et robots, et avance par lots
+  (`email_sync_state.last_uid`). L'app la lance à l'ouverture puis toutes les 3 minutes ; le bouton ⟳ force.
+- Rattachement à la lecture (`lib/email/messages.ts`) : un mail appartient à un lieu si un correspondant est
+  l'adresse du lieu, d'un de ses contacts, ou son nom de domaine (hors webmails) ; sinon à un contact ; sinon
+  à l'adresse inconnue. Ajouter un contact fait apparaître tout son historique.
+- Envoi : `/api/email/send` répond dans le fil (In-Reply-To / References), signe, copie dans « Envoyés » avec
+  le même Message-ID (pas de doublon à la synchro) et enregistre le mail tout de suite dans `emails`.
+- Pages : `/messages` (toutes les conversations), onglet Messages de l'opportunité, Messages / Fiche d'un lieu,
+  conversation d'un contact (clic sur un contact).

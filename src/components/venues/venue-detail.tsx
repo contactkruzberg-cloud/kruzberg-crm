@@ -26,9 +26,11 @@ const VenueLocationMap = dynamic(() => import('./venue-location-map').then((m) =
 interface VenueDetailProps {
   venue: Venue;
   contacts: Contact[];
+  /** Opens the contact's mail conversation. */
+  onOpenContact?: (id: string) => void;
 }
 
-export function VenueDetail({ venue, contacts }: VenueDetailProps) {
+export function VenueDetail({ venue, contacts, onOpenContact }: VenueDetailProps) {
   const updateVenue = useUpdateVenue();
   const deleteVenue = useDeleteVenue();
   const createDeal = useCreateDeal();
@@ -131,7 +133,7 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
   };
 
   return (
-    <section className="lg:border-l lg:pl-8">
+    <section>
       <div className="flex flex-row items-start justify-between pb-5">
         <div>
           <h2 className="font-display text-[26px] font-bold leading-tight">{venue.name}</h2>
@@ -550,7 +552,12 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
           ) : (
             <div className="divide-y border-y">
               {venueContacts.map((c) => (
-                <div key={c.id} className="flex items-center justify-between py-2.5">
+                <div
+                  key={c.id}
+                  onClick={() => onOpenContact?.(c.id)}
+                  title={onOpenContact ? 'Voir les messages' : undefined}
+                  className={cn('-mx-2 flex items-center justify-between rounded-lg px-2 py-2.5', onOpenContact && 'cursor-pointer hover:bg-secondary')}
+                >
                   <div>
                     <p className="text-sm font-medium">{c.name}</p>
                     <p className="text-xs text-muted-foreground">

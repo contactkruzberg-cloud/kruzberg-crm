@@ -2,16 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays, Kanban, LayoutDashboard, Menu, Send } from 'lucide-react';
+import { Kanban, LayoutDashboard, Menu, MessageCircle, Send } from 'lucide-react';
 import { useAppStore } from '@/stores/app-store';
 import { cn } from '@/lib/utils';
 import { useNavBadges } from './use-nav-badges';
 
 const TABS = [
   { href: '/', label: 'Accueil', icon: LayoutDashboard },
+  { href: '/messages', label: 'Messages', icon: MessageCircle },
   { href: '/relances', label: 'Relances', icon: Send },
   { href: '/pipeline', label: 'Pipeline', icon: Kanban },
-  { href: '/calendrier', label: 'Agenda', icon: CalendarDays },
 ];
 
 /** Thumb-reach navigation on phones: the 4 daily pages + the full menu. */

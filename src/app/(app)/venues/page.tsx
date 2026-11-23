@@ -27,6 +27,8 @@ import { departementFromPostal } from '@/lib/france-geo';
 import { cn } from '@/lib/utils';
 import type { VenueType } from '@/types/database';
 import { PageHeader } from '@/components/layout/page-header';
+import { VenueConversation } from '@/components/messages/entity-conversation';
+import { ContactDialog } from '@/components/messages/contact-dialog';
 
 const TYPE_OPTIONS: { key: VenueType | 'all'; label: string }[] = [
   { key: 'all', label: 'Tous' },
@@ -90,6 +92,8 @@ export default function VenuesPage() {
   const [contactableOnly, setContactableOnly] = usePersistentState<boolean>('venues:contactable', false);
   const [venueSort, setVenueSort] = usePersistentState<VenueSortKey>('venues:sort', 'fit_score');
   const [showFilters, setShowFilters] = useState(false);
+  const [venuePane, setVenuePane] = usePersistentState<'messages' | 'fiche'>('venues:pane', 'messages');
+  const [openContactId, setOpenContactId] = useState<string | null>(null);
 
   // Contact filters
   const [contactRoleFilter, setContactRoleFilter] = usePersistentState<string>('venues:contact-role', 'all');
@@ -716,7 +720,29 @@ export default function VenuesPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <VenueDetail venue={selectedVenue} contacts={contacts || []} />
+                  <div className="lg:border-l lg:pl-8">
+                    <div className="mb-4 inline-flex rounded-[10px] bg-secondary p-[3px] text-[13px] font-medium">
+                      {(['messages', 'fiche'] as const).map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => setVenuePane(k)}
+                          className={cn('rounded-[7px] px-4 py-1 transition-colors', venuePane === k ? 'bg-card shadow-[0_1px_3px_hsl(0_0%_0%/0.12)] dark:bg-white/15' : 'text-muted-foreground')}
+                        >
+                          {k === 'messages' ? 'Messages' : 'Fiche'}
+                        </button>
+                      ))}
+                    </div>
+                    {venuePane === 'messages' ? (
+                      <>
+                        <h2 className="font-display text-[24px] font-bold leading-tight">{selectedVenue.name}</h2>
+                        <p className="text-[13px] text-muted-foreground">{selectedVenue.city}</p>
+                        <VenueConversation venue={selectedVenue} className="h-[calc(100dvh-17rem)]" />
+                      </>
+                    ) : (
+                      <VenueDetail venue={selectedVenue} contacts={contacts || []} onOpenContact={setOpenContactId} />
+                    )}
+                  </div>
                 </motion.div>
               ) : (
                 <div className="flex h-64 items-center justify-center text-[15px] text-muted-foreground lg:border-l">Choisis un lieu dans la liste.</div>
@@ -739,7 +765,7 @@ export default function VenuesPage() {
             </thead>
             <tbody>
               {filteredContacts.map((contact) => (
-                <tr key={contact.id} className="border-b transition-colors hover:bg-secondary">
+                <tr key={contact.id} onClick={() => setOpenContactId(contact.id)} className="cursor-pointer border-b transition-colors hover:bg-secondary">
                   <td className="p-3 font-medium">{contact.name}</td>
                   <td className="p-3 text-muted-foreground">{contact.venue?.name || '—'}</td>
                   <td className="p-3 text-muted-foreground text-xs">{contact.email || '—'}</td>
@@ -780,6 +806,7 @@ export default function VenuesPage() {
         defaultVenueId={contactDefaultVenueId}
       />
       <ImportWizard open={importOpen} onOpenChange={setImportOpen} />
+      <ContactDialog contact={(contacts || []).find((c) => c.id === openContactId) ?? null} onClose={() => setOpenContactId(null)} />
     </div>
   );
 }
