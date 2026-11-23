@@ -10,6 +10,7 @@ import { isSetupError, useEmails, useSyncEmails } from '@/hooks/use-emails';
 import { useVenues } from '@/hooks/use-venues';
 import { buildConversations, type Conversation as Conv } from '@/lib/email/messages';
 import { cn } from '@/lib/utils';
+import { cleanBody, withoutSignature } from '@/lib/email/text';
 import { Conversation, SetupNotice, type ConversationContext } from './conversation';
 
 type Filter = 'all' | 'unread' | 'unknown';
@@ -31,7 +32,7 @@ const initials = (s: string) =>
     .join('') || '?';
 
 function Row({ c, on, onClick }: { c: Conv; on: boolean; onClick: () => void }) {
-  const preview = (c.last.direction === 'out' ? 'Toi : ' : '') + (c.last.body_text.trim().split('\n')[0] || c.last.subject);
+  const preview = (c.last.direction === 'out' ? 'Toi : ' : '') + (withoutSignature(cleanBody(c.last.body_text)).replace(/<(https?:|mailto:)[^>]+>/g, '').split('\n').find((l) => l.trim()) || c.last.subject);
   return (
     <button
       type="button"

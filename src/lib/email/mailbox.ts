@@ -3,6 +3,7 @@ import { simpleParser } from 'mailparser';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ownText } from './sent';
 import { domainOf, normAddr, peersOf } from './messages';
+import { cleanBody, htmlToText } from './text';
 
 // Copies booking@'s mail (OVH IMAP) into the `emails` table, folder by folder,
 // in small batches so a first sync of years of mail can run over several
@@ -94,7 +95,7 @@ export async function syncMailbox(db: SupabaseClient, userId: string, { budgetMs
             const cc = (env.cc ?? []).map((a) => normAddr(a.address)).filter(Boolean);
             const { peers, domains } = peersOf({ from, to, cc }, ownDomain);
             if (!peers.length) continue;
-            const text = (parsed?.text || (typeof parsed?.html === 'string' ? parsed.html.replace(/<[^>]+>/g, ' ') : '') || '').replace(/\r/g, '');
+            const text = cleanBody(parsed?.text || (typeof parsed?.html === 'string' ? htmlToText(parsed.html) : '') || '');
             const sentAt = (env.date ? new Date(env.date) : msg.internalDate ? new Date(msg.internalDate) : new Date()).toISOString();
             const messageId = env.messageId || null;
             rows.push({

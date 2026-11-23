@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { isSetupError, useEmails, useFullText, useMarkSeen, useSendMessage } from '@/hooks/use-emails';
 import { matches, replySubject, replyTarget, type EmailRow, type Match } from '@/lib/email/messages';
 import { cn } from '@/lib/utils';
+import { cleanBody, linkify, withoutSignature } from '@/lib/email/text';
 
 const dayLabel = (iso: string) => {
   const d = new Date(iso);
@@ -29,11 +30,40 @@ export function SetupNotice() {
   );
 }
 
+/** Body text with real, readable links (label instead of a long URL). */
+function MessageText({ text, out }: { text: string; out: boolean }) {
+  return (
+    <p className="whitespace-pre-wrap break-words">
+      {text.split('\n').map((line, i) => (
+        <Fragment key={i}>
+          {i > 0 && '\n'}
+          {linkify(line).map((t, j) =>
+            t.t === 'text' ? (
+              <Fragment key={j}>{t.v}</Fragment>
+            ) : (
+              <a
+                key={j}
+                href={t.href}
+                target={t.href.startsWith('mailto:') ? undefined : '_blank'}
+                rel="noopener noreferrer"
+                title={t.href.replace(/^mailto:/, '')}
+                className={cn('underline decoration-1 underline-offset-2', out ? 'text-primary-foreground decoration-primary-foreground/50' : 'text-primary decoration-primary/40')}
+              >
+                {t.label}
+              </a>
+            ),
+          )}
+        </Fragment>
+      ))}
+    </p>
+  );
+}
+
 function Bubble({ m, showSubject }: { m: EmailRow; showSubject: boolean }) {
   const out = m.direction === 'out';
   const [quoted, setQuoted] = useState(false);
   const full = useFullText(quoted ? m.id : null);
-  const text = m.body_text.trim() || '(message sans texte)';
+  const text = withoutSignature(cleanBody(m.body_text)) || cleanBody(m.body_text) || '(message sans texte)';
 
   return (
     <div className={cn('flex', out ? 'justify-end' : 'justify-start')}>
@@ -46,7 +76,7 @@ function Bubble({ m, showSubject }: { m: EmailRow; showSubject: boolean }) {
           )}
         >
           {showSubject && m.subject && <p className={cn('mb-1 text-[12.5px] font-semibold', out ? 'text-primary-foreground/85' : 'text-foreground/80')}>{m.subject}</p>}
-          <p className="whitespace-pre-wrap break-words">{quoted ? (full.data ?? text) : text}</p>
+          <MessageText text={quoted && full.data ? cleanBody(full.data) : text} out={out} />
           {m.has_attachments && (
             <p className={cn('mt-1.5 flex items-center gap-1 text-[12px]', out ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
               <Paperclip className="h-3 w-3" /> pièce jointe
