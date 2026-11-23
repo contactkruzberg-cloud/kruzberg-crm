@@ -17,10 +17,8 @@ import {
   LogOut,
   ChevronLeft,
   Zap,
-  Users,
   X,
   Radar,
-  Orbit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -30,11 +28,9 @@ import { SettingsDialog } from '@/components/layout/settings-dialog';
 export const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/radar', label: 'Radar', icon: Radar },
-  { href: '/constellation', label: 'Constellation', icon: Orbit },
   { href: '/pipeline', label: 'Pipeline', icon: Kanban },
   { href: '/tours', label: 'Tournées', icon: Route },
   { href: '/venues', label: 'Lieux & Contacts', icon: Building2 },
-  { href: '/groupes', label: 'Groupes amis', icon: Users },
   { href: '/templates', label: 'Templates', icon: Mail },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
 ];

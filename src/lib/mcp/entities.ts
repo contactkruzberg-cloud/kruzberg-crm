@@ -458,8 +458,6 @@ export function entityUrl(baseUrl: string, entity: EntityKey, row: Row): string 
       return `${base}/tours/${row.tour_id}`;
     case 'template':
       return `${base}/templates`;
-    case 'band':
-      return `${base}/groupes`;
     default:
       return null;
   }

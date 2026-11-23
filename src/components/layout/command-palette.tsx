@@ -18,15 +18,14 @@ import {
   User,
   FileText,
   Search,
-  Users,
   Route,
   Plus,
   AlarmClock,
   Settings,
   ListTodo,
   Radar,
+  Orbit,
 } from 'lucide-react';
-import { useBands } from '@/hooks/use-bands';
 import { useTours } from '@/hooks/use-tours';
 import { usePipelineFilters } from '@/components/pipeline/pipeline-filters';
 import type { CreateIntent } from '@/stores/app-store';
@@ -34,17 +33,16 @@ import type { CreateIntent } from '@/stores/app-store';
 const PAGES = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Radar (pistes de la veille)', href: '/radar', icon: Radar },
+  { name: 'Constellation (réseau de la niche)', href: '/radar?vue=constellation', icon: Orbit },
   { name: 'Pipeline', href: '/pipeline', icon: Kanban },
   { name: 'Lieux & Contacts', href: '/venues', icon: Building2 },
   { name: 'Tournées', href: '/tours', icon: Route },
-  { name: 'Groupes amis', href: '/groupes', icon: Users },
   { name: 'Templates', href: '/templates', icon: Mail },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 
 export function CommandPalette() {
   const { commandPaletteOpen, setCommandPaletteOpen, openCreate, setSettingsOpen } = useAppStore();
-  const { data: bands } = useBands();
   const { data: tours } = useTours();
   const [pipelineFilters, setPipelineFilters] = usePipelineFilters();
   const router = useRouter();
@@ -87,7 +85,6 @@ export function CommandPalette() {
     { name: 'Nouveau lieu', icon: Plus, keywords: 'créer ajouter structure salle festival', run: () => create('venue') },
     { name: 'Nouveau contact', icon: Plus, keywords: 'créer ajouter personne', run: () => create('contact') },
     { name: 'Nouvelle tâche', icon: ListTodo, keywords: 'créer ajouter todo', run: () => create('task') },
-    { name: 'Nouveau groupe ami', icon: Plus, keywords: 'créer ajouter band', run: () => create('band') },
     { name: 'Nouvelle tournée', icon: Plus, keywords: 'créer ajouter tour', run: () => create('tour') },
     { name: 'Réglages, corbeille et connexions Claude', icon: Settings, keywords: 'compte paramètres restaurer supprimés', run: () => {
       setCommandPaletteOpen(false);
@@ -214,23 +211,6 @@ export function CommandPalette() {
                 })}
               </Command.Group>
             )}
-            {search && bands && bands.length > 0 && (
-              <Command.Group heading="Groupes amis" className="text-xs text-muted-foreground px-2 py-1.5">
-                {bands.map((band) => (
-                  <Command.Item
-                    key={band.id}
-                    value={`band-${band.id} ${band.name} ${band.city || ''} ${band.genre || ''}`}
-                    onSelect={() => navigate(`/groupes?id=${band.id}`)}
-                    className="flex items-center gap-3 px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-accent aria-selected:bg-accent"
-                  >
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span>{band.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">{band.city}</span>
-                  </Command.Item>
-                ))}
-              </Command.Group>
-            )}
-
             {search && tours && tours.length > 0 && (
               <Command.Group heading="Tournées" className="text-xs text-muted-foreground px-2 py-1.5">
                 {tours.map((tour) => (
