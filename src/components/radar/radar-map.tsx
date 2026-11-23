@@ -71,10 +71,10 @@ export function RadarMap({
           Chances :
           {(
             [
-              ['#22c55e', 'fortes'],
-              ['#a78bfa', 'réelles'],
-              ['#f97316', 'faibles'],
-              ['#64748b', 'très faibles'],
+              ['#30D158', 'fortes'],
+              ['#0A84FF', 'réelles'],
+              ['#FF9F0A', 'faibles'],
+              ['#8E8E93', 'très faibles'],
             ] as const
           ).map(([c, t]) => (
             <span key={t} className="flex items-center gap-1">

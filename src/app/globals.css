@@ -5,87 +5,115 @@
 
 /* ===== KRUZBERG Design System ===== */
 
+/*
+ * KRUZBERG — inspired by macOS / iOS: system font, translucent materials over
+ * a soft wallpaper, hairline separators, Apple system colours.
+ */
 :root {
-  /* Core palette — light: cool off-white, white cards */
-  --background: 220 20% 97.5%;
-  --foreground: 240 10% 6%;
+  /* Light — iOS grouped background, white materials */
+  --background: 240 24% 96%;
+  --foreground: 240 6% 10%;
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 6%;
+  --card-foreground: 240 6% 10%;
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 6%;
-  --primary: 163 94% 32%;
+  --popover-foreground: 240 6% 10%;
+  --primary: 211 100% 50%;            /* systemBlue #007AFF */
   --primary-foreground: 0 0% 100%;
-  --secondary: 220 14% 94%;
-  --secondary-foreground: 240 10% 10%;
-  --muted: 220 14% 94.5%;
-  --muted-foreground: 220 9% 40%;
-  --accent: 220 14% 93%;
-  --accent-foreground: 240 10% 8%;
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 220 13% 88%;
-  --input: 220 13% 86%;
-  --ring: 163 94% 32%;
-  --radius: 0.75rem;
+  --secondary: 240 6% 10%;            /* used with low alpha: fills */
+  --secondary-foreground: 240 6% 10%;
+  --muted: 240 11% 93%;
+  --muted-foreground: 240 4% 46%;     /* secondaryLabel */
+  --accent: 240 11% 91%;
+  --accent-foreground: 240 6% 10%;
+  --destructive: 3 100% 59%;          /* systemRed */
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 6% 10%;               /* hairlines: this colour at --border-a */
+  --border-a: 0.1;
+  --input: 240 6% 10%;
+  --input-a: 0.14;
+  --ring: 211 100% 50%;
+  --radius: 0.875rem;
+
+  /* Materials (translucent surfaces) */
+  --material: 0 0% 100%;
+  --material-a: 0.72;
+  --material-thick-a: 0.86;
+  --wallpaper-a: 0.16;
 
   /* Status colors */
-  --status-urgent: 0 84% 60%;
-  --status-warning: 25 95% 53%;
-  --status-success: 142 76% 36%;
-  --status-info: 217 91% 60%;
-  --status-neutral: 0 0% 45%;
+  --status-urgent: 3 100% 59%;
+  --status-warning: 35 100% 50%;
+  --status-success: 135 59% 49%;
+  --status-info: 211 100% 50%;
+  --status-neutral: 240 2% 57%;
 
-  /* Pipeline stage colors */
-  --stage-a-contacter: 217 91% 60%;
-  --stage-contacte: 262 83% 58%;
-  --stage-relance: 25 95% 53%;
-  --stage-repondu: 47 96% 53%;
-  --stage-a-suivre: 82 78% 44%;
-  --stage-confirme: 142 76% 36%;
-  --stage-termine: 215 16% 47%;
-  --stage-refuse: 0 84% 60%;
+  /* Pipeline stages — Apple system colours (light) */
+  --stage-a-contacter: 211 100% 50%;  /* blue */
+  --stage-contacte: 241 61% 59%;      /* indigo */
+  --stage-relance: 35 100% 50%;       /* orange */
+  --stage-repondu: 48 100% 46%;       /* yellow */
+  --stage-a-suivre: 189 72% 47%;      /* teal */
+  --stage-confirme: 135 59% 45%;      /* green */
+  --stage-termine: 240 2% 57%;        /* gray */
+  --stage-refuse: 3 100% 59%;         /* red */
 
-  /* Accent glow */
-  --glow-primary: 0 0 20px hsl(var(--primary) / 0.3);
-  --glow-urgent: 0 0 20px hsl(0 84% 60% / 0.4);
-  --glow-warning: 0 0 20px hsl(25 95% 53% / 0.3);
+  --glow-primary: 0 0 20px hsl(var(--primary) / 0.25);
+  --glow-urgent: 0 0 20px hsl(var(--status-urgent) / 0.35);
+  --glow-warning: 0 0 20px hsl(var(--status-warning) / 0.3);
 
-  /* Raised surfaces */
-  --elev-card: 0 1px 2px hsl(220 30% 20% / 0.05), 0 1px 3px hsl(220 30% 20% / 0.04);
-  --elev-pop: 0 10px 30px -10px hsl(220 30% 20% / 0.25);
+  --elev-card: 0 0 0 0.5px hsl(240 6% 10% / 0.06), 0 1px 2px hsl(240 6% 10% / 0.04), 0 4px 16px -4px hsl(240 6% 10% / 0.06);
+  --elev-pop: 0 0 0 0.5px hsl(240 6% 10% / 0.08), 0 20px 48px -12px hsl(240 6% 10% / 0.22);
 
-  /* Glass */
-  --glass-bg: hsl(220 20% 97.5% / 0.8);
-  --glass-border: hsl(220 13% 88%);
+  --line: hsl(var(--border) / var(--border-a));
+  --glass-bg: hsl(var(--material) / var(--material-a));
+  --glass-border: var(--line);
 }
 
 .dark {
-  /* Dark: blue-black layers, the mint of the brand as the only bright colour */
-  --background: 240 8% 4%;
-  --foreground: 240 5% 96%;
-  --card: 240 6% 7%;
-  --card-foreground: 240 5% 96%;
-  --popover: 240 6% 8.5%;
-  --popover-foreground: 240 5% 96%;
-  --primary: 162 100% 45%;
-  --primary-foreground: 240 10% 4%;
-  --secondary: 240 5% 12%;
-  --secondary-foreground: 240 5% 96%;
-  --muted: 240 5% 12%;
+  /* Dark — near-black, elevated greys, a coloured wallpaper behind the glass */
+  --background: 240 6% 5%;
+  --foreground: 0 0% 98%;
+  --card: 240 4% 11%;                 /* secondarySystemBackground #1C1C1E */
+  --card-foreground: 0 0% 98%;
+  --popover: 240 3% 15%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 211 100% 52%;            /* systemBlue dark #0A84FF */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 100%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 4% 15%;
   --muted-foreground: 240 5% 64%;
-  --accent: 240 5% 13%;
-  --accent-foreground: 240 5% 96%;
-  --destructive: 0 70% 45%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 5% 14%;
-  --input: 240 5% 17%;
-  --ring: 162 100% 45%;
+  --accent: 240 3% 18%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 3 100% 61%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 100%;
+  --border-a: 0.09;
+  --input: 0 0% 100%;
+  --input-a: 0.13;
+  --ring: 211 100% 52%;
 
-  --elev-card: inset 0 1px 0 0 hsl(0 0% 100% / 0.03), 0 1px 2px hsl(0 0% 0% / 0.4);
-  --elev-pop: 0 16px 40px -12px hsl(0 0% 0% / 0.7);
+  --material: 240 4% 13%;
+  --material-a: 0.62;
+  --material-thick-a: 0.82;
+  --wallpaper-a: 0.22;
 
-  --glass-bg: hsl(240 8% 4% / 0.75);
-  --glass-border: hsl(240 5% 14%);
+  /* Pipeline stages — Apple system colours (dark) */
+  --stage-a-contacter: 211 100% 52%;
+  --stage-contacte: 241 73% 63%;
+  --stage-relance: 36 100% 52%;
+  --stage-repondu: 50 100% 52%;
+  --stage-a-suivre: 189 72% 56%;
+  --stage-confirme: 135 64% 50%;
+  --stage-termine: 240 2% 57%;
+  --stage-refuse: 3 100% 61%;
+  --status-urgent: 3 100% 61%;
+  --status-warning: 36 100% 52%;
+  --status-success: 135 64% 50%;
+  --status-info: 211 100% 52%;
+
+  --elev-card: inset 0 0.5px 0 0 hsl(0 0% 100% / 0.06), 0 1px 2px hsl(0 0% 0% / 0.3);
+  --elev-pop: inset 0 0.5px 0 0 hsl(0 0% 100% / 0.08), 0 24px 60px -12px hsl(0 0% 0% / 0.65);
 }
 
 @theme inline {
@@ -97,7 +125,8 @@
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
+  /* Apple-style fills: the label colour at low opacity */
+  --color-secondary: hsl(var(--secondary) / 0.08);
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
@@ -105,61 +134,91 @@
   --color-accent-foreground: hsl(var(--accent-foreground));
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
+  --color-border: hsl(var(--border) / var(--border-a));
+  --color-input: hsl(var(--input) / var(--input-a));
   --color-ring: hsl(var(--ring));
   --radius: var(--radius);
 
   --color-sidebar: hsl(var(--card));
   --color-sidebar-foreground: hsl(var(--card-foreground));
 
-  --font-sans: var(--font-geist-sans);
-  --font-display: var(--font-display-face);
+  /* SF Pro on Apple devices, Geist elsewhere */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', var(--font-geist-sans), system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', var(--font-geist-mono), monospace;
   --shadow-card: var(--elev-card);
   --shadow-pop: var(--elev-pop);
-  --font-mono: var(--font-geist-mono);
 }
 
 /* ===== Base Styles ===== */
 * {
-  border-color: hsl(var(--border));
+  border-color: var(--line);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
   background: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-feature-settings: 'cv11', 'ss01';
+  font-family: var(--font-sans);
+  letter-spacing: -0.006em;
 }
 
-/* A faint mint light from the top-left corner, behind everything. */
-.dark body {
-  background-image: radial-gradient(1000px 520px at 12% -8%, hsl(var(--primary) / 0.07), transparent 65%),
-    radial-gradient(800px 480px at 100% 0%, hsl(262 83% 58% / 0.04), transparent 60%);
-  background-attachment: fixed;
+/* Wallpaper: soft colour fields behind the translucent materials. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -20vmax;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--wallpaper-a);
+  background:
+    radial-gradient(38vmax 30vmax at 18% 12%, hsl(211 100% 55%), transparent 70%),
+    radial-gradient(34vmax 28vmax at 82% 8%, hsl(280 70% 62%), transparent 70%),
+    radial-gradient(40vmax 32vmax at 70% 92%, hsl(189 75% 52%), transparent 70%),
+    radial-gradient(30vmax 26vmax at 8% 88%, hsl(330 80% 64%), transparent 70%);
+  filter: blur(60px) saturate(120%);
 }
 
 ::selection {
-  background: hsl(var(--primary) / 0.3);
+  background: hsl(var(--primary) / 0.28);
 }
 
 :focus-visible {
-  outline: 2px solid hsl(var(--ring) / 0.7);
-  outline-offset: 2px;
+  outline: 3px solid hsl(var(--ring) / 0.45);
+  outline-offset: 1px;
 }
 
-/* Titles: a narrower, more graphic face. */
+/* ===== Materials ===== */
+.material {
+  background-color: hsl(var(--material) / var(--material-a));
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+}
+.material-thick {
+  background-color: hsl(var(--material) / var(--material-thick-a));
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(40px) saturate(180%);
+}
+.material-bar {
+  background-color: hsl(var(--background) / 0.7);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
 .font-display {
-  font-family: var(--font-display-face), var(--font-sans), system-ui, sans-serif;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  letter-spacing: -0.022em;
 }
 
-/* Numbers that line up. */
 .nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* iPhone home bar. */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -180,11 +239,11 @@ body {
   background: hsl(var(--muted-foreground) / 0.5);
 }
 
-/* ===== Glassmorphism utility ===== */
+/* ===== Legacy aliases ===== */
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid var(--glass-border);
 }
 
@@ -198,8 +257,8 @@ body {
 
 /* ===== Pulse animation for urgent badges ===== */
 @keyframes pulse-urgent {
-  0%, 100% { opacity: 1; box-shadow: 0 0 8px hsl(0 84% 60% / 0.4); }
-  50% { opacity: 0.85; box-shadow: 0 0 20px hsl(0 84% 60% / 0.6); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px hsl(var(--status-urgent) / 0.4); }
+  50% { opacity: 0.85; box-shadow: 0 0 20px hsl(var(--status-urgent) / 0.6); }
 }
 .animate-pulse-urgent {
   animation: pulse-urgent 2s ease-in-out infinite;
@@ -213,21 +272,9 @@ body {
   animation: pulse-warning 2s ease-in-out infinite;
 }
 
-/* ===== Gradient backgrounds ===== */
+/* ===== Auth pages: the wallpaper already does the job ===== */
 .gradient-hero {
-  background: linear-gradient(135deg,
-    hsl(var(--background)) 0%,
-    hsl(162 100% 45% / 0.05) 50%,
-    hsl(var(--background)) 100%
-  );
-}
-.dark .gradient-hero {
-  background: linear-gradient(135deg,
-    hsl(0 0% 3.9%) 0%,
-    hsl(162 100% 45% / 0.08) 30%,
-    hsl(262 83% 58% / 0.05) 70%,
-    hsl(0 0% 3.9%) 100%
-  );
+  background: transparent;
 }
 
 /* ===== Stage badges ===== */

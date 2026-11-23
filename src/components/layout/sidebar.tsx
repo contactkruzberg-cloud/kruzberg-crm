@@ -80,7 +80,7 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          'fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r bg-card/95 backdrop-blur-xl transition-[width,transform] duration-300 md:z-40 md:bg-card/60',
+          'material fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r transition-[width,transform] duration-300 md:z-40',
           mobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
           sidebarOpen ? 'md:w-60' : 'md:w-16',
         )}
@@ -97,12 +97,10 @@ export function Sidebar() {
               title="Réglages et compte"
               className="group -mx-1 flex items-center gap-2.5 rounded-lg px-1 py-1 transition-colors hover:bg-accent"
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[0_0_18px_-4px_hsl(var(--primary)/0.7)]">
-                <Zap className="h-4 w-4 transition-transform group-hover:rotate-12" />
+              <span className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-gradient-to-b from-neutral-700 to-neutral-900 text-white shadow-[0_1px_2px_hsl(0_0%_0%/0.3),inset_0_0.5px_0_hsl(0_0%_100%/0.25)] dark:from-neutral-200 dark:to-neutral-400 dark:text-neutral-900">
+                <Zap className="h-[15px] w-[15px] fill-current transition-transform group-hover:rotate-12" />
               </span>
-              <span className="font-display text-[17px] font-bold tracking-tight">
-                KRUZ<span className="text-primary">BERG</span>
-              </span>
+              <span className="font-display text-[15px] font-semibold tracking-[0.08em]">KRUZBERG</span>
             </button>
           )}
           <Button
@@ -124,10 +122,10 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-3">
           {NAV_GROUPS.map((group, gi) => (
-            <div key={group.title ?? gi} className={cn('space-y-0.5', gi > 0 && 'mt-5')}>
+            <div key={group.title ?? gi} className={cn('space-y-px', gi > 0 && 'mt-4')}>
               {group.title &&
                 (expanded ? (
-                  <p className="px-3 pb-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">{group.title}</p>
+                  <p className="px-2.5 pb-1 text-[11px] font-semibold text-muted-foreground/80">{group.title}</p>
                 ) : (
                   <Separator className="mx-auto mb-2 w-8" />
                 ))}
@@ -143,19 +141,18 @@ export function Sidebar() {
                 onClick={closeMobile}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150',
-                  isActive ? 'bg-primary/10 text-foreground' : 'text-muted-foreground hover:bg-accent/70 hover:text-foreground',
+                  'relative flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13.5px] transition-colors duration-100',
+                  isActive ? 'bg-secondary font-medium text-foreground dark:bg-white/10' : 'text-foreground/80 hover:bg-secondary/60',
                   !expanded && 'justify-center px-0 py-2.5',
                 )}
               >
-                {isActive && <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-x-2 -translate-y-1/2 rounded-r-full bg-primary" aria-hidden />}
-                <Icon className={cn('h-[18px] w-[18px] shrink-0', isActive && 'text-primary')} />
+                <Icon className={cn('h-[17px] w-[17px] shrink-0 text-primary', !isActive && 'opacity-90')} strokeWidth={1.9} />
                 {expanded && <span className="flex-1 truncate">{item.label}</span>}
                 {badge > 0 &&
                   (expanded ? (
-                    <span className="nums rounded-full bg-red-500/15 px-1.5 text-[11px] font-semibold text-red-500">{badge}</span>
+                    <span className="nums min-w-5 rounded-full bg-[hsl(var(--status-urgent))] px-1.5 text-center text-[11px] font-semibold leading-[18px] text-white">{badge}</span>
                   ) : (
-                    <span className="absolute right-2 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-card" aria-label={`${badge}`} />
+                    <span className="absolute right-2 top-1.5 h-2 w-2 rounded-full bg-[hsl(var(--status-urgent))]" aria-label={`${badge}`} />
                   ))}
               </Link>
             );
@@ -175,7 +172,7 @@ export function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className={cn('border-t p-2', expanded ? 'flex items-center gap-1' : 'space-y-1')}>
+        <div className={cn('p-2', expanded ? 'flex items-center gap-1' : 'space-y-1')}>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

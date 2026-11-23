@@ -16,7 +16,7 @@ export interface MapGroup {
   leads: Lead[];
 }
 
-const TIER_HEX: Record<Tier, string> = { hi: '#22c55e', mid: '#a78bfa', lo: '#f97316', vlo: '#64748b' };
+const TIER_HEX: Record<Tier, string> = { hi: '#30D158', mid: '#0A84FF', lo: '#FF9F0A', vlo: '#8E8E93' };
 
 /** Zoom to the markers whenever the set of places changes (tab / filters). */
 function FitBounds({ groups, near, radius }: { groups: MapGroup[]; near?: NearPlace | null; radius?: number }) {

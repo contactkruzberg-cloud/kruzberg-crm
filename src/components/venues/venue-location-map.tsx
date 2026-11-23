@@ -41,8 +41,8 @@ export function VenueLocationMap({ latitude, longitude, name, height = 'h-44' }:
           center={[latitude, longitude]}
           radius={9}
           pathOptions={{
-            color: '#22d3ee',
-            fillColor: '#22d3ee',
+            color: '#0A84FF',
+            fillColor: '#0A84FF',
             fillOpacity: 0.7,
             weight: 2,
           }}

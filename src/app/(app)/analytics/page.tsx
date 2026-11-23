@@ -5,7 +5,7 @@ import { useDeals } from '@/hooks/use-deals';
 import { useActivities } from '@/hooks/use-activities';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { STAGES, type DealStage } from '@/types/database';
+import { STAGES, type DealStage, APPLE, STAGE_HEX } from '@/types/database';
 import {
   ResponsiveContainer,
   BarChart,
@@ -25,16 +25,7 @@ import { subWeeks, format, startOfWeek, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PageHeader } from '@/components/layout/page-header';
 
-const STAGE_COLORS: Record<DealStage, string> = {
-  a_contacter: '#3b82f6',
-  contacte: '#8b5cf6',
-  relance: '#f97316',
-  repondu: '#eab308',
-  a_suivre: '#84cc16',
-  confirme: '#22c55e',
-  termine: '#64748b',
-  refuse: '#ef4444',
-};
+const STAGE_COLORS: Record<DealStage, string> = STAGE_HEX;
 
 const container = {
   hidden: { opacity: 0 },
@@ -68,9 +59,9 @@ export default function AnalyticsPage() {
 
   // Conversion funnel
   const funnelData = [
-    { name: 'Contactés', value: allDeals.filter((d) => d.stage !== 'a_contacter').length, fill: '#8b5cf6' },
-    { name: 'Répondu', value: allDeals.filter((d) => ['repondu', 'a_suivre', 'confirme'].includes(d.stage)).length, fill: '#eab308' },
-    { name: 'Confirmés', value: allDeals.filter((d) => d.stage === 'confirme').length, fill: '#22c55e' },
+    { name: 'Contactés', value: allDeals.filter((d) => d.stage !== 'a_contacter').length, fill: '#5E5CE6' },
+    { name: 'Répondu', value: allDeals.filter((d) => ['repondu', 'a_suivre', 'confirme'].includes(d.stage)).length, fill: '#FFD60A' },
+    { name: 'Confirmés', value: allDeals.filter((d) => d.stage === 'confirme').length, fill: '#30D158' },
   ];
 
   // Response rate by venue type
@@ -136,7 +127,7 @@ export default function AnalyticsPage() {
   const chartTooltipStyle = {
     contentStyle: {
       background: 'hsl(var(--card))',
-      border: '1px solid hsl(var(--border))',
+      border: '0.5px solid var(--line)',
       borderRadius: '8px',
       fontSize: '12px',
     },
@@ -222,7 +213,7 @@ export default function AnalyticsPage() {
                     <XAxis dataKey="type" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} unit="%" />
                     <Tooltip {...chartTooltipStyle} />
-                    <Bar dataKey="rate" fill="hsl(162, 100%, 45%)" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="rate" fill={APPLE.blue} radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -246,8 +237,8 @@ export default function AnalyticsPage() {
                     <XAxis type="number" hide />
                     <YAxis type="category" dataKey="city" width={80} tick={{ fontSize: 11 }} />
                     <Tooltip {...chartTooltipStyle} />
-                    <Bar dataKey="total" fill="#8b5cf6" radius={[0, 6, 6, 0]} name="Total" />
-                    <Bar dataKey="confirmed" fill="#22c55e" radius={[0, 6, 6, 0]} name="Confirmés" />
+                    <Bar dataKey="total" fill={APPLE.indigo} radius={[0, 6, 6, 0]} name="Total" />
+                    <Bar dataKey="confirmed" fill={APPLE.green} radius={[0, 6, 6, 0]} name="Confirmés" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -270,8 +261,8 @@ export default function AnalyticsPage() {
                   <AreaChart data={weeklyEmails}>
                     <defs>
                       <linearGradient id="emailGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(162, 100%, 45%)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(162, 100%, 45%)" stopOpacity={0} />
+                        <stop offset="5%" stopColor={APPLE.blue} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={APPLE.blue} stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <XAxis dataKey="week" tick={{ fontSize: 10 }} />
@@ -280,7 +271,7 @@ export default function AnalyticsPage() {
                     <Area
                       type="monotone"
                       dataKey="emails"
-                      stroke="hsl(162, 100%, 45%)"
+                      stroke={APPLE.blue}
                       fill="url(#emailGrad)"
                       strokeWidth={2}
                     />

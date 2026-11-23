@@ -12,11 +12,12 @@ import { cn, daysUntil, dealLabel, formatDate } from '@/lib/utils';
 const CLOSED = ['confirme', 'termine', 'refuse'];
 
 type Tone = 'alert' | 'warn' | 'ok' | 'info';
+/** Apple-style: neutral material tile, the colour lives in the icon. */
 const TONE: Record<Tone, string> = {
-  alert: 'border-red-500/40 bg-red-500/5 text-red-500',
-  warn: 'border-orange-500/40 bg-orange-500/5 text-orange-500',
-  ok: 'border-border bg-card text-muted-foreground',
-  info: 'border-primary/40 bg-primary/5 text-primary',
+  alert: 'bg-[hsl(var(--status-urgent))]',
+  warn: 'bg-[hsl(var(--status-warning))]',
+  ok: 'bg-[hsl(var(--status-neutral))]',
+  info: 'bg-primary',
 };
 
 function Tile({
@@ -38,15 +39,17 @@ function Tile({
 }) {
   const body = (
     <>
-      <div className="flex items-center gap-1.5 text-xs font-medium">
-        <Icon className="h-3.5 w-3.5" />
+      <div className="flex items-center gap-2 text-[13px] font-medium text-muted-foreground">
+        <span className={cn('flex h-6 w-6 items-center justify-center rounded-full text-white', TONE[tone])}>
+          <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />
+        </span>
         {label}
       </div>
-      <div className="font-display mt-1 truncate text-[26px] font-semibold leading-tight tabular-nums text-foreground">{value}</div>
-      <div className="truncate text-xs text-muted-foreground">{sub}</div>
+      <div className="font-display mt-2 truncate text-[28px] font-bold leading-none tabular-nums text-foreground">{value}</div>
+      <div className="mt-1 truncate text-xs text-muted-foreground">{sub}</div>
     </>
   );
-  const cls = cn('block rounded-xl border p-3.5 text-left transition-all hover:shadow-md hover:-translate-y-0.5', TONE[tone]);
+  const cls = 'material block rounded-2xl border p-4 text-left shadow-card transition-shadow hover:shadow-pop';
   return href ? (
     <Link href={href} className={cls}>
       {body}

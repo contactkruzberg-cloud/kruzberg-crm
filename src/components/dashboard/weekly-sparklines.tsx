@@ -53,8 +53,8 @@ export function WeeklySparklines() {
             <AreaChart data={days}>
               <defs>
                 <linearGradient id="emailGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(162, 100%, 45%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(162, 100%, 45%)" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#0A84FF" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#0A84FF" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis
@@ -67,7 +67,7 @@ export function WeeklySparklines() {
               <RechartsTooltip
                 contentStyle={{
                   background: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
+                  border: '0.5px solid var(--line)',
                   borderRadius: '8px',
                   fontSize: '12px',
                 }}
@@ -75,7 +75,7 @@ export function WeeklySparklines() {
               <Area
                 type="monotone"
                 dataKey="emails"
-                stroke="hsl(162, 100%, 45%)"
+                stroke="#0A84FF"
                 fill="url(#emailGradient)"
                 strokeWidth={2}
               />

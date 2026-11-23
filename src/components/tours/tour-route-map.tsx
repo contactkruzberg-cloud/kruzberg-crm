@@ -16,7 +16,7 @@ interface TourRouteMapProps {
 }
 
 function stopColor(type: TourStop['type']) {
-  return STOP_TYPES.find((t) => t.key === type)?.color || '#22d3ee';
+  return STOP_TYPES.find((t) => t.key === type)?.color || '#0A84FF';
 }
 
 export function TourRouteMap({ stops }: TourRouteMapProps) {
@@ -55,7 +55,7 @@ export function TourRouteMap({ stops }: TourRouteMapProps) {
         {path.length > 1 && (
           <Polyline
             positions={path}
-            pathOptions={{ color: '#22d3ee', weight: 3, opacity: 0.7, dashArray: '6 8' }}
+            pathOptions={{ color: '#0A84FF', weight: 3, opacity: 0.7, dashArray: '6 8' }}
           />
         )}
         {located.map((stop, i) => {

@@ -81,12 +81,12 @@ export function TourBudget({ tour, stops }: TourBudgetProps) {
   };
 
   const chartData = [
-    { name: 'Recettes', value: budget.revenue, fill: '#22c55e' },
-    { name: 'Carburant', value: budget.fuel, fill: '#f97316' },
-    { name: 'Véhicule', value: budget.vehicle, fill: '#06b6d4' },
-    { name: 'Hôtels', value: budget.hotels, fill: '#8b5cf6' },
-    { name: 'Per-diems', value: budget.perDiems, fill: '#eab308' },
-    { name: 'Autres', value: budget.otherExpenses, fill: '#64748b' },
+    { name: 'Recettes', value: budget.revenue, fill: '#30D158' },
+    { name: 'Carburant', value: budget.fuel, fill: '#FF9F0A' },
+    { name: 'Véhicule', value: budget.vehicle, fill: '#40C8E0' },
+    { name: 'Hôtels', value: budget.hotels, fill: '#5E5CE6' },
+    { name: 'Per-diems', value: budget.perDiems, fill: '#FFD60A' },
+    { name: 'Autres', value: budget.otherExpenses, fill: '#8E8E93' },
   ];
 
   return (

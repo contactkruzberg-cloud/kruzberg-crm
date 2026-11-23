@@ -12,10 +12,10 @@ export function CollapsibleSection({ id, title, children }: { id: string; title:
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground hover:text-foreground"
+        className="font-display flex items-center gap-1.5 text-[17px] font-semibold text-foreground hover:opacity-80"
         aria-expanded={!collapsed}
       >
-        <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', collapsed && '-rotate-90')} />
+        <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', collapsed && '-rotate-90')} />
         {title}
       </button>
       {!collapsed && children}

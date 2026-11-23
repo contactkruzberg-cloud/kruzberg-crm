@@ -286,6 +286,34 @@ export const STAGES: { key: DealStage; label: string; color: string }[] = [
   { key: 'refuse', label: 'Refusé', color: 'stage-refuse' },
 ];
 
+/** Apple system colours (dark variants), for charts and maps where CSS variables do not apply. */
+export const APPLE = {
+  blue: '#0A84FF',
+  indigo: '#5E5CE6',
+  purple: '#BF5AF2',
+  pink: '#FF375F',
+  red: '#FF453A',
+  orange: '#FF9F0A',
+  yellow: '#FFD60A',
+  green: '#30D158',
+  mint: '#63E6E2',
+  teal: '#40C8E0',
+  cyan: '#64D2FF',
+  gray: '#8E8E93',
+} as const;
+
+/** Stage colours as hex (same hues as the --stage-* CSS variables). */
+export const STAGE_HEX: Record<DealStage, string> = {
+  a_contacter: APPLE.blue,
+  contacte: APPLE.indigo,
+  relance: APPLE.orange,
+  repondu: APPLE.yellow,
+  a_suivre: APPLE.teal,
+  confirme: APPLE.green,
+  termine: APPLE.gray,
+  refuse: APPLE.red,
+};
+
 export const VENUE_TYPES: { key: VenueType; label: string }[] = [
   { key: 'bar', label: 'Bar' },
   { key: 'salle', label: 'Salle' },
@@ -332,9 +360,9 @@ export const TOUR_STATUSES: { key: TourStatus; label: string; color: string }[] 
 ];
 
 export const STOP_TYPES: { key: TourStopType; label: string; color: string }[] = [
-  { key: 'show', label: 'Concert', color: '#22c55e' },
-  { key: 'day_off', label: 'Jour off', color: '#64748b' },
-  { key: 'travel', label: 'Trajet', color: '#3b82f6' },
+  { key: 'show', label: 'Concert', color: '#30D158' },
+  { key: 'day_off', label: 'Jour off', color: '#8E8E93' },
+  { key: 'travel', label: 'Trajet', color: '#0A84FF' },
 ];
 
 export const EXPENSE_CATEGORIES: { key: ExpenseCategory; label: string }[] = [

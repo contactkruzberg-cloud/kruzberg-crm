@@ -21,7 +21,7 @@ export function MobileTabBar() {
   const badges = useNavBadges();
 
   return (
-    <nav aria-label="Navigation principale" className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t bg-background/85 backdrop-blur-xl md:hidden">
+    <nav aria-label="Navigation principale" className="material-bar pb-safe fixed inset-x-0 bottom-0 z-40 border-t md:hidden">
       <div className="grid grid-cols-5">
         {TABS.map((t) => {
           const on = t.href === '/' ? pathname === '/' : pathname.startsWith(t.href);
@@ -31,23 +31,23 @@ export function MobileTabBar() {
               key={t.href}
               href={t.href}
               aria-current={on ? 'page' : undefined}
-              className={cn('relative flex flex-col items-center gap-0.5 py-2 text-[10.5px] font-medium', on ? 'text-primary' : 'text-muted-foreground')}
+              className={cn('relative flex flex-col items-center gap-0.5 pb-1.5 pt-2 text-[10px] font-medium', on ? 'text-primary' : 'text-muted-foreground')}
             >
-              <span className={cn('flex h-7 w-12 items-center justify-center rounded-full transition-colors', on && 'bg-primary/12')}>
-                <t.icon className="h-[19px] w-[19px]" />
+              <span className="flex h-7 w-12 items-center justify-center">
+                <t.icon className="h-[22px] w-[22px]" strokeWidth={on ? 2.2 : 1.7} />
               </span>
               {t.label}
               {badge > 0 && (
-                <span className="nums absolute left-1/2 top-1 ml-2 min-w-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-semibold leading-4 text-white">
+                <span className="nums absolute left-1/2 top-1 ml-2 min-w-[18px] rounded-full bg-[hsl(var(--status-urgent))] px-1 text-center text-[11px] font-semibold leading-[18px] text-white">
                   {badge > 99 ? '99+' : badge}
                 </span>
               )}
             </Link>
           );
         })}
-        <button type="button" onClick={() => setMobileNavOpen(true)} className="flex flex-col items-center gap-0.5 py-2 text-[10.5px] font-medium text-muted-foreground">
+        <button type="button" onClick={() => setMobileNavOpen(true)} className="flex flex-col items-center gap-0.5 pb-1.5 pt-2 text-[10px] font-medium text-muted-foreground">
           <span className="flex h-7 w-12 items-center justify-center">
-            <Menu className="h-[19px] w-[19px]" />
+            <Menu className="h-[22px] w-[22px]" strokeWidth={1.7} />
           </span>
           Plus
         </button>

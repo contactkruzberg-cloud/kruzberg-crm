@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { MapTiles } from '@/components/shared/map-tiles';
+import { APPLE, STAGE_HEX } from '@/types/database';
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -23,16 +24,7 @@ const LeafletTooltip = dynamic(
   { ssr: false }
 );
 
-const STAGE_COLORS: Record<string, string> = {
-  a_contacter: '#3b82f6',
-  contacte: '#8b5cf6',
-  relance: '#f97316',
-  repondu: '#eab308',
-  a_suivre: '#84cc16',
-  confirme: '#22c55e',
-  termine: '#64748b',
-  refuse: '#ef4444',
-};
+const STAGE_COLORS: Record<string, string> = STAGE_HEX;
 
 type MapFilter = 'upcoming' | 'past' | 'both' | 'all';
 
@@ -175,7 +167,7 @@ export function VenueMap() {
               <MapTiles />
               {filteredVenues.map((venue) => {
                 const deal = dealsByVenue.get(venue.id);
-                const color = deal ? STAGE_COLORS[deal.stage] || '#22d3ee' : '#22d3ee';
+                const color = deal ? STAGE_COLORS[deal.stage] || APPLE.blue : APPLE.blue;
                 return (
                   <CircleMarker
                     key={venue.id}

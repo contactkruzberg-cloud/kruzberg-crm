@@ -10,22 +10,14 @@ import { useUpdateVenue } from '@/hooks/use-venues';
 import { geocodeAddress } from '@/lib/geocode';
 import { toast } from 'sonner';
 import { MapTiles } from '@/components/shared/map-tiles';
+import { APPLE, STAGE_HEX } from '@/types/database';
 
 const MapContainer = dynamic(() => import('react-leaflet').then((m) => m.MapContainer), { ssr: false });
 const CircleMarker = dynamic(() => import('react-leaflet').then((m) => m.CircleMarker), { ssr: false });
 const LeafletTooltip = dynamic(() => import('react-leaflet').then((m) => m.Tooltip), { ssr: false });
 const Popup = dynamic(() => import('react-leaflet').then((m) => m.Popup), { ssr: false });
 
-const STAGE_COLORS: Record<string, string> = {
-  a_contacter: '#3b82f6',
-  contacte: '#8b5cf6',
-  relance: '#f97316',
-  repondu: '#eab308',
-  a_suivre: '#84cc16',
-  confirme: '#22c55e',
-  termine: '#64748b',
-  refuse: '#ef4444',
-};
+const STAGE_COLORS: Record<string, string> = STAGE_HEX;
 
 // Nominatim usage policy: 1 req/sec. We use 1.1s to stay safe.
 const GEOCODE_DELAY_MS = 1100;
@@ -196,7 +188,7 @@ export function VenuesMapView({ venues, deals, onSelect }: VenuesMapViewProps) {
           <MapTiles />
           {venuesWithCoords.map((venue) => {
             const deal = dealsByVenue.get(venue.id);
-            const color = deal ? STAGE_COLORS[deal.stage] || '#22d3ee' : '#22d3ee';
+            const color = deal ? STAGE_COLORS[deal.stage] || APPLE.blue : APPLE.blue;
             return (
               <CircleMarker
                 key={venue.id}

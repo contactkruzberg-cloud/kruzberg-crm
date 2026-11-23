@@ -217,15 +217,15 @@ export const KIND_PLURAL: Record<EntityKind, string> = {
 
 /** Couleur par type (HSL, lisible sur fond sombre comme clair). */
 export const KIND_COLOR: Record<EntityKind, string> = {
-  tourneur: 'hsl(162 100% 45%)',
-  label: 'hsl(262 83% 66%)',
-  salle: 'hsl(217 91% 62%)',
+  tourneur: 'hsl(211 100% 58%)',
+  label: 'hsl(280 75% 66%)',
+  salle: 'hsl(189 72% 56%)',
   festival: 'hsl(25 95% 56%)',
-  organisateur: 'hsl(190 80% 50%)',
-  tete_affiche: 'hsl(330 80% 62%)',
-  plateau: 'hsl(47 96% 55%)',
-  media: 'hsl(0 0% 62%)',
-  dispositif: 'hsl(82 70% 48%)',
+  organisateur: 'hsl(241 73% 68%)',
+  tete_affiche: 'hsl(348 100% 61%)',
+  plateau: 'hsl(50 100% 52%)',
+  media: 'hsl(240 2% 60%)',
+  dispositif: 'hsl(135 64% 50%)',
 };
 
 export const ORIGIN_LABEL: Record<BandOrigin, string> = {
@@ -267,7 +267,7 @@ export const STAGE_COLOR: Record<Stage, string> = {
   residence: 'hsl(100 40% 55%)',
   premiere_partie: 'hsl(330 80% 62%)',
   festival: 'hsl(25 95% 56%)',
-  premier_tourneur: 'hsl(162 100% 45%)',
+  premier_tourneur: 'hsl(211 100% 58%)',
   signature_label: 'hsl(280 70% 60%)',
   tournee_france: 'hsl(217 91% 62%)',
   tournee_europe: 'hsl(200 90% 55%)',

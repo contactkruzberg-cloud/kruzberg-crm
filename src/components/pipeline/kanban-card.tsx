@@ -46,10 +46,10 @@ export function KanbanCard({ deal, onClick, isDragging, hint, selected, selectio
       {...listeners}
       onClick={selectionMode && onToggleSelect ? onToggleSelect : onClick}
       className={cn(
-        'group relative cursor-pointer rounded-xl border bg-card p-3 shadow-card transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-px hover:border-foreground/15 hover:shadow-pop',
+        'group relative cursor-pointer rounded-[14px] border bg-card p-3 shadow-card transition-shadow duration-150 hover:shadow-pop',
         (isDragging || isSortDragging) && 'rotate-2 opacity-60 shadow-pop',
-        urgency === 'overdue' && 'border-l-2 border-l-red-500',
-        urgency === 'urgent' && 'border-l-2 border-l-orange-500',
+        urgency === 'overdue' && 'shadow-[inset_3px_0_0_0_hsl(var(--status-urgent)),var(--elev-card)]',
+        urgency === 'urgent' && 'shadow-[inset_3px_0_0_0_hsl(var(--status-warning)),var(--elev-card)]',
         selected && 'border-primary bg-primary/5 ring-1 ring-primary'
       )}
     >
