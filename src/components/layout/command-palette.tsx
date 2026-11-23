@@ -26,6 +26,7 @@ import {
   Radar,
   Orbit,
   Send,
+  CalendarDays,
 } from 'lucide-react';
 import { useTours } from '@/hooks/use-tours';
 import { usePipelineFilters } from '@/components/pipeline/pipeline-filters';
@@ -34,6 +35,7 @@ import type { CreateIntent } from '@/stores/app-store';
 const PAGES = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'File de relances', href: '/relances', icon: Send },
+  { name: 'Calendrier (concerts, tournées, candidatures)', href: '/calendrier', icon: CalendarDays },
   { name: 'Radar (pistes de la veille)', href: '/radar', icon: Radar },
   { name: 'Constellation (réseau de la niche)', href: '/radar?vue=constellation', icon: Orbit },
   { name: 'Pipeline', href: '/pipeline', icon: Kanban },

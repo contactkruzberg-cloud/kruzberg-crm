@@ -5,6 +5,10 @@ import { updateSession } from '@/lib/supabase/middleware';
 // servers (no CRM session), they handle their own authentication.
 const MCP_PUBLIC = /^\/(?:api\/mcp(?:\/|$)|api\/oauth\/|\.well-known\/oauth-(?:protected-resource|authorization-server)(?:\/|$))/;
 
+// iCal feed of the calendar, fetched by agenda apps (no CRM session): its URL
+// carries its own secret token. /api/calendar/link stays behind the login.
+const CALENDAR_FEED = /^\/api\/calendar\/(?!link$)[^/]+$/;
+
 // Other discovery URLs that do not exist here (OpenID, root-level /register…):
 // a plain 404 rather than a redirect to /login, which OAuth clients would
 // otherwise try to parse as an authorization server.
@@ -12,7 +16,7 @@ const OAUTH_NOT_HERE = /^\/(?:\.well-known\/(?:oauth-|openid-)|register$|authori
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (MCP_PUBLIC.test(pathname)) return NextResponse.next();
+  if (MCP_PUBLIC.test(pathname) || CALENDAR_FEED.test(pathname)) return NextResponse.next();
   if (OAUTH_NOT_HERE.test(pathname)) return new NextResponse('Not Found', { status: 404 });
   return await updateSession(request);
 }

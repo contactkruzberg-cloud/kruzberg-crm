@@ -20,6 +20,7 @@ import {
   X,
   Radar,
   Send,
+  CalendarDays,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -32,6 +33,7 @@ export const NAV_GROUPS: { title: string | null; items: { href: string; label: s
     items: [
       { href: '/', label: 'Dashboard', icon: LayoutDashboard },
       { href: '/relances', label: 'Relances', icon: Send },
+      { href: '/calendrier', label: 'Calendrier', icon: CalendarDays },
     ],
   },
   { title: 'Prospection', items: [{ href: '/radar', label: 'Radar', icon: Radar }] },
