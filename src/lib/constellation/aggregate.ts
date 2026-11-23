@@ -26,7 +26,7 @@ function resolve(key: string, db: Db): string {
 }
 
 /**
- * Regroupe les faits par acteur et calcule le score de la « règle de Francis » :
+ * Regroupe les faits par acteur et calcule le score de la règle de récurrence :
  * nombre de groupes de la niche chez qui on retrouve l'acteur, avec un bonus
  * pour les groupes lyonnais (notre terrain d'abord), pour les groupes à succès
  * (leurs passages tracent le chemin) et pour l'activité récente.

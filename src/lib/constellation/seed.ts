@@ -24,7 +24,7 @@ export const SEED_BANDS: SeedBand[] = [
   band('Cardinals', 'radar', 'Post-punk irlandais, angle presse du Radar.', { city: 'Cork', country: 'Irlande', scene: 'europe' }),
   band('High Vis', 'radar', 'Post-punk ; a joué à l’A38 (Budapest) : exactement notre circuit européen.', { city: 'Londres', country: 'Royaume-Uni', scene: 'europe' }),
   band('Johnnie Carwash', 'seance', 'Garage pop lyonnais passé par le Labo, 2e album chez Howlin’ Banana, ~200 dates en Europe : notre parcours avec quelques années d’avance.', { city: 'Lyon', country: 'France', scene: 'lyon' }),
-  band('Mad Girls Love Song', 'seance', 'Cité par Francis en séance. Contexte à préciser.'),
+  band('Mad Girls Love Song', 'seance', 'Cité en séance. Contexte à préciser.'),
 ];
 
 const watch = (name: string, kind: Watch['kind'], scale: Watch['scale'], note: string, city?: string): Watch => ({
@@ -34,19 +34,19 @@ const watch = (name: string, kind: Watch['kind'], scale: Watch['scale'], note: s
   scale,
   city,
   note,
-  source: 'Session 03 · Francis Richert',
+  source: 'Session 03',
 });
 
 // Tourneurs notés en séance (orthographe et coordonnées à vérifier).
 export const SEED_WATCH: Watch[] = [
-  watch('Murailles Musique', 'tourneur', 'national', 'Cité par Francis.'),
-  watch('Super Mon Amour', 'tourneur', 'national', 'Cité par Francis.'),
-  watch('Vedette', 'tourneur', 'national', 'Cité par Francis (vedette.net).'),
+  watch('Murailles Musique', 'tourneur', 'national', 'Cité en séance.'),
+  watch('Super Mon Amour', 'tourneur', 'national', 'Cité en séance.'),
+  watch('Vedette', 'tourneur', 'national', 'Cité en séance (vedette.net).'),
   watch('Alias', 'tourneur', 'national', 'Trop gros pour nous aujourd’hui, mais leur catalogue est une bonne source pour la constellation.'),
   watch('Podium', 'tourneur', 'local', 'Tourneur lyonnais (ex-AFX).', 'Lyon'),
-  watch('Jasipir', 'tourneur', 'local', 'Tourneur local cité par Francis.', 'Lyon'),
-  watch('Namastrock', 'tourneur', 'local', 'Tourneur local cité par Francis.', 'Lyon'),
-  watch('Le Cri du Charbon', 'tourneur', 'local', 'Tourneur local cité par Francis.'),
+  watch('Jasipir', 'tourneur', 'local', 'Tourneur local cité en séance.', 'Lyon'),
+  watch('Namastrock', 'tourneur', 'local', 'Tourneur local cité en séance.', 'Lyon'),
+  watch('Le Cri du Charbon', 'tourneur', 'local', 'Tourneur local cité en séance.'),
   watch('Howlin’ Banana Records', 'label', 'national', 'Label de Johnnie Carwash (2e album).'),
-  watch('Club du Transbordeur', 'salle', 'local', 'Soirée « Club Punk et boîte à rythmes » : passer par Francis pour joindre David.', 'Villeurbanne'),
+  watch('Club du Transbordeur', 'salle', 'local', 'Soirée « Club Punk et boîte à rythmes » : contact : David.', 'Villeurbanne'),
 ];

@@ -225,7 +225,7 @@ export function applyAction(l: Loaded, a: Action): Record<string, unknown> {
       if (!ANGLE_LABEL[a.angle]) throw new ActionError('Angle inconnu');
       return { ok: true, job: enqueue(db, 'discover', a.angle, ANGLE_LABEL[a.angle], { autoExplore: a.autoExplore }) };
     case 'discoverAll': {
-      // Recherche massive : le local d'abord (conseil de Francis), puis la France et l'Europe.
+      // Recherche massive : le local d'abord, puis la France et l'Europe.
       const angles = Object.keys(ANGLE_LABEL) as DiscoverAngle[];
       for (const angle of angles) enqueue(db, 'discover', angle, ANGLE_LABEL[angle], { autoExplore: a.autoExplore });
       return { ok: true, count: angles.length };
@@ -460,4 +460,40 @@ function apply(db: Db, job: Job, output: unknown): { added: number; explore: str
     added++;
   }
   return { added, explore };
+}
+
+// ---------------------------------------------------------------- noms retirés
+
+const SCRUB: [RegExp, string][] = [
+  [/Cité par Francis en séance/g, 'Cité en séance'],
+  [/Cité par Francis/g, 'Cité en séance'],
+  [/cité par Francis/g, 'cité en séance'],
+  [/\s*·\s*Francis Richert/g, ''],
+  [/passer par Francis pour joindre David/g, 'contact : David'],
+  [/\s*(?:selon|avec|par|de|conseillé par|conseil de) Francis(?: Richert)?/gi, ''],
+  [/Francis(?: Richert)?/g, 'notre accompagnateur'],
+];
+
+function scrubString(s: string) {
+  return SCRUB.reduce((acc, [re, to]) => acc.replace(re, to), s);
+}
+
+function scrubDeep<T>(v: T): T {
+  if (typeof v === 'string') return scrubString(v) as T;
+  if (Array.isArray(v)) return v.map(scrubDeep) as T;
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, scrubDeep(x)])) as T;
+  return v;
+}
+
+/** Vrai si des données enregistrées citent encore un nom retiré de la constellation. */
+export function needsScrub(db: Db) {
+  return /Francis/.test(JSON.stringify([db.bands, db.watch, db.findings, db.synthesis]));
+}
+
+/** Retire ces noms des groupes, acteurs suivis, faits relevés et synthèse déjà enregistrés. */
+export function scrub(db: Db) {
+  db.bands = scrubDeep(db.bands);
+  db.watch = scrubDeep(db.watch);
+  db.findings = scrubDeep(db.findings);
+  db.synthesis = scrubDeep(db.synthesis);
 }

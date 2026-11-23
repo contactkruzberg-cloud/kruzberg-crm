@@ -6,7 +6,7 @@ import type { Finding } from '@/lib/constellation/types';
 import { host } from './ui';
 import type { State } from './use-constellation';
 
-// Conseil de Francis pour Johnnie Carwash : « aller les voir et les contacter ».
+// Conseil pour Johnnie Carwash : « aller les voir et les contacter ».
 // Les dates à venir des groupes de la niche près de Lyon sont l'occasion de
 // rencontrer le groupe, le programmateur et parfois le tourneur.
 const NEAR = /lyon|villeurbanne|vaulx|vénissieux|venissieux|saint-?étienne|saint-?etienne|grenoble|chambéry|chambery|annecy|valence|vienne|bourg-en-bresse|mâcon|macon|clermont|genève|geneve|dijon|annemasse/i;

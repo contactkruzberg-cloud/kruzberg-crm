@@ -11,7 +11,7 @@ import { Upcoming } from './upcoming';
 
 const KINDS: EntityKind[] = ['tourneur', 'label', 'salle', 'festival', 'organisateur', 'tete_affiche', 'plateau', 'media', 'dispositif'];
 
-/** Une salle de plus de 600 places ou un tourneur international, c'est trop gros pour nous aujourd'hui (comme Alias, selon Francis). */
+/** Une salle de plus de 600 places ou un tourneur international, c'est trop gros pour nous aujourd'hui (comme Alias). */
 export function reachable(e: Entity) {
   if (e.capacity && e.capacity > 600) return false;
   if (e.kind === 'tourneur' && e.scale === 'international') return false;
@@ -180,7 +180,7 @@ export function Ranking({ data: all, onOpen, onBand, selected, goBands }: { data
                       <KindBadge kind={e.kind} />
                       {e.watch && (
                         <Badge className="border-primary/40 text-primary" title={e.watch.note}>
-                          <Star className="size-3" /> Francis
+                          <Star className="size-3" /> Séance
                         </Badge>
                       )}
                       {e.refBands > 0 && (
@@ -241,7 +241,7 @@ function WatchList({ data, onOpen }: { data: State; onOpen: (k: string) => void 
   if (!w.length) return null;
   return (
     <div className="rounded-xl border border-border bg-card p-4">
-      <h3 className="text-sm font-semibold">Notés en séance avec Francis</h3>
+      <h3 className="text-sm font-semibold">Notés en séance</h3>
       <p className="mb-3 text-xs text-muted-foreground">Ils remonteront dans le classement s’ils apparaissent chez les groupes explorés. Ouvre un tourneur pour explorer son catalogue.</p>
       <div className="flex flex-wrap gap-2">
         {w.map((e) => (

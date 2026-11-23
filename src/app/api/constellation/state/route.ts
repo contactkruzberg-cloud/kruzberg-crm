@@ -1,5 +1,5 @@
 import { loadDb, mutate } from '@/lib/constellation/docs';
-import { seed } from '@/lib/constellation/engine';
+import { needsScrub, scrub, seed } from '@/lib/constellation/engine';
 import { crmKnown, kick, ownerStore, routineConfigured } from '@/lib/constellation/server';
 
 // Données de la page /constellation. La page calcule elle-même le classement
@@ -22,6 +22,10 @@ export async function GET(request: Request) {
   let { db, launch } = await loadDb(store);
   if (!db.bands.length && !db.watch.length) {
     await mutate(store, (l) => seed(l.db));
+    ({ db, launch } = await loadDb(store));
+  }
+  if (needsScrub(db)) {
+    await mutate(store, (l) => scrub(l.db));
     ({ db, launch } = await loadDb(store));
   }
   const [last] = await store.select('constellation_docs', { order: [{ col: 'updated_at', asc: false }], limit: 1 });

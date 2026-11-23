@@ -17,7 +17,7 @@ function list(names: string[]) {
 }
 
 /**
- * La phrase de personnalisation du premier mail (conseil de Francis : « montrer
+ * La phrase de personnalisation du premier mail (conseil : « montrer
  * qu'on connaît le lieu : j'ai vu que vous aviez accueilli tel artiste… »).
  */
 export function hook(e: Entity, bandName: (id: string) => string): string | null {
@@ -99,7 +99,7 @@ export function EntityPanel({
             <KindBadge kind={e.kind} />
             {e.watch && (
               <Badge className="border-primary/40 text-primary">
-                <Star className="size-3" /> Cité par Francis
+                <Star className="size-3" /> Cité en séance
               </Badge>
             )}
             {e.inCrm && (
@@ -130,7 +130,7 @@ export function EntityPanel({
           {e.bandIds.length >= 2 ? (
             <>
               <strong className="text-primary">Signal.</strong> Vu chez {e.bandIds.length} groupes de la niche
-              {e.lyonBands ? `, dont ${e.lyonBands} lyonnais` : ''}. Selon la règle de Francis, il y a quelque chose à faire ici.
+              {e.lyonBands ? `, dont ${e.lyonBands} lyonnais` : ''}. Il y a sans doute quelque chose à faire ici.
             </>
           ) : e.bandIds.length === 1 ? (
             <>Vu chez un seul groupe pour l’instant. Explore d’autres groupes pour confirmer.</>
@@ -213,7 +213,7 @@ export function EntityPanel({
               onChange={(ev) => setNote(ev.target.value)}
               onBlur={() => note !== (e.note ?? '') && act({ type: 'entity', key: e.key, note })}
               rows={2}
-              placeholder="Contact trouvé, qui connaît qui, à demander à Francis…"
+              placeholder="Contact trouvé, qui connaît qui, à demander autour de nous…"
               className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm outline-none focus:ring-2 focus:ring-ring/40"
             />
           </label>

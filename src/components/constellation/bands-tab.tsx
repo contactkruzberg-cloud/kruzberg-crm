@@ -97,7 +97,7 @@ export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<s
             <Compass className="size-4 text-primary" /> Découvrir des groupes
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            L’« espionnage industriel » de Francis : trouver les groupes auxquels on peut s’identifier. Ceux qui sont très proches de nous (4 ou 5 sur 5) sont retenus d’office ; les autres arrivent en suggestions.
+            L’« espionnage industriel » : trouver les groupes auxquels on peut s’identifier. Ceux qui sont très proches de nous (4 ou 5 sur 5) sont retenus d’office ; les autres arrivent en suggestions.
           </p>
           <ul className="mt-3 space-y-1.5">
             {ANGLES.map((a) => {

@@ -71,7 +71,7 @@ export function ConstellationView() {
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight">Constellation</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Les noms qui reviennent chez les groupes de notre niche post-punk. <span className="text-foreground/80">« Si on voit le nom d’un même tourneur écrit plusieurs fois chez les groupes de notre niche, c’est qu’il y a quelque chose à faire avec lui. »</span> — Francis
+            Les noms qui reviennent chez les groupes de notre niche post-punk : un tourneur, un label ou une salle qu’on retrouve chez plusieurs groupes, c’est une porte à ouvrir.
           </p>
         </div>
         <div className="flex items-center gap-2">

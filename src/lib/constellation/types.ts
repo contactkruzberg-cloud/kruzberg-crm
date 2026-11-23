@@ -1,8 +1,8 @@
 // Constellation : la carte des noms qui reviennent dans la niche post-punk de
-// KRUZBERG (idée de Marion Richeux, session 03 avec Francis Richert).
+// KRUZBERG (idée de Marion Richeux, session 03).
 // On part de groupes de la niche, on relève leur parcours (tourneur, label,
 // salles, festivals, premières parties…), et on classe les acteurs selon le
-// nombre de groupes chez qui on les retrouve (la « règle de Francis »).
+// nombre de groupes chez qui on les retrouve (la règle de récurrence).
 
 export type Scene = 'lyon' | 'france' | 'europe';
 

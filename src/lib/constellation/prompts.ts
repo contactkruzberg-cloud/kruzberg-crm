@@ -3,7 +3,7 @@ import type { Band, DiscoverAngle, Watch } from './types';
 // Les consignes de recherche. Elles tiennent le contexte de KRUZBERG pour que
 // la recherche sache ce qui nous est utile (et ce qui ne l'est pas).
 
-export const KRUZBERG = `KRUZBERG est un quatuor post-punk / cold wave de Lyon (France) : chant scandé en anglais, envolées mélodiques, son brut, un groupe qui emmène le public en transe. Références : Fontaines D.C., IDLES, la nouvelle vague post-punk irlandaise et britannique. Groupe émergent : on vise des lieux de 50 à 400 places, des bars-concerts, des clubs associatifs, des petits festivals DIY, d'abord à Lyon et en Auvergne-Rhône-Alpes, puis en France et en Europe (une tournée européenne est prévue en mai 2027). Notre accompagnateur, Francis Richert, nous a donné cette règle : « si on voit le nom d'un même tourneur écrit plusieurs fois chez les groupes de notre niche, c'est qu'il y a quelque chose à faire avec lui ».`;
+export const KRUZBERG = `KRUZBERG est un quatuor post-punk / cold wave de Lyon (France) : chant scandé en anglais, envolées mélodiques, son brut, un groupe qui emmène le public en transe. Références : Fontaines D.C., IDLES, la nouvelle vague post-punk irlandaise et britannique. Groupe émergent : on vise des lieux de 50 à 400 places, des bars-concerts, des clubs associatifs, des petits festivals DIY, d'abord à Lyon et en Auvergne-Rhône-Alpes, puis en France et en Europe (une tournée européenne est prévue en mai 2027). Notre règle : si on voit le nom d'un même tourneur écrit plusieurs fois chez les groupes de notre niche, c'est qu'il y a quelque chose à faire avec lui.`;
 
 const RULES = `Règles :
 - Ne relève QUE ce que tu as trouvé dans une source consultée. Chaque fait a son URL de source (page du groupe, du label, du tourneur, Songkick, Bandsintown, setlist.fm, Discogs, Bandcamp, Instagram, article de presse, affiche de festival, Wikipédia…). Jamais d'invention, jamais de nom deviné.
@@ -158,7 +158,7 @@ const ANGLES: Record<DiscoverAngle, string> = {
 export function discoverPrompt(angle: DiscoverAngle, known: string[]): string {
   return `${KRUZBERG}
 
-Tâche : trouver des groupes auxquels KRUZBERG peut s'identifier, pour cartographier les lieux, tourneurs, tremplins et médias qui leur sont accessibles (l'« espionnage industriel » conseillé par Francis : leur parcours est une carte des lieux et des contacts accessibles pour nous).
+Tâche : trouver des groupes auxquels KRUZBERG peut s'identifier, pour cartographier les lieux, tourneurs, tremplins et médias qui leur sont accessibles (l'« espionnage industriel » : leur parcours est une carte des lieux et des contacts accessibles pour nous).
 
 Angle de cette recherche : ${ANGLES[angle]}
 
@@ -228,7 +228,7 @@ export const SYNTHESIS_SCHEMA = {
 export function synthesisPrompt(dossier: string): string {
   return `${KRUZBERG}
 
-Où en est KRUZBERG (octobre 2026) : groupe lyonnais accompagné par Francis Richert ; une live session filmée ; une date à venir au Marché Gare et une résidence ; une tournée européenne prévue en mai 2027 ; une actualité à trancher (single début 2027 ou EP en septembre 2027) ; candidatures prévues aux iNOUïS 2027 (clôture le 12 novembre 2026) et au Ninkasi Musik Lab ; Francis conseille de consolider le local avant de s'étendre (routing envisagé : Lyon → Besançon → Strasbourg → Bruxelles → Lille).
+Où en est KRUZBERG (octobre 2026) : groupe lyonnais accompagné ; une live session filmée ; une date à venir au Marché Gare et une résidence ; une tournée européenne prévue en mai 2027 ; une actualité à trancher (single début 2027 ou EP en septembre 2027) ; candidatures prévues aux iNOUïS 2027 (clôture le 12 novembre 2026) et au Ninkasi Musik Lab ; priorité : consolider le local avant de s'étendre (routing envisagé : Lyon → Besançon → Strasbourg → Bruxelles → Lille).
 
 Voici le dossier de la constellation : les trajectoires datées de groupes à succès (Last Train, Johnny Mafia, Johnnie Carwash, Fontaines D.C., IDLES, shame, The Murder Capital, DITZ, Gurriers, Enola Gay…) et de groupes de notre niche, avec les acteurs (tourneurs, labels, tremplins, salles, médias) qui reviennent le plus.
 
