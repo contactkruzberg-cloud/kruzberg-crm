@@ -8,7 +8,7 @@ import { useSavedAt } from '@/lib/save-status';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, Command, RefreshCw, Menu, Plus, Check, Loader2, Kanban, Building2, User, ListTodo, Users, Route } from 'lucide-react';
+import { Search, Command, RefreshCw, Menu, Plus, Check, Loader2, Kanban, Building2, User, ListTodo, Route } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS } from './sidebar';
 
@@ -17,7 +17,6 @@ const CREATE_ITEMS: { kind: CreateIntent; label: string; icon: typeof Plus }[] =
   { kind: 'venue', label: 'Lieu / structure', icon: Building2 },
   { kind: 'contact', label: 'Contact', icon: User },
   { kind: 'task', label: 'Tâche', icon: ListTodo },
-  { kind: 'band', label: 'Groupe ami', icon: Users },
   { kind: 'tour', label: 'Tournée', icon: Route },
 ];
 

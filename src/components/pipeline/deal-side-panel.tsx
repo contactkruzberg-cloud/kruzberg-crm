@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { STAGES, PRIORITIES, RELANCE_METHODS, type DealStage, type DealPriority, type RelanceMethod } from '@/types/database';
@@ -24,7 +23,6 @@ import { motion } from 'framer-motion';
 import { SendEmailDialog } from '@/components/shared/send-email-dialog';
 import { AddToTourDialog } from '@/components/tours/add-to-tour-dialog';
 import { useDealTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks';
-import { DealBill } from '@/components/pipeline/deal-bill';
 import { DealQuickActions } from '@/components/pipeline/deal-quick-actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePersistentState } from '@/lib/persistent-state';
@@ -542,8 +540,6 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
               </TabsContent>
 
               <TabsContent value="tasks" className="space-y-5 mt-4">
-                <DealBill dealId={dealId} />
-                <Separator />
                 {/* Tasks */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">

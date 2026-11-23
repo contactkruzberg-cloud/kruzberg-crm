@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type Theme = 'light' | 'dark' | 'system';
-export type CreateIntent = 'deal' | 'venue' | 'contact' | 'task' | 'band' | 'tour';
+export type CreateIntent = 'deal' | 'venue' | 'contact' | 'task' | 'tour';
 
 interface AppState {
   sidebarOpen: boolean;
