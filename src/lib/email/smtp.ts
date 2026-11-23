@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import { ImapFlow } from 'imapflow';
 import MailComposer from 'nodemailer/lib/mail-composer';
 import { withSignature } from './signature';
+import { composeBodies } from './compose';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'ssl0.ovh.net',
@@ -35,7 +36,8 @@ export async function sendEmail({ to, subject, body, replyTo, cc, inReplyTo, ref
   const user = process.env.SMTP_USER || 'booking@kruzberg.com';
   const from = `"KRUZBERG" <${user}>`;
   // Sent by the CRM itself: Apple Mail won't add Greg's signature, so we do.
-  body = withSignature(body);
+  // Links typed [texte](adresse) leave as real links (HTML) + "texte <adresse>" (text).
+  const { text, html, hasLinks } = composeBodies(withSignature(body));
   // Our own Message-ID: the copy in « Envoyés » and the CRM share it (no duplicate on sync).
   const messageId = `<crm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@${user.split('@')[1] || 'kruzberg.com'}>`;
   const mail = {
@@ -43,7 +45,8 @@ export async function sendEmail({ to, subject, body, replyTo, cc, inReplyTo, ref
     to,
     cc: cc || undefined,
     subject,
-    text: body,
+    text,
+    html: hasLinks ? html : undefined,
     replyTo: replyTo || user,
     messageId,
     inReplyTo: inReplyTo || undefined,
@@ -62,7 +65,7 @@ export async function sendEmail({ to, subject, body, replyTo, cc, inReplyTo, ref
     console.error('Failed to save to Sent folder:', err);
   }
 
-  return { messageId, body };
+  return { messageId, body: text };
 }
 
 async function saveToSentFolder(rawMessage: Buffer) {

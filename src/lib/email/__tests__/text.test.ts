@@ -56,3 +56,18 @@ describe('withoutSignature', () => {
     expect(withoutSignature('Merci !\n-- \nJulie\nProg')).toBe('Merci !');
   });
 });
+
+describe('linkify labels', () => {
+  test('the label stops at the end of the previous sentence', () => {
+    expect(linkify('On aimerait jouer au Sonic en mars. Dossier de presse <https://k.com/EPK.pdf>')).toEqual([
+      { t: 'text', v: 'On aimerait jouer au Sonic en mars. ' },
+      { t: 'link', href: 'https://k.com/EPK.pdf', label: 'Dossier de presse' },
+    ]);
+  });
+  test('"Lien : <url>" shows the short url', () => {
+    expect(linkify('Lien : <https://www.k.com/x>')).toEqual([
+      { t: 'text', v: 'Lien : ' },
+      { t: 'link', href: 'https://www.k.com/x', label: 'k.com' },
+    ]);
+  });
+});

@@ -172,6 +172,13 @@ body {
   background: hsl(var(--primary) / 0.28);
 }
 
+/* My messages are blue: the selection must be white to be seen. */
+.bubble-out ::selection,
+.bubble-out::selection {
+  background: hsl(0 0% 100% / 0.9);
+  color: hsl(var(--primary));
+}
+
 :focus-visible {
   outline: 3px solid hsl(var(--ring) / 0.45);
   outline-offset: 1px;

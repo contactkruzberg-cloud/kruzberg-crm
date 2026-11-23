@@ -1,12 +1,13 @@
 'use client';
 
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUp, Loader2, Paperclip } from 'lucide-react';
+import { ArrowUp, Link2, Loader2, Paperclip } from 'lucide-react';
 import { toast } from 'sonner';
 import { isSetupError, useEmails, useFullText, useMarkSeen, useSendMessage } from '@/hooks/use-emails';
 import { matches, replySubject, replyTarget, type EmailRow, type Match } from '@/lib/email/messages';
 import { cn } from '@/lib/utils';
-import { cleanBody, linkify, withoutSignature } from '@/lib/email/text';
+import { cleanBody, linkify, prettyUrl, withoutSignature } from '@/lib/email/text';
+import { insertLink, normalizeHref } from '@/lib/email/compose';
 
 const dayLabel = (iso: string) => {
   const d = new Date(iso);
@@ -72,7 +73,9 @@ function Bubble({ m, showSubject }: { m: EmailRow; showSubject: boolean }) {
         <div
           className={cn(
             'rounded-[20px] px-3.5 py-2 text-[14.5px] leading-[1.4]',
-            out ? 'rounded-br-md bg-primary text-primary-foreground' : 'rounded-bl-md bg-secondary text-foreground dark:bg-white/10',
+            out
+              ? 'bubble-out rounded-br-md bg-primary text-primary-foreground'
+              : 'rounded-bl-md bg-secondary text-foreground dark:bg-white/10',
           )}
         >
           {showSubject && m.subject && <p className={cn('mb-1 text-[12.5px] font-semibold', out ? 'text-primary-foreground/85' : 'text-foreground/80')}>{m.subject}</p>}
@@ -87,6 +90,18 @@ function Bubble({ m, showSubject }: { m: EmailRow; showSubject: boolean }) {
           <span>{time(m.sent_at)}</span>
           <button type="button" className="hover:text-foreground" onClick={() => setQuoted((q) => !q)}>
             {quoted ? 'masquer le mail complet' : 'mail complet'}
+          </button>
+          <button
+            type="button"
+            className="hover:text-foreground"
+            onClick={() =>
+              navigator.clipboard
+                .writeText(quoted && full.data ? cleanBody(full.data) : text)
+                .then(() => toast.success('Message copié'))
+                .catch(() => toast.error('Copie impossible'))
+            }
+          >
+            copier
           </button>
         </div>
       </div>
@@ -131,6 +146,38 @@ export function Conversation({
   const [to, setTo] = useState<string | null>(null);
   const [subject, setSubject] = useState<string | null>(null);
   const [body, setBody] = useState('');
+  const area = useRef<HTMLTextAreaElement>(null);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkLabel, setLinkLabel] = useState('');
+  const [linkHref, setLinkHref] = useState('');
+  const sel = useRef<[number, number]>([0, 0]);
+  const links = useMemo(
+    () => [...body.matchAll(/\[([^\]\n]+)\]\(([^)\s]+)\)/g)].map((m) => ({ label: m[1], href: normalizeHref(m[2]) })).filter((l): l is { label: string; href: string } => !!l.href),
+    [body],
+  );
+
+  const openLink = () => {
+    const el = area.current;
+    const start = el?.selectionStart ?? body.length;
+    const end = el?.selectionEnd ?? body.length;
+    sel.current = [start, end];
+    setLinkLabel(body.slice(start, end).trim());
+    setLinkHref('');
+    setLinkOpen(true);
+  };
+  const applyLink = () => {
+    const href = normalizeHref(linkHref);
+    if (!href) return toast.error('Adresse invalide (ex. kruzberg.com/epk)');
+    const label = linkLabel.trim() || prettyUrl(href);
+    const [start, end] = sel.current;
+    const r = insertLink(body, start, end, label, href);
+    setBody(r.value);
+    setLinkOpen(false);
+    requestAnimationFrame(() => {
+      area.current?.focus();
+      area.current?.setSelectionRange(r.caret, r.caret);
+    });
+  };
   const toValue = to ?? target.to.join(', ');
   const subjectValue = subject ?? target.subject;
 
@@ -203,7 +250,7 @@ export function Conversation({
         <div className="flex flex-wrap gap-x-3 gap-y-1 px-2 pb-1.5 text-[12.5px] text-muted-foreground">
           <label className="flex min-w-0 flex-1 items-center gap-1.5">
             À
-            <input value={toValue} onChange={(e) => setTo(e.target.value)} placeholder="adresse@lieu.fr" className="min-w-0 flex-1 bg-transparent text-foreground outline-none" />
+            <input value={toValue} onChange={(e) => setTo(e.target.value)} placeholder="adresse@lieu.fr" className="min-w-0 flex-1 bg-transparent text-foreground outline-none focus-visible:outline-none" />
           </label>
           <label className="flex min-w-0 flex-[2] items-center gap-1.5">
             Objet
@@ -211,12 +258,52 @@ export function Conversation({
               value={subjectValue}
               onChange={(e) => setSubject(e.target.value)}
               placeholder={thread.length ? replySubject(thread[thread.length - 1].subject) : 'Objet du mail'}
-              className="min-w-0 flex-1 bg-transparent text-foreground outline-none"
+              className="min-w-0 flex-1 bg-transparent text-foreground outline-none focus-visible:outline-none"
             />
           </label>
         </div>
-        <div className="flex items-end gap-2 rounded-[22px] border bg-card px-3 py-1.5 focus-within:border-primary/60">
+        {linkOpen && (
+          <div className="mb-2 flex flex-wrap items-center gap-2 rounded-2xl border bg-card p-2 shadow-pop">
+            <input
+              autoFocus={!linkLabel}
+              value={linkLabel}
+              onChange={(e) => setLinkLabel(e.target.value)}
+              placeholder="Texte du lien (ex. Dossier de presse)"
+              className="h-8 min-w-0 flex-1 rounded-lg bg-secondary px-2.5 text-[13.5px] outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            />
+            <input
+              autoFocus={!!linkLabel}
+              value={linkHref}
+              onChange={(e) => setLinkHref(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  applyLink();
+                }
+                if (e.key === 'Escape') setLinkOpen(false);
+              }}
+              placeholder="Adresse (kruzberg.com/epk, https://…)"
+              className="h-8 min-w-0 flex-[1.3] rounded-lg bg-secondary px-2.5 text-[13.5px] outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            />
+            <button type="button" onClick={applyLink} className="h-8 rounded-lg bg-primary px-3 text-[13px] font-medium text-primary-foreground">
+              Insérer
+            </button>
+            <button type="button" onClick={() => setLinkOpen(false)} className="h-8 rounded-lg px-2 text-[13px] text-muted-foreground hover:text-foreground">
+              Annuler
+            </button>
+          </div>
+        )}
+        <div className="flex items-end gap-1.5 rounded-[22px] border bg-card py-1.5 pl-1.5 pr-3 focus-within:border-primary/60">
+          <button
+            type="button"
+            onClick={openLink}
+            title="Insérer un lien (⌘K)"
+            className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          >
+            <Link2 className="h-4 w-4" />
+          </button>
           <textarea
+            ref={area}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             onKeyDown={(e) => {
@@ -224,10 +311,27 @@ export function Conversation({
                 e.preventDefault();
                 submit();
               }
+              if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                e.stopPropagation();
+                openLink();
+              }
+            }}
+            onPaste={(e) => {
+              // Pasting a web address over selected text turns it into a link.
+              const el = e.currentTarget;
+              const pasted = e.clipboardData.getData('text').trim();
+              const href = normalizeHref(pasted);
+              if (el.selectionStart !== el.selectionEnd && href && !/\s/.test(pasted)) {
+                e.preventDefault();
+                const r = insertLink(body, el.selectionStart, el.selectionEnd, body.slice(el.selectionStart, el.selectionEnd), href);
+                setBody(r.value);
+                requestAnimationFrame(() => el.setSelectionRange(r.caret, r.caret));
+              }
             }}
             rows={Math.min(8, Math.max(1, body.split('\n').length))}
             placeholder={thread.length ? 'Répondre…' : 'Écrire un mail…'}
-            className="max-h-48 min-h-[28px] flex-1 resize-none bg-transparent py-1 text-[14.5px] outline-none placeholder:text-muted-foreground/70"
+            className="max-h-48 min-h-[28px] flex-1 resize-none bg-transparent py-1 text-[14.5px] outline-none placeholder:text-muted-foreground/70 focus-visible:outline-none"
           />
           <button
             type="button"
@@ -239,7 +343,21 @@ export function Conversation({
             {send.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowUp className="h-4 w-4" strokeWidth={2.5} />}
           </button>
         </div>
-        <p className="px-2 pb-1 pt-1 text-[11px] text-muted-foreground/70">Envoyé depuis booking@ avec ta signature, dans le même fil que le dernier mail · ⌘↩ pour envoyer</p>
+        <p className="px-2 pb-1 pt-1 text-[11px] text-muted-foreground/70">
+          {links.length ? (
+            <>
+              Lien{links.length > 1 ? 's' : ''} cliquable{links.length > 1 ? 's' : ''} :{' '}
+              {links.map((l, i) => (
+                <Fragment key={i}>
+                  {i > 0 && ', '}
+                  <span className="text-primary">{l.label}</span> → {prettyUrl(l.href)}
+                </Fragment>
+              ))}
+              {' · '}
+            </>
+          ) : null}
+          Envoyé depuis booking@ avec ta signature, dans le même fil · ⌘K lien · ⌘↩ envoyer
+        </p>
       </div>
     </div>
   );

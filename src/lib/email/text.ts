@@ -80,7 +80,7 @@ export function prettyUrl(href: string) {
 }
 
 // Where the label of an Apple Mail "label <url>" link starts, looking back.
-const LABEL_STARTS = ['(', ' - ', ' – ', ' | ', '• ', ' / '];
+const LABEL_STARTS = ['(', ' - ', ' – ', ' | ', '• ', ' / ', '. ', '! ', '? ', ': ', ', ', '; '];
 
 /**
  * Splits one line into text and links: "label <url>" (Apple Mail), bare URLs,
@@ -107,7 +107,7 @@ export function linkify(line: string): Token[] {
         if (i >= 0) cut = Math.max(cut, i + d.length);
       }
       const label = pending.slice(cut).trim();
-      if (label && label.length <= 60) {
+      if (label && label.length <= 45) {
         text(pending.slice(0, cut) + pending.slice(cut).match(/^\s*/)![0]);
         out.push({ t: 'link', href, label });
       } else {
