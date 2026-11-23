@@ -168,22 +168,6 @@ body {
   letter-spacing: -0.006em;
 }
 
-/* Wallpaper: soft colour fields behind the translucent materials. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: -20vmax;
-  z-index: -1;
-  pointer-events: none;
-  opacity: var(--wallpaper-a);
-  background:
-    radial-gradient(38vmax 30vmax at 18% 12%, hsl(211 100% 55%), transparent 70%),
-    radial-gradient(34vmax 28vmax at 82% 8%, hsl(280 70% 62%), transparent 70%),
-    radial-gradient(40vmax 32vmax at 70% 92%, hsl(189 75% 52%), transparent 70%),
-    radial-gradient(30vmax 26vmax at 8% 88%, hsl(330 80% 64%), transparent 70%);
-  filter: blur(60px) saturate(120%);
-}
-
 ::selection {
   background: hsl(var(--primary) / 0.28);
 }

@@ -43,7 +43,6 @@ export default function ToursPage() {
       <PageHeader
         icon={Route}
         title={<>Tournées <span className="text-sm font-normal text-muted-foreground">({tours?.length || 0})</span></>}
-        description="Itinéraires, logistique et budget de chaque tournée."
         actions={
         <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4" />

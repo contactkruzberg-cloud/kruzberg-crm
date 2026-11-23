@@ -1,91 +1,27 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { TodayStrip } from '@/components/dashboard/today-strip';
-import { KpiCards } from '@/components/dashboard/kpi-cards';
-import { RelanceAlerts } from '@/components/dashboard/relance-alerts';
-import { UpcomingConcerts } from '@/components/dashboard/upcoming-concerts';
-import { ActivityFeed } from '@/components/dashboard/activity-feed';
-import { VenueMap } from '@/components/dashboard/venue-map';
-import { WeeklySparklines } from '@/components/dashboard/weekly-sparklines';
-import { PendingTasks } from '@/components/dashboard/pending-tasks';
-import { NextTour } from '@/components/dashboard/next-tour';
-import { ApplicationDeadlines } from '@/components/dashboard/application-deadlines';
-import { CollapsibleSection } from '@/components/dashboard/collapsible-section';
+import { TodayList } from '@/components/dashboard/today';
+import { NextDates, PipelineGlance } from '@/components/dashboard/glance';
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 },
-  },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
-};
-
-// Today at a glance, then what to do now, then the overview (foldable).
+// Accueil : ce qu'il faut faire aujourd'hui, puis les prochaines dates et où
+// en est le booking. Le reste vit dans sa propre page.
 export default function DashboardPage() {
+  const date = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      <h1 className="sr-only">Dashboard</h1>
+    <div className="mx-auto max-w-6xl pt-2 md:pt-6">
+      <header>
+        <p className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">{date}</p>
+        <h1 className="font-display mt-0.5 text-[34px] font-bold leading-tight">Aujourd’hui</h1>
+      </header>
 
-      {/* Today at a glance */}
-      <motion.div variants={item}>
-        <TodayStrip />
-      </motion.div>
-
-      {/* To do now */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div variants={item}>
-          <RelanceAlerts />
-        </motion.div>
-        <motion.div variants={item} id="taches" className="scroll-mt-20">
-          <PendingTasks />
-        </motion.div>
+      <div className="mt-8 grid grid-cols-1 gap-x-16 gap-y-12 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <TodayList />
+        <div className="space-y-12">
+          <NextDates />
+          <PipelineGlance />
+        </div>
       </div>
-
-      {/* Festival / tremplin applications */}
-      <motion.div variants={item}>
-        <ApplicationDeadlines />
-      </motion.div>
-
-      {/* Pipeline overview */}
-      <motion.div variants={item}>
-        <CollapsibleSection id="kpis" title="Pipeline">
-          <KpiCards />
-        </CollapsibleSection>
-      </motion.div>
-
-      {/* Upcoming */}
-      <motion.div variants={item}>
-        <CollapsibleSection id="upcoming" title="Prochaines dates">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <UpcomingConcerts />
-            <NextTour />
-          </div>
-        </CollapsibleSection>
-      </motion.div>
-
-      <motion.div variants={item}>
-        <CollapsibleSection id="activity" title="Activité récente">
-          <ActivityFeed />
-        </CollapsibleSection>
-      </motion.div>
-
-      <motion.div variants={item}>
-        <CollapsibleSection id="map" title="Carte">
-          <VenueMap />
-        </CollapsibleSection>
-      </motion.div>
-
-      <motion.div variants={item}>
-        <CollapsibleSection id="trends" title="Tendances">
-          <WeeklySparklines />
-        </CollapsibleSection>
-      </motion.div>
-    </motion.div>
+    </div>
   );
 }

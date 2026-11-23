@@ -135,7 +135,7 @@ export default function AnalyticsPage() {
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      <PageHeader icon={BarChart3} title="Analytics" description="Comment avance la prospection : réponses, dates, lieux et régions." />
+      <PageHeader icon={BarChart3} title="Analytics" />
 
       {/* Top KPIs */}
       <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">

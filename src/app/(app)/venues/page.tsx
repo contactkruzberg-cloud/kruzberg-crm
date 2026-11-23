@@ -329,7 +329,6 @@ export default function VenuesPage() {
       <PageHeader
         icon={Building2}
         title="Lieux & Contacts"
-        description="Salles, bars, festivals et assos, avec les personnes à qui écrire."
         actions={
           <>
           <Button

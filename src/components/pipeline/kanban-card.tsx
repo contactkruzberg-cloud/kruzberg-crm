@@ -2,10 +2,9 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Badge } from '@/components/ui/badge';
-import { cn, getRelanceUrgency, daysUntil, formatRelativeDate, dealLabel } from '@/lib/utils';
+import { cn, getRelanceUrgency, daysUntil, dealLabel } from '@/lib/utils';
 import type { Deal } from '@/types/database';
-import { Check, Clock, MapPin, Star } from 'lucide-react';
+import { Check, Star } from 'lucide-react';
 import { DealQuickActions } from './deal-quick-actions';
 
 interface KanbanCardProps {
@@ -46,7 +45,7 @@ export function KanbanCard({ deal, onClick, isDragging, hint, selected, selectio
       {...listeners}
       onClick={selectionMode && onToggleSelect ? onToggleSelect : onClick}
       className={cn(
-        'group relative cursor-pointer rounded-[14px] border bg-card p-3 shadow-card transition-shadow duration-150 hover:shadow-pop',
+        'group relative cursor-pointer rounded-xl bg-card p-3 shadow-card transition-shadow duration-150 hover:shadow-pop',
         (isDragging || isSortDragging) && 'rotate-2 opacity-60 shadow-pop',
         urgency === 'overdue' && 'shadow-[inset_3px_0_0_0_hsl(var(--status-urgent)),var(--elev-card)]',
         urgency === 'urgent' && 'shadow-[inset_3px_0_0_0_hsl(var(--status-warning)),var(--elev-card)]',
@@ -85,8 +84,7 @@ export function KanbanCard({ deal, onClick, isDragging, hint, selected, selectio
       </div>
 
       {(deal.title?.trim() || deal.venue?.city) && (
-        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-          <MapPin className="h-3 w-3 shrink-0" />
+        <div className="mt-0.5 flex items-center gap-1 text-[12.5px] text-muted-foreground">
           <span className="truncate">
             {[deal.title?.trim() ? deal.venue?.name || deal.contact?.name : null, deal.venue?.city]
               .filter(Boolean)
@@ -101,32 +99,17 @@ export function KanbanCard({ deal, onClick, isDragging, hint, selected, selectio
         </p>
       )}
 
-      <div className={cn('flex flex-wrap items-center gap-1.5', deal.tags?.length && 'mt-2')}>
-        {deal.tags?.slice(0, 2).map((tag) => (
-          <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
-            {tag}
-          </Badge>
-        ))}
-      </div>
-
       {deal.next_relance_at && urgency && urgency !== 'ok' && (
         <div
           className={cn(
-            'flex items-center gap-1 mt-2 text-xs font-medium',
-            urgency === 'overdue' ? 'text-red-500' : 'text-orange-500'
+            'mt-1.5 flex items-center gap-1 text-[12px] font-medium',
+            urgency === 'overdue' ? 'text-[hsl(var(--status-urgent))]' : 'text-[hsl(var(--status-warning))]'
           )}
         >
-          <Clock className="h-3 w-3" />
           {urgency === 'overdue'
-            ? `${Math.abs(daysUntil(deal.next_relance_at))}j de retard`
-            : `Relance dans ${daysUntil(deal.next_relance_at)}j`}
+            ? `Relance en retard de ${Math.abs(daysUntil(deal.next_relance_at))} j`
+            : daysUntil(deal.next_relance_at) === 0 ? "Relance aujourd'hui" : `Relance dans ${daysUntil(deal.next_relance_at)} j`}
         </div>
-      )}
-
-      {deal.last_message_at && (
-        <p className="mt-1.5 text-[11px] text-muted-foreground">
-          Dernier contact · {formatRelativeDate(deal.last_message_at)}
-        </p>
       )}
 
       {/* Actions: always there on touch screens, on hover with a mouse. */}

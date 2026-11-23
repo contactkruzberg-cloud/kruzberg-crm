@@ -57,7 +57,7 @@ export function Header() {
       )}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <h1 className="font-display truncate text-[17px] font-semibold md:hidden">{pageTitle(pathname)}</h1>
+        {pathname !== '/' && <h1 className="font-display truncate text-[17px] font-semibold md:hidden">{pageTitle(pathname)}</h1>}
         <SaveIndicator />
       </div>
 

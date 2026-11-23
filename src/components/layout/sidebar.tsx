@@ -32,7 +32,7 @@ export const NAV_GROUPS: { title: string | null; items: { href: string; label: s
   {
     title: null,
     items: [
-      { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/', label: 'Aujourd’hui', icon: LayoutDashboard },
       { href: '/relances', label: 'Relances', icon: Send },
       { href: '/calendrier', label: 'Calendrier', icon: CalendarDays },
     ],

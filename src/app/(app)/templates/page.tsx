@@ -197,7 +197,6 @@ export default function TemplatesPage() {
       <PageHeader
         icon={FileText}
         title="Templates & Communications"
-        description="Tes modèles de mails et l’historique des mails envoyés depuis le CRM."
         actions={
           <>
         {pageTab === 'templates' && (

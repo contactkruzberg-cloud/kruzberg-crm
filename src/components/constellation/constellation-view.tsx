@@ -68,7 +68,6 @@ export function ConstellationView() {
       <PageHeader
         icon={Orbit}
         title="Constellation"
-        description="Les noms qui reviennent chez les groupes de notre niche post-punk : un tourneur, un label ou une salle qu’on retrouve chez plusieurs groupes, c’est une porte à ouvrir."
         actions={
           <>
           {running.length > 0 && (

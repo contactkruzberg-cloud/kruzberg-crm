@@ -33,7 +33,7 @@ import { usePipelineFilters } from '@/components/pipeline/pipeline-filters';
 import type { CreateIntent } from '@/stores/app-store';
 
 const PAGES = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Aujourd’hui (accueil)', href: '/', icon: LayoutDashboard },
   { name: 'File de relances', href: '/relances', icon: Send },
   { name: 'Calendrier (concerts, tournées, candidatures)', href: '/calendrier', icon: CalendarDays },
   { name: 'Radar (pistes de la veille)', href: '/radar', icon: Radar },

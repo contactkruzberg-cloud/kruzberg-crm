@@ -120,7 +120,6 @@ export default function PipelinePage() {
       <PageHeader
         icon={Kanban}
         title="Pipeline"
-        description="Toutes les opportunités, du premier contact à la date confirmée."
         actions={
           <>
           <Tabs value={view} onValueChange={(v) => setView(v as 'kanban' | 'table')}>

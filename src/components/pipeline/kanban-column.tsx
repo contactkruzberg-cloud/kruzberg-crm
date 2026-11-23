@@ -20,11 +20,11 @@ export function KanbanColumn({ stage, count, headerAction, children }: KanbanCol
     <div
       ref={setNodeRef}
       className={cn(
-        'flex w-[17rem] shrink-0 flex-col rounded-[18px] bg-secondary/60 transition-colors duration-150 lg:w-[18.5rem] dark:bg-white/[0.035]',
-        isOver && 'bg-primary/10 ring-2 ring-primary/40',
+        'flex w-[16.5rem] shrink-0 flex-col rounded-2xl transition-colors duration-150 lg:w-[17.5rem]',
+        isOver && 'bg-primary/[0.06]',
       )}
     >
-      <div className="flex items-center justify-between gap-2 px-3.5 pb-1.5 pt-3">
+      <div className="flex items-center justify-between gap-2 border-b px-1 pb-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
           <h3 className="truncate text-[13.5px] font-semibold">{stage.label}</h3>
@@ -32,12 +32,10 @@ export function KanbanColumn({ stage, count, headerAction, children }: KanbanCol
         </div>
         {headerAction}
       </div>
-      <div className="min-h-[120px] flex-1 space-y-2 p-2">
+      <div className="min-h-[120px] flex-1 space-y-2 py-2.5">
         {children}
         {count === 0 && (
-          <div className={cn('flex h-24 items-center justify-center rounded-xl border border-dashed text-xs text-muted-foreground/60', isOver && 'border-primary/50 text-primary')}>
-            Glisse une carte ici
-          </div>
+          <p className={cn('px-1 py-3 text-[13px] text-muted-foreground/60', isOver && 'text-primary')}>Aucune</p>
         )}
       </div>
     </div>
