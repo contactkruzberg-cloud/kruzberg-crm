@@ -20,12 +20,13 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Plus, Upload, Download, Search, SlidersHorizontal, X, ArrowUpDown, List, Map as MapIcon, FileDown } from 'lucide-react';
+import { Plus, Upload, Download, Search, SlidersHorizontal, X, ArrowUpDown, List, Map as MapIcon, FileDown, Building2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { exportAllData, downloadImportTemplate } from '@/utils/export-xlsx';
 import { departementFromPostal } from '@/lib/france-geo';
 import { cn } from '@/lib/utils';
 import type { VenueType } from '@/types/database';
+import { PageHeader } from '@/components/layout/page-header';
 
 const TYPE_OPTIONS: { key: VenueType | 'all'; label: string }[] = [
   { key: 'all', label: 'Tous' },
@@ -325,18 +326,12 @@ export default function VenuesPage() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold hidden md:block">Lieux & Contacts</h1>
-          <Tabs value={tab} onValueChange={setTab}>
-            <TabsList>
-              <TabsTrigger value="venues">Lieux ({filteredVenues.length}/{venues?.length || 0})</TabsTrigger>
-              <TabsTrigger value="contacts">Contacts ({filteredContacts.length}/{contacts?.length || 0})</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        <div className="flex gap-2">
+      <PageHeader
+        icon={Building2}
+        title="Lieux & Contacts"
+        description="Salles, bars, festivals et assos, avec les personnes à qui écrire."
+        actions={
+          <>
           <Button
             variant="outline"
             size="sm"
@@ -375,8 +370,15 @@ export default function VenuesPage() {
             <Plus className="h-4 w-4" />
             {tab === 'venues' ? 'Ajouter un lieu' : 'Ajouter un contact'}
           </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
+          <Tabs value={tab} onValueChange={setTab}>
+            <TabsList>
+              <TabsTrigger value="venues">Lieux ({filteredVenues.length}/{venues?.length || 0})</TabsTrigger>
+              <TabsTrigger value="contacts">Contacts ({filteredContacts.length}/{contacts?.length || 0})</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
       {/* Search + filter toggle */}
       <div className="flex gap-2 items-center flex-wrap">

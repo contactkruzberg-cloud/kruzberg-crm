@@ -74,8 +74,8 @@ export function RelanceAlerts() {
                   key={deal.id}
                   className={`flex items-center justify-between gap-2 p-3 rounded-lg border transition-all hover:shadow-md ${
                     urgency === 'overdue'
-                      ? 'border-red-500/30 bg-red-500/5 animate-pulse-urgent'
-                      : 'border-orange-500/30 bg-orange-500/5 animate-pulse-warning'
+                      ? 'border-red-500/30 bg-red-500/5'
+                      : 'border-orange-500/30 bg-orange-500/5'
                   }`}
                 >
                   <Link href={`/pipeline?deal=${deal.id}`} className="min-w-0 flex-1 group">

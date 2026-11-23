@@ -23,6 +23,7 @@ import {
 import { BarChart3, TrendingUp, Target, MapPin, Calendar, PieChart as PieIcon } from 'lucide-react';
 import { subWeeks, format, startOfWeek, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { PageHeader } from '@/components/layout/page-header';
 
 const STAGE_COLORS: Record<DealStage, string> = {
   a_contacter: '#3b82f6',
@@ -143,7 +144,7 @@ export default function AnalyticsPage() {
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      <h1 className="text-xl font-bold hidden md:block">Analytics</h1>
+      <PageHeader icon={BarChart3} title="Analytics" description="Comment avance la prospection : réponses, dates, lieux et régions." />
 
       {/* Top KPIs */}
       <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">

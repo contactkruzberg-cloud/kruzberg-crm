@@ -7,16 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { STAGES } from '@/types/database';
 import { cn } from '@/lib/utils';
 
-const BAR: Record<string, string> = {
-  a_contacter: 'bg-slate-400',
-  contacte: 'bg-blue-500',
-  relance: 'bg-orange-500',
-  repondu: 'bg-violet-500',
-  a_suivre: 'bg-amber-400',
-  confirme: 'bg-green-500',
-  termine: 'bg-emerald-700',
-  refuse: 'bg-red-500/70',
-};
+/** Same colours as the pipeline columns (globals.css --stage-*). */
+const stageBg = (color: string) => ({ backgroundColor: `hsl(var(--${color}))` });
 
 /** Le pipeline en une barre : combien d'opportunités à chaque étape, et les taux qui comptent. */
 export function KpiCards() {
@@ -57,13 +49,13 @@ export function KpiCards() {
           <div className="space-y-2">
             <div className="flex h-2.5 overflow-hidden rounded-full bg-muted">
               {STAGES.filter((s) => by[s.key]).map((s) => (
-                <div key={s.key} className={BAR[s.key]} style={{ width: `${(by[s.key] / total) * 100}%` }} title={`${s.label} : ${by[s.key]}`} />
+                <div key={s.key} style={{ ...stageBg(s.color), width: `${(by[s.key] / total) * 100}%` }} title={`${s.label} : ${by[s.key]}`} />
               ))}
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1">
               {STAGES.map((s) => (
                 <Link key={s.key} href="/pipeline" className={cn('flex items-center gap-1.5 text-xs hover:text-foreground', by[s.key] ? 'text-muted-foreground' : 'text-muted-foreground/50')}>
-                  <span className={cn('h-2 w-2 rounded-full', BAR[s.key])} />
+                  <span className="h-2 w-2 rounded-full" style={stageBg(s.color)} />
                   {s.label} <span className="tabular-nums font-medium text-foreground">{by[s.key]}</span>
                 </Link>
               ))}

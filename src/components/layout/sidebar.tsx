@@ -26,16 +26,32 @@ import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SettingsDialog } from '@/components/layout/settings-dialog';
 
-export const NAV_ITEMS = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/relances', label: 'Relances', icon: Send },
-  { href: '/radar', label: 'Radar', icon: Radar },
-  { href: '/pipeline', label: 'Pipeline', icon: Kanban },
-  { href: '/tours', label: 'Tournées', icon: Route },
-  { href: '/venues', label: 'Lieux & Contacts', icon: Building2 },
-  { href: '/templates', label: 'Templates', icon: Mail },
-  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+export const NAV_GROUPS: { title: string | null; items: { href: string; label: string; icon: typeof LayoutDashboard }[] }[] = [
+  {
+    title: null,
+    items: [
+      { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/relances', label: 'Relances', icon: Send },
+    ],
+  },
+  { title: 'Prospection', items: [{ href: '/radar', label: 'Radar', icon: Radar }] },
+  {
+    title: 'Suivi',
+    items: [
+      { href: '/pipeline', label: 'Pipeline', icon: Kanban },
+      { href: '/venues', label: 'Lieux & Contacts', icon: Building2 },
+    ],
+  },
+  { title: 'Concerts', items: [{ href: '/tours', label: 'Tournées', icon: Route }] },
+  {
+    title: 'Outils',
+    items: [
+      { href: '/templates', label: 'Templates', icon: Mail },
+      { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+    ],
+  },
 ];
+export const NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -102,8 +118,16 @@ export function Sidebar() {
         <Separator />
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-          {NAV_ITEMS.map((item) => {
+        <nav className="flex-1 overflow-y-auto py-3 px-2">
+          {NAV_GROUPS.map((group, gi) => (
+            <div key={group.title ?? gi} className={cn('space-y-1', gi > 0 && 'mt-4')}>
+              {group.title &&
+                (expanded ? (
+                  <p className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">{group.title}</p>
+                ) : (
+                  <Separator className="mx-auto mb-2 w-8" />
+                ))}
+          {group.items.map((item) => {
             const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
             const Icon = item.icon;
 
@@ -133,6 +157,8 @@ export function Sidebar() {
             }
             return link;
           })}
+            </div>
+          ))}
         </nav>
 
         <Separator />

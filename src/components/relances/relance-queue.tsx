@@ -12,6 +12,7 @@ import { freshDraft, RelanceBasis, RelanceEditor } from '@/components/pipeline/r
 import { cn, daysUntil, dealLabel, formatDate } from '@/lib/utils';
 import type { RelanceDoc } from '@/lib/relance/prompt';
 import type { Deal } from '@/types/database';
+import { PageHeader } from '@/components/layout/page-header';
 
 type Status = 'ready' | 'writing' | 'error' | 'todo';
 
@@ -86,27 +87,30 @@ export function RelanceQueue() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-xl font-bold">
-            <Send className="h-5 w-5 text-primary" /> File de relances
-          </h1>
-          <p className="text-sm text-muted-foreground">
+      <PageHeader
+        icon={Send}
+        title="File de relances"
+        description={
+          <>
             {queue.length
               ? `${queue.length} relance${queue.length > 1 ? 's' : ''} due${queue.length > 1 ? 's' : ''}` +
                 (counts.ready ? ` · ${counts.ready} prête${counts.ready > 1 ? 's' : ''}` : '') +
                 (counts.writing ? ` · ${counts.writing} en rédaction` : '')
               : 'Rien à relancer aujourd’hui.'}
             {soon > 0 && ` · ${soon} autre${soon > 1 ? 's' : ''} dans les 3 jours`}
-          </p>
-        </div>
+          </>
+        }
+        actions={
+          <>
         {toPrepare.length > 0 && (
           <Button onClick={prepareAll} disabled={requestAll.isPending} className="gap-1.5">
             {requestAll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             Préparer {toPrepare.length === queue.length ? 'toutes les relances' : `les ${toPrepare.length} restantes`} ({toPrepare.length})
           </Button>
         )}
-      </div>
+          </>
+        }
+      />
 
       {!queue.length ? (
         <div className="rounded-xl border border-dashed py-16 text-center">

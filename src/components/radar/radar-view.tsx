@@ -57,6 +57,7 @@ import { VeilleDialog } from './veille-dialog';
 import { ChanceBadge, Kbd, Tag } from './radar-ui';
 import { NAV_ITEMS, RadarNav, RadarNavMobile } from './radar-nav';
 import { useRadarActions } from './use-radar-actions';
+import { PageHeader } from '@/components/layout/page-header';
 
 const PAGE = 80;
 
@@ -453,13 +454,11 @@ export function RadarView() {
 
   return (
     <div className={cn('space-y-5', picked.size > 0 && 'pb-24')}>
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="hidden md:flex items-center gap-2 text-xl font-bold">
-            <Radar className="h-5 w-5 text-primary" /> Booking Radar
-          </h1>
-          <p className="text-sm text-muted-foreground">
+      <PageHeader
+        icon={Radar}
+        title="Booking Radar"
+        description={
+          <>
             {meta.date ? (
               <>
                 Dernière veille : <span className="text-foreground">{fmtDate(meta.date)}</span>
@@ -469,9 +468,10 @@ export function RadarView() {
             ) : (
               'Aucune veille encore enregistrée.'
             )}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+          </>
+        }
+        actions={
+          <>
           <Button
             variant="outline"
             onClick={() => launchVeille.mutate(searchScope)}
@@ -527,8 +527,9 @@ export function RadarView() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      </div>
+          </>
+        }
+      />
       {meta.summary && <p className="-mt-3 text-xs text-muted-foreground line-clamp-2">{meta.summary}</p>}
 
       <RadarNavMobile tab={tab} counts={tabCounts} fresh={freshCounts} onSelect={selectTab} />

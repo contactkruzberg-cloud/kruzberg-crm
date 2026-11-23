@@ -10,6 +10,7 @@ import { CreateTourDialog } from '@/components/tours/create-tour-dialog';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Route } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 
 export default function ToursPage() {
   const { data: tours, isLoading } = useTours();
@@ -39,17 +40,17 @@ export default function ToursPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2">
-          <Route className="h-5 w-5 text-primary" />
-          <h1 className="text-xl font-bold hidden md:block">Tournées</h1>
-          <span className="text-sm text-muted-foreground">({tours?.length || 0})</span>
-        </div>
+      <PageHeader
+        icon={Route}
+        title={<>Tournées <span className="text-sm font-normal text-muted-foreground">({tours?.length || 0})</span></>}
+        description="Itinéraires, logistique et budget de chaque tournée."
+        actions={
         <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4" />
           Nouvelle tournée
         </Button>
-      </div>
+        }
+      />
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -14,6 +14,7 @@ import { Patterns } from './patterns';
 import { Ranking } from './ranking';
 import { cn } from './ui';
 import { useConstellation, type Routine } from './use-constellation';
+import { PageHeader } from '@/components/layout/page-header';
 
 type Tab = 'ranking' | 'links' | 'graph' | 'patterns' | 'bands';
 
@@ -64,17 +65,12 @@ export function ConstellationView() {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase">
-            <Orbit className="size-3.5 text-primary" /> KRUZBERG · Réseau
-          </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight">Constellation</h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Les noms qui reviennent chez les groupes de notre niche post-punk : un tourneur, un label ou une salle qu’on retrouve chez plusieurs groupes, c’est une porte à ouvrir.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      <PageHeader
+        icon={Orbit}
+        title="Constellation"
+        description="Les noms qui reviennent chez les groupes de notre niche post-punk : un tourneur, un label ou une salle qu’on retrouve chez plusieurs groupes, c’est une porte à ouvrir."
+        actions={
+          <>
           {running.length > 0 && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               <Loader2 className="size-3.5 animate-spin" /> {running.length} recherche{running.length > 1 ? 's' : ''} en cours
@@ -83,8 +79,9 @@ export function ConstellationView() {
           )}
           <ImportButton onDone={() => void reload()} />
           {data && <JobsMenu jobs={data.jobs} onCancel={(id) => act({ type: 'cancelJob', id })} />}
-        </div>
-      </header>
+          </>
+        }
+      />
 
       {stats && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

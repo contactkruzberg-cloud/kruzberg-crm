@@ -20,6 +20,7 @@ import { resolveTemplate, formatDate } from '@/lib/utils';
 import { Plus, Copy, Trash2, Mail, Clock, FileText, Eye, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { useActivities } from '@/hooks/use-activities';
+import { PageHeader } from '@/components/layout/page-header';
 
 const SAMPLE_VARIABLES: Record<string, string> = {
   nom_contact: 'Marie',
@@ -193,9 +194,21 @@ export default function TemplatesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold hidden md:block">Templates & Communications</h1>
+      <PageHeader
+        icon={FileText}
+        title="Templates & Communications"
+        description="Tes modèles de mails et l’historique des mails envoyés depuis le CRM."
+        actions={
+          <>
+        {pageTab === 'templates' && (
+          <Button size="sm" className="gap-2" onClick={handleCreate}>
+            <Plus className="h-4 w-4" />
+            Nouveau template
+          </Button>
+        )}
+          </>
+        }
+      />
           <Tabs value={pageTab} onValueChange={(v) => setPageTab(v as 'templates' | 'history')}>
             <TabsList>
               <TabsTrigger value="templates" className="gap-2">
@@ -208,14 +221,6 @@ export default function TemplatesPage() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-        </div>
-        {pageTab === 'templates' && (
-          <Button size="sm" className="gap-2" onClick={handleCreate}>
-            <Plus className="h-4 w-4" />
-            Nouveau template
-          </Button>
-        )}
-      </div>
 
       {pageTab === 'history' && (
         <div className="space-y-2">

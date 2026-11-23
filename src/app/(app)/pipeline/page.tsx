@@ -20,6 +20,7 @@ import { Plus, Kanban, Table2, Search, X, Building2, User } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { usePersistentState } from '@/lib/persistent-state';
 import { applyPipelineFilters, PipelineFilters, usePipelineFilters } from '@/components/pipeline/pipeline-filters';
+import { PageHeader } from '@/components/layout/page-header';
 
 export default function PipelinePage() {
   const { data: deals, isLoading } = useDeals();
@@ -116,10 +117,12 @@ export default function PipelinePage() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold hidden md:block">Pipeline</h1>
+      <PageHeader
+        icon={Kanban}
+        title="Pipeline"
+        description="Toutes les opportunités, du premier contact à la date confirmée."
+        actions={
+          <>
           <Tabs value={view} onValueChange={(v) => setView(v as 'kanban' | 'table')}>
             <TabsList>
               <TabsTrigger value="kanban" className="gap-2">
@@ -132,12 +135,13 @@ export default function PipelinePage() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-        </div>
         <Button size="sm" className="gap-2" onClick={() => openCreate()}>
           <Plus className="h-4 w-4" />
           Nouvelle opportunité
         </Button>
-      </div>
+          </>
+        }
+      />
 
       {/* Search: "have I already created an opportunity for this?" */}
       <div className="space-y-2">
