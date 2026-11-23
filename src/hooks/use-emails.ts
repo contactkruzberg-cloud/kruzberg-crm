@@ -64,11 +64,20 @@ async function syncOnce(): Promise<SyncResponse> {
   return body;
 }
 
+// One sync at a time in this tab, whoever starts it (auto-sync, ⟳ button, Messages page).
+let running: Promise<unknown> | null = null;
+
 /** Sync until the mailbox is caught up (a first sync of years of mail takes several rounds). */
 export function useSyncEmails() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ quiet }: { quiet?: boolean } = {}) => {
+      if (running) {
+        await running;
+        return { inserted: 0, newReplies: 0, quiet: true };
+      }
+      let release!: () => void;
+      running = new Promise<void>((r) => (release = r));
       let inserted = 0;
       let newReplies = 0;
       const id = quiet ? undefined : toast.loading('Synchronisation des mails…');
@@ -83,6 +92,8 @@ export function useSyncEmails() {
         }
       } finally {
         if (id) toast.dismiss(id);
+        running = null;
+        release();
       }
       return { inserted, newReplies, quiet };
     },
