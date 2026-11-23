@@ -46,11 +46,11 @@ export function KanbanCard({ deal, onClick, isDragging, hint, selected, selectio
       {...listeners}
       onClick={selectionMode && onToggleSelect ? onToggleSelect : onClick}
       className={cn(
-        'group relative rounded-lg border bg-card p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/30',
-        (isDragging || isSortDragging) && 'opacity-50 rotate-2 shadow-xl',
-        urgency === 'overdue' && 'border-red-500/40',
-        urgency === 'urgent' && 'border-orange-500/30',
-        selected && 'border-primary ring-1 ring-primary bg-primary/5'
+        'group relative cursor-pointer rounded-xl border bg-card p-3 shadow-card transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-px hover:border-foreground/15 hover:shadow-pop',
+        (isDragging || isSortDragging) && 'rotate-2 opacity-60 shadow-pop',
+        urgency === 'overdue' && 'border-l-2 border-l-red-500',
+        urgency === 'urgent' && 'border-l-2 border-l-orange-500',
+        selected && 'border-primary bg-primary/5 ring-1 ring-primary'
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -76,7 +76,7 @@ export function KanbanCard({ deal, onClick, isDragging, hint, selected, selectio
             {selected && <Check className="h-3 w-3" strokeWidth={3} />}
           </span>
         )}
-        <h4 className="text-sm font-medium truncate flex-1">
+        <h4 className="flex-1 truncate text-[13.5px] font-semibold leading-snug">
           {dealLabel(deal, 'Sans lieu')}
         </h4>
         {deal.priority === 'high' && (
@@ -101,7 +101,7 @@ export function KanbanCard({ deal, onClick, isDragging, hint, selected, selectio
         </p>
       )}
 
-      <div className="flex items-center gap-2 mt-2 flex-wrap">
+      <div className={cn('flex flex-wrap items-center gap-1.5', deal.tags?.length && 'mt-2')}>
         {deal.tags?.slice(0, 2).map((tag) => (
           <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
             {tag}
@@ -124,12 +124,16 @@ export function KanbanCard({ deal, onClick, isDragging, hint, selected, selectio
       )}
 
       {deal.last_message_at && (
-        <p className="text-[10px] text-muted-foreground mt-1.5">
-          Dernier contact : {formatRelativeDate(deal.last_message_at)}
+        <p className="mt-1.5 text-[11px] text-muted-foreground">
+          Dernier contact · {formatRelativeDate(deal.last_message_at)}
         </p>
       )}
 
-      <DealQuickActions deal={deal} className="mt-2" />
+      {/* Actions: always there on touch screens, on hover with a mouse. */}
+      <DealQuickActions
+        deal={deal}
+        className="mt-2 border-t pt-2 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100"
+      />
     </div>
   );
 }

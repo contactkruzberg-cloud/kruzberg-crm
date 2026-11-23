@@ -1,7 +1,6 @@
 'use client';
 
 import { useDroppable } from '@dnd-kit/core';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { DealStage } from '@/types/database';
 
@@ -15,30 +14,32 @@ interface KanbanColumnProps {
 
 export function KanbanColumn({ stage, count, headerAction, children }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key });
+  const color = `hsl(var(--${stage.color}))`;
 
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        'flex-shrink-0 w-64 lg:w-72 rounded-xl border bg-card/50 p-3 transition-all duration-200',
-        isOver && 'border-primary/50 bg-primary/5 shadow-lg'
+        'flex w-[17rem] shrink-0 flex-col rounded-2xl border bg-muted/30 transition-colors duration-150 lg:w-[18.5rem]',
+        isOver && 'border-primary/50 bg-primary/5',
       )}
     >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className={cn('w-2 h-2 rounded-full', `bg-current`)} style={{
-            color: `hsl(var(--${stage.color.replace('stage-', 'stage-')}))`
-          }} />
-          <h3 className="text-sm font-medium">{stage.label}</h3>
+      <div className="flex items-center justify-between gap-2 rounded-t-2xl border-b bg-card/80 px-3 py-2.5 backdrop-blur" style={{ boxShadow: `inset 0 2px 0 0 ${color}` }}>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+          <h3 className="truncate text-sm font-semibold">{stage.label}</h3>
+          <span className="nums rounded-md bg-muted px-1.5 text-xs font-medium text-muted-foreground">{count}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          {headerAction}
-          <Badge variant="secondary" className="text-xs">
-            {count}
-          </Badge>
-        </div>
+        {headerAction}
       </div>
-      <div className="space-y-2 min-h-[100px]">{children}</div>
+      <div className="min-h-[120px] flex-1 space-y-2 p-2">
+        {children}
+        {count === 0 && (
+          <div className={cn('flex h-24 items-center justify-center rounded-xl border border-dashed text-xs text-muted-foreground/70', isOver && 'border-primary/50 text-primary')}>
+            Glisse une carte ici
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -9,11 +9,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <main
       className={cn(
-        'min-h-[calc(100vh-3.5rem)] transition-all duration-300 pt-14',
+        'min-h-[calc(100vh-3.5rem)] pb-20 transition-[margin] duration-300 md:pb-0',
         sidebarOpen ? 'md:ml-60' : 'md:ml-16'
       )}
     >
-      <div className="p-3 sm:p-4 lg:p-6">{children}</div>
+      <div className="mx-auto w-full max-w-[1680px] p-3 sm:p-4 lg:px-8 lg:py-6">{children}</div>
     </main>
   );
 }

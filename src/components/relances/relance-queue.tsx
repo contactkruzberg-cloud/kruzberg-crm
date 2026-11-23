@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { AlarmClock, ArrowRight, CheckCircle2, ExternalLink, Loader2, Send, SkipForward, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { canQuickRelance, useDeals, useSnoozeRelance } from '@/hooks/use-deals';
 import { useRelanceDocs, useRequestRelance, useRequestRelances } from '@/hooks/use-relance';
 import { freshDraft, RelanceBasis, RelanceEditor } from '@/components/pipeline/relance-dialog';
@@ -113,16 +114,16 @@ export function RelanceQueue() {
       />
 
       {!queue.length ? (
-        <div className="rounded-xl border border-dashed py-16 text-center">
-          <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-green-500" />
-          <p className="font-medium">Toutes les relances sont à jour.</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {soon ? `Prochaines dans les 3 jours : ${soon}.` : 'Rien de prévu dans les 3 prochains jours.'}{' '}
-            <Link href="/pipeline" className="text-primary hover:underline">
-              Voir le pipeline
-            </Link>
-          </p>
-        </div>
+        <EmptyState
+          icon={CheckCircle2}
+          title="Toutes les relances sont à jour"
+          hint={soon ? `${soon} relance${soon > 1 ? 's' : ''} prévue${soon > 1 ? 's' : ''} dans les 3 prochains jours.` : 'Rien de prévu dans les 3 prochains jours.'}
+          action={
+            <Button asChild variant="outline" size="sm">
+              <Link href="/pipeline">Voir le pipeline</Link>
+            </Button>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
           {/* Queue */}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { PageHeader } from '@/components/layout/page-header';
 import { useDeals } from '@/hooks/use-deals';
 import { useAllTourStops } from '@/hooks/use-tour-stops';
@@ -171,7 +172,7 @@ export function CalendarView() {
 
           {/* Agenda list (mobile, and a recap under the grid) */}
           <div className="space-y-2 md:hidden">
-            {!monthEvents.length && <p className="rounded-xl border border-dashed py-10 text-center text-sm text-muted-foreground">Rien ce mois-ci.</p>}
+            {!monthEvents.length && <EmptyState compact icon={CalendarDays} title="Rien ce mois-ci" hint="Passe au mois suivant avec les flèches." />}
             {monthEvents.map((e) => (
               <Link key={e.id} href={e.href} className={cn('flex items-center gap-3 rounded-lg border bg-card p-3', e.date < today && 'opacity-60')}>
                 <div className="w-10 shrink-0 text-center">

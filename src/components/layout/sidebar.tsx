@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SettingsDialog } from '@/components/layout/settings-dialog';
+import { useNavBadges } from './use-nav-badges';
 
 export const NAV_GROUPS: { title: string | null; items: { href: string; label: string; icon: typeof LayoutDashboard }[] }[] = [
   {
@@ -61,6 +62,7 @@ export function Sidebar() {
   const { sidebarOpen, toggleSidebar, theme, setTheme, mobileNavOpen, setMobileNavOpen, settingsOpen, setSettingsOpen } =
     useAppStore();
   const supabase = createClient();
+  const badges = useNavBadges();
   // Labels: desktop when expanded; always in the mobile drawer.
   const expanded = sidebarOpen || mobileNavOpen;
   const closeMobile = () => setMobileNavOpen(false);
@@ -78,7 +80,7 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          'fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r glass transition-all duration-300 md:z-40',
+          'fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r bg-card/95 backdrop-blur-xl transition-[width,transform] duration-300 md:z-40 md:bg-card/60',
           mobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
           sidebarOpen ? 'md:w-60' : 'md:w-16',
         )}
@@ -93,11 +95,13 @@ export function Sidebar() {
                 setSettingsOpen(true);
               }}
               title="Réglages et compte"
-              className="flex items-center gap-2 group rounded-md -mx-1 px-1 hover:bg-accent transition-colors"
+              className="group -mx-1 flex items-center gap-2.5 rounded-lg px-1 py-1 transition-colors hover:bg-accent"
             >
-              <Zap className="h-5 w-5 text-primary transition-transform group-hover:rotate-12" />
-              <span className="text-lg font-bold tracking-tighter">
-                <span className="text-primary">KRUZ</span>BERG
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[0_0_18px_-4px_hsl(var(--primary)/0.7)]">
+                <Zap className="h-4 w-4 transition-transform group-hover:rotate-12" />
+              </span>
+              <span className="font-display text-[17px] font-bold tracking-tight">
+                KRUZ<span className="text-primary">BERG</span>
               </span>
             </button>
           )}
@@ -117,15 +121,13 @@ export function Sidebar() {
 
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
-        <Separator />
-
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2">
+        <nav className="flex-1 overflow-y-auto px-3 py-3">
           {NAV_GROUPS.map((group, gi) => (
-            <div key={group.title ?? gi} className={cn('space-y-1', gi > 0 && 'mt-4')}>
+            <div key={group.title ?? gi} className={cn('space-y-0.5', gi > 0 && 'mt-5')}>
               {group.title &&
                 (expanded ? (
-                  <p className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">{group.title}</p>
+                  <p className="px-3 pb-1 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">{group.title}</p>
                 ) : (
                   <Separator className="mx-auto mb-2 w-8" />
                 ))}
@@ -133,19 +135,28 @@ export function Sidebar() {
             const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
             const Icon = item.icon;
 
+            const badge = badges[item.href] ?? 0;
             const link = (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={closeMobile}
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
-                  isActive ? 'bg-primary/10 text-primary shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-                  !expanded && 'justify-center px-0',
+                  'relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150',
+                  isActive ? 'bg-primary/10 text-foreground' : 'text-muted-foreground hover:bg-accent/70 hover:text-foreground',
+                  !expanded && 'justify-center px-0 py-2.5',
                 )}
               >
-                <Icon className={cn('h-4.5 w-4.5 shrink-0', isActive && 'text-primary')} />
-                {expanded && <span>{item.label}</span>}
+                {isActive && <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-x-2 -translate-y-1/2 rounded-r-full bg-primary" aria-hidden />}
+                <Icon className={cn('h-[18px] w-[18px] shrink-0', isActive && 'text-primary')} />
+                {expanded && <span className="flex-1 truncate">{item.label}</span>}
+                {badge > 0 &&
+                  (expanded ? (
+                    <span className="nums rounded-full bg-red-500/15 px-1.5 text-[11px] font-semibold text-red-500">{badge}</span>
+                  ) : (
+                    <span className="absolute right-2 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-card" aria-label={`${badge}`} />
+                  ))}
               </Link>
             );
 
@@ -163,16 +174,14 @@ export function Sidebar() {
           ))}
         </nav>
 
-        <Separator />
-
         {/* Footer */}
-        <div className="p-2 space-y-1">
+        <div className={cn('border-t p-2', expanded ? 'flex items-center gap-1' : 'space-y-1')}>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
-                size={expanded ? 'default' : 'icon'}
-                className={cn('w-full', expanded ? 'justify-start gap-3' : '')}
+                size={expanded ? 'sm' : 'icon'}
+                className={cn('text-muted-foreground', expanded ? 'flex-1 justify-start gap-2.5' : 'w-full')}
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               >
                 {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -181,20 +190,19 @@ export function Sidebar() {
             </TooltipTrigger>
             {!expanded && <TooltipContent side="right">Thème</TooltipContent>}
           </Tooltip>
-
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
-                size={expanded ? 'default' : 'icon'}
-                className={cn('w-full text-muted-foreground hover:text-destructive', expanded ? 'justify-start gap-3' : '')}
+                size="icon"
+                className={cn('text-muted-foreground hover:text-destructive', !expanded && 'w-full')}
                 onClick={handleLogout}
+                aria-label="Déconnexion"
               >
                 <LogOut className="h-4 w-4" />
-                {expanded && 'Déconnexion'}
               </Button>
             </TooltipTrigger>
-            {!expanded && <TooltipContent side="right">Déconnexion</TooltipContent>}
+            <TooltipContent side={expanded ? 'top' : 'right'}>Déconnexion</TooltipContent>
           </Tooltip>
         </div>
       </aside>

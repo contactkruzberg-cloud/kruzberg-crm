@@ -42,7 +42,7 @@ function Tile({
         <Icon className="h-3.5 w-3.5" />
         {label}
       </div>
-      <div className="mt-1 truncate text-2xl font-bold tabular-nums text-foreground">{value}</div>
+      <div className="font-display mt-1 truncate text-[26px] font-semibold leading-tight tabular-nums text-foreground">{value}</div>
       <div className="truncate text-xs text-muted-foreground">{sub}</div>
     </>
   );

@@ -136,11 +136,6 @@ export function KanbanBoard({ deals, onDealClick, hints, hideEmptyColumns, selec
                   />
                 ))}
               </SortableContext>
-              {stageDeals.length === 0 && (
-                <div className="text-center py-8 text-xs text-muted-foreground">
-                  Déposez ici
-                </div>
-              )}
             </KanbanColumn>
           );
         })}

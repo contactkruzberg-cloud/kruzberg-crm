@@ -8,7 +8,7 @@ import { useSavedAt } from '@/lib/save-status';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, Command, RefreshCw, Menu, Plus, Check, Loader2, Kanban, Building2, User, ListTodo, Route } from 'lucide-react';
+import { Search, Command, RefreshCw, Zap, Plus, Check, Loader2, Kanban, Building2, User, ListTodo, Route } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NAV_ITEMS } from './sidebar';
 
@@ -46,21 +46,21 @@ function SaveIndicator() {
 
 export function Header() {
   const pathname = usePathname();
-  const { sidebarOpen, setCommandPaletteOpen, setMobileNavOpen, openCreate } = useAppStore();
+  const { sidebarOpen, setCommandPaletteOpen, openCreate } = useAppStore();
   const syncEmails = useSyncEmails();
 
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b glass px-3 sm:px-4 lg:px-6 transition-all duration-300',
+        'sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b bg-background/75 px-3 backdrop-blur-xl transition-[margin] duration-300 sm:px-4 lg:px-8',
         sidebarOpen ? 'md:ml-60' : 'md:ml-16',
       )}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 shrink-0" onClick={() => setMobileNavOpen(true)} title="Menu">
-          <Menu className="h-5 w-5" />
-        </Button>
-        <h1 className="text-sm font-semibold truncate md:hidden">{pageTitle(pathname)}</h1>
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground md:hidden">
+          <Zap className="h-4 w-4" />
+        </span>
+        <h1 className="font-display truncate text-base font-semibold md:hidden">{pageTitle(pathname)}</h1>
         <SaveIndicator />
       </div>
 

@@ -39,7 +39,7 @@ export function KpiCards() {
           {rates.map((r) => (
             <div key={r.label}>
               <p className="text-xs text-muted-foreground">{r.label}</p>
-              <p className="text-2xl font-bold tabular-nums">{r.value}</p>
+              <p className="font-display text-2xl font-semibold tabular-nums">{r.value}</p>
               <p className="text-[11px] text-muted-foreground">{r.hint}</p>
             </div>
           ))}
