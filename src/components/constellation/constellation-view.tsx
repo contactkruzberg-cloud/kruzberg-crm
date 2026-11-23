@@ -83,7 +83,7 @@ export function ConstellationView() {
       />
 
       {stats && (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-4 border-y py-4 md:grid-cols-4">
           <Stat label="Groupes explorés" value={`${stats.explored} / ${stats.active}`} />
           <Stat label="Acteurs relevés" value={stats.actors} />
           <Stat label="Signaux (≥ 2 groupes)" value={stats.signals} accent />
@@ -138,9 +138,9 @@ export function ConstellationView() {
 
 function Stat({ label, value, accent }: { label: string; value: React.ReactNode; accent?: boolean }) {
   return (
-    <div className="rounded-xl border border-border bg-card px-4 py-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={cn('mt-0.5 text-xl font-semibold tabular-nums', accent && 'text-primary')}>{value}</div>
+    <div className="py-1">
+      <div className={cn('font-display nums text-[26px] font-semibold leading-none', accent && 'text-primary')}>{value}</div>
+      <div className="mt-1.5 text-[13px] text-muted-foreground">{label}</div>
     </div>
   );
 }

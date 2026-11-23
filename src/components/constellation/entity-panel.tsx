@@ -92,7 +92,7 @@ export function EntityPanel({
   const byBand = e.bandIds.map((id) => ({ id, fs: e.findings.filter((f) => f.bandId === id).sort((a, b) => (b.when ?? '').localeCompare(a.when ?? '')) }));
 
   return (
-    <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[460px] flex-col border-l border-border bg-card shadow-2xl">
+    <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[460px] flex-col border-l material-thick shadow-pop">
       <div className="flex items-start justify-between gap-3 border-b border-border p-5">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -126,7 +126,7 @@ export function EntityPanel({
       </div>
 
       <div className="flex-1 space-y-5 overflow-y-auto p-5">
-        <div className={cn('rounded-lg border p-3 text-sm', e.bandIds.length >= 2 ? 'border-primary/40 bg-primary/5' : 'border-border')}>
+        <div className={cn('rounded-xl p-3 text-sm', e.bandIds.length >= 2 ? 'bg-primary/[0.07]' : 'bg-secondary')}>
           {e.bandIds.length >= 2 ? (
             <>
               <strong className="text-primary">Signal.</strong> Vu chez {e.bandIds.length} groupes de la niche
@@ -144,7 +144,7 @@ export function EntityPanel({
         {sentence && (
           <section>
             <h3 className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Phrase de personnalisation</h3>
-            <div className="rounded-lg border border-border bg-background p-3 text-sm leading-relaxed">
+            <div className="rounded-xl bg-secondary p-3 text-sm leading-relaxed">
               {sentence}
               <div className="mt-2 flex justify-end">
                 <Button
@@ -166,7 +166,7 @@ export function EntityPanel({
         <EntityLinks entity={e} links={links.get(e.key) ?? []} data={data} onEntity={onEntity} onBand={onBand} />
 
         {(e.kind === 'tourneur' || e.kind === 'label') && (
-          <section className="rounded-lg border border-border p-3">
+          <section className="rounded-xl bg-secondary p-3">
             <h3 className="text-sm font-semibold">Catalogue</h3>
             <p className="mb-2 text-xs text-muted-foreground">
               Chercher dans le roster de {e.name} les groupes de notre niche : ils arrivent en suggestions dans « Groupes de départ ».
@@ -184,7 +184,7 @@ export function EntityPanel({
             <h3 className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Preuves, groupe par groupe</h3>
             <div className="space-y-3">
               {byBand.map(({ id, fs }) => (
-                <div key={id} className="rounded-lg border border-border">
+                <div key={id} className="rounded-xl bg-secondary">
                   <button onClick={() => onBand(id)} className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium hover:bg-accent/50">
                     <span className={cn(bands.get(id)?.scene === 'lyon' && 'text-primary')}>{name(id)}</span>
                     <span className="text-xs text-muted-foreground">{bands.get(id)?.city}</span>
@@ -301,7 +301,7 @@ function EntityLinks({
         {groups.map(({ kind, rows }) => {
           const more = open.has(kind);
           return (
-            <div key={kind} className="rounded-lg border border-border">
+            <div key={kind} className="rounded-xl bg-secondary">
               <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
                 <span className="text-sm font-medium">{relationTitle(e.kind, kind)}</span>
                 <KindBadge kind={kind} />

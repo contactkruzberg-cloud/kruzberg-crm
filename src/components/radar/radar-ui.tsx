@@ -8,10 +8,10 @@ import type { Lead } from '@/lib/radar/types';
 // Small shared pieces of the radar UI.
 
 export const TIER_STYLE: Record<Tier, string> = {
-  hi: 'bg-green-500/15 text-green-600 dark:text-green-400 border-green-500/30',
-  mid: 'bg-primary/15 text-primary border-primary/30',
-  lo: 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30',
-  vlo: 'bg-muted text-muted-foreground border-border',
+  hi: 'text-[hsl(var(--status-success))]',
+  mid: 'text-primary',
+  lo: 'text-[hsl(var(--status-warning))]',
+  vlo: 'text-muted-foreground',
 };
 export const TIER_BAR: Record<Tier, string> = {
   hi: 'bg-green-500',
@@ -26,7 +26,7 @@ export function ChanceBadge({ lead, className }: { lead: Lead; className?: strin
   return (
     <span
       title={`Chances réelles pour KRUZBERG : ${c.sc}/100 · ${label}\n${c.parts.map((p) => `${p[0]} ${p[1]}/100`).join(' · ')}${c.adj ? ` · ajustement ${c.adj > 0 ? '+' : ''}${c.adj}` : ''}`}
-      className={cn('inline-flex items-center rounded-md border px-1.5 py-0.5 text-xs font-semibold tabular-nums', TIER_STYLE[tier], className)}
+      className={cn('nums inline-flex items-center text-[13px] font-semibold', TIER_STYLE[tier], className)}
     >
       {c.sc}%
     </span>
@@ -35,16 +35,16 @@ export function ChanceBadge({ lead, className }: { lead: Lead; className?: strin
 
 export function Tag({ children, tone = 'default', className, ...props }: React.HTMLAttributes<HTMLSpanElement> & { tone?: 'default' | 'new' | 'warn' | 'urgent' | 'ok' | 'muted' | 'crm' }) {
   const tones = {
-    default: 'bg-secondary text-secondary-foreground',
-    new: 'bg-primary text-primary-foreground',
-    warn: 'bg-orange-500/15 text-orange-600 dark:text-orange-400',
-    urgent: 'bg-red-500/15 text-red-600 dark:text-red-400',
-    ok: 'bg-green-500/15 text-green-600 dark:text-green-400',
-    muted: 'bg-muted text-muted-foreground line-through',
-    crm: 'bg-primary/15 text-primary',
+    default: 'text-muted-foreground',
+    new: 'font-semibold text-primary',
+    warn: 'text-[hsl(var(--status-warning))]',
+    urgent: 'text-[hsl(var(--status-urgent))]',
+    ok: 'text-[hsl(var(--status-success))]',
+    muted: 'text-muted-foreground/70 line-through',
+    crm: 'text-primary',
   };
   return (
-    <span className={cn('inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap', tones[tone], className)} {...props}>
+    <span className={cn('inline-flex items-center whitespace-nowrap text-[12.5px] [&:not(:last-child)]:after:ml-1.5 [&:not(:last-child)]:after:text-muted-foreground/40 [&:not(:last-child)]:after:content-["·"]', tones[tone], className)} {...props}>
       {children}
     </span>
   );

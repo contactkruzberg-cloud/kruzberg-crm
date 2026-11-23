@@ -73,7 +73,7 @@ export function Ranking({ data: all, onOpen, onBand, selected, goBands }: { data
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center rounded-md border border-border bg-card p-0.5 text-sm">
+        <div className="flex items-center rounded-[10px] bg-secondary p-[3px] text-sm">
           <button onClick={() => setScope('general')} className={cn('rounded px-3 py-1.5', scope === 'general' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
             Classement général
           </button>
@@ -130,7 +130,7 @@ export function Ranking({ data: all, onOpen, onBand, selected, goBands }: { data
             className="h-9 w-64 rounded-md border border-input bg-card pr-3 pl-8 text-sm outline-none focus:ring-2 focus:ring-ring/40"
           />
         </div>
-        <div className="flex items-center rounded-md border border-border bg-card p-0.5 text-xs">
+        <div className="flex items-center rounded-[10px] bg-secondary p-[3px] text-xs">
           {[1, 2, 3].map((n) => (
             <button key={n} onClick={() => setMin(n)} className={cn('rounded px-2.5 py-1.5', min === n ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
               {n === 1 ? 'Tous' : `≥ ${n} groupes`}
@@ -156,7 +156,7 @@ export function Ranking({ data: all, onOpen, onBand, selected, goBands }: { data
       {rows.length === 0 ? (
         <Empty title="Rien avec ces filtres" />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="border-y">
           <table className="w-full text-sm">
             <thead className="border-b border-border text-left text-xs text-muted-foreground">
               <tr>
@@ -240,7 +240,7 @@ function WatchList({ data, onOpen }: { data: State; onOpen: (k: string) => void 
   const w = data.entities.filter((e) => e.watch);
   if (!w.length) return null;
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="border-t pt-5">
       <h3 className="text-sm font-semibold">Notés en séance</h3>
       <p className="mb-3 text-xs text-muted-foreground">Ils remonteront dans le classement s’ils apparaissent chez les groupes explorés. Ouvre un tourneur pour explorer son catalogue.</p>
       <div className="flex flex-wrap gap-2">

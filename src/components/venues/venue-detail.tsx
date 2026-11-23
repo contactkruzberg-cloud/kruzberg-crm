@@ -5,7 +5,6 @@ import { useUpdateVenue, useDeleteVenue } from '@/hooks/use-venues';
 import { useDeals, useCreateDeal } from '@/hooks/use-deals';
 import { useCreateContact } from '@/hooks/use-contacts';
 import { useVenueActivities } from '@/hooks/use-activities';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -132,12 +131,11 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between">
+    <section className="lg:border-l lg:pl-8">
+      <div className="flex flex-row items-start justify-between pb-5">
         <div>
-          <CardTitle className="text-lg">{venue.name}</CardTitle>
-          <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5" />
+          <h2 className="font-display text-[26px] font-bold leading-tight">{venue.name}</h2>
+          <div className="mt-1 text-[15px] text-muted-foreground">
             {venue.city}, {venue.country}
           </div>
         </div>
@@ -153,8 +151,8 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
             </Button>
           </ConfirmDialog>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-5">
+      </div>
+      <div className="space-y-6">
         {/* Quick actions */}
         <div className="flex gap-2 flex-wrap">
           {hasActiveDeal && (
@@ -225,7 +223,7 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
         </div>
 
         {/* Prospection */}
-        <div className="space-y-3 rounded-lg border p-3">
+        <div className="space-y-3 border-y py-4">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <Label className="text-xs flex items-center gap-1">
               <Target className="h-3 w-3" /> Prospection & candidatures
@@ -436,7 +434,7 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
 
           {/* Inline add contact form */}
           {showAddContact && (
-            <div className="rounded-lg border p-3 mb-3 space-y-3 bg-muted/30">
+            <div className="mb-3 space-y-3 rounded-xl bg-secondary p-3">
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-[11px]">Nom *</Label>
@@ -550,9 +548,9 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
           {venueContacts.length === 0 && !showAddContact ? (
             <p className="text-xs text-muted-foreground">Aucun contact lié</p>
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y border-y">
               {venueContacts.map((c) => (
-                <div key={c.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                <div key={c.id} className="flex items-center justify-between py-2.5">
                   <div>
                     <p className="text-sm font-medium">{c.name}</p>
                     <p className="text-xs text-muted-foreground">
@@ -577,16 +575,15 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
           {venueDeals.length === 0 ? (
             <p className="text-xs text-muted-foreground">Aucune opportunité</p>
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y border-y">
               {venueDeals.map((d) => {
                 const stageInfo = STAGES.find((s) => s.key === d.stage);
                 return (
-                  <div key={d.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={cn('text-xs font-medium px-2 py-0.5 rounded shrink-0', stageInfo?.color)}>
-                        {stageInfo?.label}
-                      </span>
-                      {d.title?.trim() && <span className="text-xs truncate">{d.title}</span>}
+                  <div key={d.id} className="flex items-center justify-between gap-2 py-2.5">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: `hsl(var(--${stageInfo?.color}))` }} />
+                      <span className="shrink-0 text-sm">{stageInfo?.label}</span>
+                      {d.title?.trim() && <span className="truncate text-sm text-muted-foreground">· {d.title}</span>}
                     </div>
                     {d.concert_date && (
                       <span className="text-xs text-muted-foreground">
@@ -639,7 +636,7 @@ export function VenueDetail({ venue, contacts }: VenueDetailProps) {
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }

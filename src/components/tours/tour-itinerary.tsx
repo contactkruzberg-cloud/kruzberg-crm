@@ -116,9 +116,7 @@ export function TourItinerary({ tour, stops }: TourItineraryProps) {
       <TourRouteMap stops={stops} />
 
       {stops.length === 0 ? (
-        <div className="text-sm text-muted-foreground text-center py-10 border rounded-xl border-dashed">
-          Aucune étape. Ajoute ta première date avec le bouton ci-dessus.
-        </div>
+        <p className="border-y py-6 text-[15px] text-muted-foreground">Aucune étape. Ajoute la première date avec le bouton ci-dessus.</p>
       ) : (
         <div className="space-y-0">
           {stops.map((stop, i) => {
@@ -127,7 +125,7 @@ export function TourItinerary({ tour, stops }: TourItineraryProps) {
             const longLeg = leg?.km != null && leg.km > LONG_LEG_KM;
             return (
               <div key={stop.id}>
-                <div className="flex items-start gap-3 rounded-xl border p-3 bg-card">
+                <div className="-mx-3 flex items-start gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-secondary">
                   {/* index dot */}
                   <div
                     className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"

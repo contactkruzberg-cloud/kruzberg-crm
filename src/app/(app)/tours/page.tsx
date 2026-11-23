@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Route } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export default function ToursPage() {
   const { data: tours, isLoading } = useTours();
@@ -52,17 +53,13 @@ export default function ToursPage() {
       />
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="max-w-4xl space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-40" />
+            <Skeleton key={i} className="h-14" />
           ))}
         </div>
       ) : tours && tours.length > 0 ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl divide-y border-y">
           {tours.map((tour) => (
             <TourCard
               key={tour.id}
@@ -73,19 +70,17 @@ export default function ToursPage() {
           ))}
         </motion.div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 h-72 border rounded-xl border-dashed text-center">
-          <Route className="h-10 w-10 text-muted-foreground/40" />
-          <div>
-            <p className="font-medium">Aucune tournée pour l&apos;instant</p>
-            <p className="text-sm text-muted-foreground">
-              Crée une tournée et regroupe tes dates confirmées pour planifier trajets, hôtels et budget.
-            </p>
-          </div>
-          <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Nouvelle tournée
-          </Button>
-        </div>
+        <EmptyState
+          icon={Route}
+          title="Aucune tournée"
+          hint="Regroupe des dates confirmées pour planifier trajets, hôtels et budget."
+          action={
+            <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Nouvelle tournée
+            </Button>
+          }
+        />
       )}
 
       <CreateTourDialog open={createOpen} onOpenChange={setCreateOpen} />

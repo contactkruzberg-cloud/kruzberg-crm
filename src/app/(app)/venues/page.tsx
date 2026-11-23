@@ -719,29 +719,27 @@ export default function VenuesPage() {
                   <VenueDetail venue={selectedVenue} contacts={contacts || []} />
                 </motion.div>
               ) : (
-                <div className="flex items-center justify-center h-64 text-muted-foreground border rounded-xl border-dashed">
-                  <p className="text-sm">Sélectionnez un lieu pour voir les détails</p>
-                </div>
+                <div className="flex h-64 items-center justify-center text-[15px] text-muted-foreground lg:border-l">Choisis un lieu dans la liste.</div>
               )}
             </div>
           </div>
         )
       ) : (
-        <div className="rounded-xl border overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-[14px]">
             <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Nom</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Lieu</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Email</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Rôle</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Ton</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Méthode</th>
+              <tr className="border-b">
+                <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Nom</th>
+                <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Lieu</th>
+                <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Email</th>
+                <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Rôle</th>
+                <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Ton</th>
+                <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Méthode</th>
               </tr>
             </thead>
             <tbody>
               {filteredContacts.map((contact) => (
-                <tr key={contact.id} className="border-b hover:bg-muted/30 transition-colors">
+                <tr key={contact.id} className="border-b transition-colors hover:bg-secondary">
                   <td className="p-3 font-medium">{contact.name}</td>
                   <td className="p-3 text-muted-foreground">{contact.venue?.name || '—'}</td>
                   <td className="p-3 text-muted-foreground text-xs">{contact.email || '—'}</td>
@@ -752,9 +750,7 @@ export default function VenuesPage() {
                     </span>
                   </td>
                   <td className="p-3">
-                    <Badge variant="outline" className="text-[10px]">
-                      {contact.pref_method}
-                    </Badge>
+                    <span className="text-muted-foreground">{contact.pref_method}</span>
                   </td>
                 </tr>
               ))}

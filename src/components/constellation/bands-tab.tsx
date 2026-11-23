@@ -69,7 +69,7 @@ export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<s
                 {g.label} <span className="font-normal text-muted-foreground">· {bs.length}</span>
               </h3>
               {g.hint && <p className="mb-2 text-xs text-muted-foreground">{g.hint}</p>}
-              <ul className="divide-y divide-border/60 overflow-hidden rounded-xl border border-border bg-card">
+              <ul className="divide-y divide-border/60 border-y">
                 {bs.map((b) => (
                   <BandRow key={b.id} b={b} data={data} onOpen={onOpen} act={act} />
                 ))}
@@ -92,7 +92,7 @@ export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<s
       </section>
 
       <section className="space-y-3">
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="border-t pt-5">
           <h2 className="flex items-center gap-2 font-semibold">
             <Compass className="size-4 text-primary" /> Découvrir des groupes
           </h2>
@@ -128,7 +128,7 @@ export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<s
         ) : (
           <ul className="space-y-2">
             {suggested.map((b) => (
-              <li key={b.id} className="rounded-lg border border-border bg-card p-3">
+              <li key={b.id} className="rounded-xl bg-secondary p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="font-medium">

@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { useDeals } from '@/hooks/use-deals';
 import { useActivities } from '@/hooks/use-activities';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { STAGES, type DealStage, APPLE, STAGE_HEX } from '@/types/database';
 import {
@@ -15,12 +14,9 @@ import {
   Tooltip,
   AreaChart,
   Area,
-  FunnelChart,
-  Funnel,
-  LabelList,
   Cell,
 } from 'recharts';
-import { BarChart3, TrendingUp, Target, MapPin, Calendar, PieChart as PieIcon } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { subWeeks, format, startOfWeek, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { PageHeader } from '@/components/layout/page-header';
@@ -137,53 +133,39 @@ export default function AnalyticsPage() {
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       <PageHeader icon={BarChart3} title="Analytics" />
 
-      {/* Top KPIs */}
-      <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Total deals</p>
-          <p className="text-2xl font-bold">{allDeals.length}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Taux de réponse</p>
-          <p className="text-2xl font-bold">
-            {allDeals.length > 0
-              ? Math.round(
-                  (allDeals.filter((d) => ['repondu', 'a_suivre', 'confirme'].includes(d.stage)).length /
-                    allDeals.length) *
-                    100
-                )
-              : 0}
-            %
-          </p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Confirmés</p>
-          <p className="text-2xl font-bold text-green-500">
-            {allDeals.filter((d) => d.stage === 'confirme').length}
-          </p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Jours moy. confirmation</p>
-          <p className="text-2xl font-bold">{avgDaysToConfirm}j</p>
-        </Card>
+      {/* Key figures */}
+      <motion.div variants={item} className="grid grid-cols-2 gap-x-8 gap-y-5 border-y py-5 lg:grid-cols-4">
+        {[
+          { label: 'Opportunités', value: allDeals.length },
+          {
+            label: 'Taux de réponse',
+            value: `${
+              allDeals.length > 0
+                ? Math.round((allDeals.filter((d) => ['repondu', 'a_suivre', 'confirme'].includes(d.stage)).length / allDeals.length) * 100)
+                : 0
+            } %`,
+          },
+          { label: 'Dates confirmées', value: allDeals.filter((d) => d.stage === 'confirme').length },
+          { label: 'Délai moyen de confirmation', value: `${avgDaysToConfirm} j` },
+        ].map((f) => (
+          <div key={f.label}>
+            <div className="font-display nums text-[32px] font-semibold leading-none">{f.value}</div>
+            <div className="mt-1.5 text-[13px] text-muted-foreground">{f.label}</div>
+          </div>
+        ))}
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-x-12 gap-y-10 lg:grid-cols-2">
         {/* Conversion Funnel */}
         <motion.div variants={item}>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Entonnoir de conversion
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <section>
+            <h2 className="font-display text-[17px] font-semibold">Du contact à la date</h2>
+            <div className="mt-3">
               <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={funnelData} layout="vertical">
                     <XAxis type="number" hide />
-                    <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12 }} />
+                    <YAxis type="category" dataKey="name" width={80} tick={{ fill: '#8E8E93', fontSize: 12 }} axisLine={false} tickLine={false} />
                     <Tooltip {...chartTooltipStyle} />
                     <Bar dataKey="value" radius={[0, 8, 8, 0]}>
                       {funnelData.map((entry, i) => (
@@ -193,69 +175,54 @@ export default function AnalyticsPage() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </motion.div>
 
         {/* Response by type */}
         <motion.div variants={item}>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Taux de réponse par type
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <section>
+            <h2 className="font-display text-[17px] font-semibold">Taux de réponse par type de lieu</h2>
+            <div className="mt-3">
               <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={responseByType}>
-                    <XAxis dataKey="type" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} unit="%" />
+                    <XAxis dataKey="type" tick={{ fill: '#8E8E93', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#8E8E93', fontSize: 11 }} unit="%" axisLine={false} tickLine={false} />
                     <Tooltip {...chartTooltipStyle} />
                     <Bar dataKey="rate" fill={APPLE.blue} radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </motion.div>
 
         {/* Best cities */}
         <motion.div variants={item}>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Meilleures villes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <section>
+            <h2 className="font-display text-[17px] font-semibold">Meilleures villes</h2>
+            <div className="mt-3">
               <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={bestCities} layout="vertical">
                     <XAxis type="number" hide />
-                    <YAxis type="category" dataKey="city" width={80} tick={{ fontSize: 11 }} />
+                    <YAxis type="category" dataKey="city" width={80} tick={{ fill: '#8E8E93', fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip {...chartTooltipStyle} />
                     <Bar dataKey="total" fill={APPLE.indigo} radius={[0, 6, 6, 0]} name="Total" />
                     <Bar dataKey="confirmed" fill={APPLE.green} radius={[0, 6, 6, 0]} name="Confirmés" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </motion.div>
 
         {/* Email volume per week */}
         <motion.div variants={item}>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Emails par semaine (12 semaines)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <section>
+            <h2 className="font-display text-[17px] font-semibold">Mails envoyés par semaine</h2>
+            <div className="mt-3">
               <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={weeklyEmails}>
@@ -265,8 +232,8 @@ export default function AnalyticsPage() {
                         <stop offset="95%" stopColor={APPLE.blue} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="week" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
+                    <XAxis dataKey="week" tick={{ fill: '#8E8E93', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#8E8E93', fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip {...chartTooltipStyle} />
                     <Area
                       type="monotone"
@@ -278,25 +245,20 @@ export default function AnalyticsPage() {
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </motion.div>
 
         {/* Stage distribution */}
         <motion.div variants={item} className="lg:col-span-2">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <PieIcon className="h-4 w-4" />
-                Distribution par stage
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <section>
+            <h2 className="font-display text-[17px] font-semibold">Opportunités par étape</h2>
+            <div className="mt-3">
               <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stageDistribution}>
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
+                    <XAxis dataKey="name" tick={{ fill: '#8E8E93', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#8E8E93', fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip {...chartTooltipStyle} />
                     <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                       {stageDistribution.map((entry, i) => (
@@ -306,8 +268,8 @@ export default function AnalyticsPage() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </motion.div>
       </div>
     </motion.div>

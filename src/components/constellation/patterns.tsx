@@ -71,7 +71,7 @@ export function Patterns({ data, act, onBand }: { data: State; act: (b: Record<s
 
   return (
     <div className="space-y-6">
-      <section className="rounded-xl border border-border bg-card p-5">
+      <section className="border-t pt-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="flex items-center gap-2 font-semibold">
@@ -92,7 +92,7 @@ export function Patterns({ data, act, onBand }: { data: State; act: (b: Record<s
             <p className="text-sm leading-relaxed">{synth.summary}</p>
             <div className="grid gap-3 md:grid-cols-2">
               {synth.patterns.map((p, i) => (
-                <article key={i} className="rounded-lg border border-border bg-background p-4">
+                <article key={i} className="rounded-xl bg-secondary p-4">
                   <h3 className="font-semibold">{p.title}</h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-foreground/85">{p.evidence}</p>
                   <p className="mt-2 rounded-md bg-primary/10 p-2 text-sm text-foreground">
@@ -109,7 +109,7 @@ export function Patterns({ data, act, onBand }: { data: State; act: (b: Record<s
               </h3>
               <ol className="space-y-2">
                 {synth.roadmap.map((r, i) => (
-                  <li key={i} className="flex gap-3 rounded-lg border border-border bg-background p-3">
+                  <li key={i} className="flex gap-3 rounded-xl bg-secondary p-3">
                     <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{i + 1}</span>
                     <div className="text-sm">
                       <div className="font-medium">
@@ -128,7 +128,7 @@ export function Patterns({ data, act, onBand }: { data: State; act: (b: Record<s
       </section>
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center rounded-md border border-border bg-card p-0.5 text-xs">
+        <div className="flex items-center rounded-[10px] bg-secondary p-[3px] text-xs">
           <button onClick={() => setGroup('ref')} className={cn('inline-flex items-center gap-1.5 rounded px-3 py-1.5', group === 'ref' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}>
             <Trophy className="size-3.5" /> Groupes à succès · {refs.length}
           </button>
@@ -147,7 +147,7 @@ export function Patterns({ data, act, onBand }: { data: State; act: (b: Record<s
         <Empty title="Pas encore de trajectoire">Les trajectoires arrivent au fil des explorations (une à six minutes par groupe).</Empty>
       ) : (
         <>
-          <section className="rounded-xl border border-border bg-card p-4">
+          <section className="border-t pt-5">
             <h3 className="font-semibold">Étapes communes</h3>
             <p className="mb-3 text-xs text-muted-foreground">Pour chaque étape : combien de groupes y sont passés, au bout de combien d’années après leur formation, et par quels acteurs. Clique une ligne pour la repérer sur les frises.</p>
             <div className="overflow-x-auto">
@@ -184,7 +184,7 @@ export function Patterns({ data, act, onBand }: { data: State; act: (b: Record<s
             </div>
           </section>
 
-          <section className="rounded-xl border border-border bg-card p-4">
+          <section className="border-t pt-5">
             <h3 className="font-semibold">Frises : années depuis la formation</h3>
             <p className="mb-3 text-xs text-muted-foreground">Chaque point est une étape datée (survol pour le détail). Clique un nom pour ouvrir le parcours complet et ses sources.</p>
             <div className="mb-2 ml-40 flex justify-between text-[10px] text-muted-foreground tabular-nums">

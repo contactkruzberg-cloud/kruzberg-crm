@@ -47,7 +47,7 @@ export function TopActors({ data, onOpen, onSeeAll }: { data: State; onOpen: (k:
             {total} acteurs retrouvés chez au moins 2 groupes de la niche, sur {data.bands.filter((b) => b.status === 'done').length} groupes explorés. Le chiffre = nombre de groupes chez qui on les retrouve.
           </p>
         </div>
-        <div className="flex items-center rounded-md border border-border bg-card p-0.5 text-xs">
+        <div className="flex items-center rounded-[10px] bg-secondary p-[3px] text-xs">
           {ZONES.map((z) => (
             <button key={z.id} onClick={() => setZone(z.id)} className={cn('rounded px-2.5 py-1.5', zone === z.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
               {z.label}
@@ -58,7 +58,7 @@ export function TopActors({ data, onOpen, onSeeAll }: { data: State; onOpen: (k:
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {cards.map(({ kind, rows }) => (
-          <div key={kind} className="flex flex-col rounded-xl border border-border bg-card">
+          <div key={kind} className="flex flex-col border-t">
             <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
               <span className="flex items-center gap-2 text-sm font-semibold">
                 <span className="inline-block size-2.5 rounded-full" style={{ background: KIND_COLOR[kind] }} />

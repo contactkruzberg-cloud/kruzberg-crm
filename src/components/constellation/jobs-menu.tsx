@@ -23,7 +23,7 @@ export function JobsMenu({ jobs, onCancel }: { jobs: Job[]; onCancel: (id: strin
         <History className="size-3.5" /> Journal
       </Button>
       {open && (
-        <div className="absolute right-0 z-40 mt-2 w-96 rounded-xl border border-border bg-card p-2 shadow-2xl">
+        <div className="absolute right-0 z-40 mt-2 w-96 rounded-xl border material-thick p-2 shadow-pop">
           {jobs.length === 0 && <p className="p-3 text-sm text-muted-foreground">Aucune recherche lancée.</p>}
           <ul className="max-h-96 overflow-y-auto">
             {jobs.map((j) => (

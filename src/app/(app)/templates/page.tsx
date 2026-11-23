@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTemplates, useCreateTemplate, useUpdateTemplate, useDeleteTemplate, useTemplateSends } from '@/hooks/use-templates';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -17,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { TEMPLATE_CATEGORIES, type Template, type TemplateCategory } from '@/types/database';
 import { resolveTemplate, formatDate } from '@/lib/utils';
-import { Plus, Copy, Trash2, Mail, Clock, FileText, Eye, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Copy, Trash2, Mail, FileText, Eye, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { useActivities } from '@/hooks/use-activities';
 import { PageHeader } from '@/components/layout/page-header';
@@ -222,23 +221,19 @@ export default function TemplatesPage() {
           </Tabs>
 
       {pageTab === 'history' && (
-        <div className="space-y-2">
+        <div className="max-w-4xl divide-y border-y">
           {allEmails.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground border rounded-xl border-dashed">
-              <Send className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Aucun email envoyé depuis le CRM</p>
-              <p className="text-xs mt-1">Les emails envoyés apparaîtront ici avec leur contenu complet</p>
-            </div>
+            <p className="py-6 text-[15px] text-muted-foreground">Aucun mail envoyé depuis le CRM pour l’instant.</p>
           ) : (
             allEmails.map((email) => {
               const isExpanded = expandedEmailId === email.id;
               return (
                 <div
                   key={email.id}
-                  className="rounded-lg border bg-card overflow-hidden transition-shadow hover:shadow-sm"
+                  className="overflow-hidden"
                 >
                   <div
-                    className="flex items-center justify-between p-4 cursor-pointer"
+                    className="-mx-3 flex cursor-pointer items-center justify-between rounded-lg px-3 py-3 transition-colors hover:bg-secondary"
                     onClick={() => setExpandedEmailId(isExpanded ? null : email.id)}
                   >
                     <div className="min-w-0 flex-1">
@@ -270,7 +265,7 @@ export default function TemplatesPage() {
                     </div>
                   </div>
                   {isExpanded && (
-                    <div className="border-t px-4 py-3 bg-muted/30">
+                    <div className="mb-3 rounded-xl bg-secondary px-4 py-3">
                       <div className="whitespace-pre-wrap text-sm leading-relaxed max-h-80 overflow-y-auto">
                         {email.body}
                       </div>
@@ -303,25 +298,23 @@ export default function TemplatesPage() {
         {/* Template list */}
         <div className="space-y-3">
           <ScrollArea className="h-[calc(100vh-250px)]">
-            <div className="space-y-2 pr-2">
+            <div className="space-y-5 pr-2">
               {TEMPLATE_CATEGORIES.map((cat) => {
                 const catTemplates = (templates || []).filter((t) => t.category === cat.key);
                 if (catTemplates.length === 0) return null;
                 return (
                   <div key={cat.key}>
-                    <p className="text-xs text-muted-foreground font-medium px-1 mb-1.5">
-                      {cat.label}
-                    </p>
+                    <p className="mb-1 px-3 text-[12px] font-semibold text-muted-foreground">{cat.label}</p>
                     {catTemplates.map((t) => (
                       <div
                         key={t.id}
                         onClick={() => selectTemplate(t)}
-                        className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm mb-1.5 ${
-                          selectedId === t.id ? 'border-primary/50 bg-primary/5' : ''
+                        className={`cursor-pointer rounded-lg px-3 py-2 transition-colors ${
+                          selectedId === t.id ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary'
                         }`}
                       >
-                        <p className="text-sm font-medium truncate">{t.name}</p>
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        <p className="truncate text-[15px] font-medium">{t.name}</p>
+                        <p className={`mt-0.5 truncate text-[13px] ${selectedId === t.id ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                           {t.subject}
                         </p>
                       </div>
@@ -341,14 +334,9 @@ export default function TemplatesPage() {
 
           {/* Send log summary */}
           {sends && sends.length > 0 && (
-            <Card>
-              <CardHeader className="p-3 pb-2">
-                <CardTitle className="text-xs flex items-center gap-1.5">
-                  <Clock className="h-3 w-3" />
-                  Derniers envois
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 space-y-1.5">
+            <div className="space-y-1.5 border-t px-3 pt-4">
+              <p className="text-[12px] font-semibold text-muted-foreground">Derniers envois</p>
+              <div className="space-y-1.5">
                 {sends.slice(0, 3).map((s) => (
                   <div key={s.id} className="text-xs text-muted-foreground">
                     <span className="font-medium text-foreground">
@@ -359,16 +347,15 @@ export default function TemplatesPage() {
                     <span className="ml-1">{formatDate(s.created_at)}</span>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
         </div>
 
         {/* Editor / Preview */}
         <div className="lg:col-span-2">
           {selectedId ? (
-            <Card>
-              <CardContent className="p-5 space-y-4">
+            <div className="space-y-4 lg:border-l lg:pl-8">
                 <Tabs value={tab} onValueChange={setTab}>
                   <div className="flex items-center justify-between">
                     <TabsList>
@@ -452,7 +439,7 @@ export default function TemplatesPage() {
                   </TabsContent>
 
                   <TabsContent value="preview">
-                    <div className="rounded-lg border p-6 bg-white dark:bg-zinc-950 space-y-3">
+                    <div className="space-y-3 rounded-xl bg-card p-6 shadow-card">
                       <div className="border-b pb-3">
                         <p className="text-sm">
                           <span className="text-muted-foreground">Objet :</span>{' '}
@@ -465,15 +452,9 @@ export default function TemplatesPage() {
                     </div>
                   </TabsContent>
                 </Tabs>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-muted-foreground border rounded-xl border-dashed">
-              <div className="text-center">
-                <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Sélectionnez un template pour l&apos;éditer</p>
-              </div>
             </div>
+          ) : (
+            <div className="flex h-64 items-center justify-center text-[15px] text-muted-foreground lg:border-l">Choisis un modèle dans la liste.</div>
           )}
         </div>
       </div>

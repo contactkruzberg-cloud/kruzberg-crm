@@ -32,7 +32,7 @@ export function Upcoming({ data, onBand, onEntity }: { data: State; onBand: (id:
   if (!rows.length) return null;
 
   return (
-    <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
+    <div className="rounded-xl bg-primary/[0.07] p-4">
       <h3 className="flex items-center gap-2 text-sm font-semibold">
         <CalendarDays className="size-4 text-primary" /> À aller voir près de Lyon
       </h3>

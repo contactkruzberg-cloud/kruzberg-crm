@@ -107,7 +107,7 @@ function LeadRow({
   const dups = live(lead) ? dupsOf(idx, lead) : [];
   const used = live(lead) && !hasDraft(lead) ? addrUsers(idx, emailsOf(lead.email), lead.id) : [];
   const loc = [lead.venue, lead.city, lead.country && lead.country !== 'FR' ? lead.country : null].filter(Boolean).join(' · ');
-  const tierBorder = { hi: 'border-l-green-500', mid: 'border-l-primary', lo: 'border-l-orange-500', vlo: 'border-l-border' }[
+  const tierDot = { hi: 'bg-[hsl(var(--status-success))]', mid: 'bg-primary', lo: 'bg-[hsl(var(--status-warning))]', vlo: 'bg-muted-foreground/40' }[
     chance(lead).sc >= 75 ? 'hi' : chance(lead).sc >= 58 ? 'mid' : chance(lead).sc >= 40 ? 'lo' : 'vlo'
   ];
 
@@ -119,11 +119,9 @@ function LeadRow({
       onClick={onOpen}
       onKeyDown={(e) => e.key === 'Enter' && onOpen()}
       className={cn(
-        'group flex gap-3 rounded-lg border border-l-4 bg-card p-3 transition-all hover:shadow-md hover:border-primary/30 cursor-pointer outline-none',
-        tierBorder,
-        picked && 'ring-2 ring-primary/50',
-        focused && 'ring-2 ring-primary',
-        isNew(lead, meta) && live(lead) && 'bg-primary/[0.03]',
+        'group -mx-3 flex cursor-pointer gap-3 rounded-lg px-3 py-3 outline-none transition-colors hover:bg-secondary',
+        picked && 'bg-primary/[0.07]',
+        focused && 'ring-2 ring-primary/50',
       )}
     >
       <input
@@ -136,11 +134,12 @@ function LeadRow({
       />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          <span className="font-medium">{lead.name}</span>
+          <span className={cn('h-2 w-2 shrink-0 translate-y-[-1px] self-center rounded-full', tierDot)} />
+          <span className="text-[15px] font-medium">{lead.name}</span>
           {loc && <span className="truncate text-xs text-muted-foreground">{loc}</span>}
           {distanceKm != null && <span className="text-xs font-medium text-primary">à {Math.round(distanceKm)} km</span>}
         </div>
-        <div className="mt-1.5 flex flex-wrap gap-1">
+        <div className="mt-1 flex flex-wrap gap-x-1.5 gap-y-0.5">
           {isNew(lead, meta) && live(lead) && <Tag tone="new">nouveau</Tag>}
           {['all', 'trash', 'drafts', 'todo', 'crm', 'known'].includes(tab) && <Tag>{CATL[lead.cat] || lead.cat}</Tag>}
           {lead.type && <Tag>{lead.type}</Tag>}
@@ -551,8 +550,8 @@ export function RadarView() {
 
           {/* Banners */}
           {toCrm.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-2 text-sm">
-              <AlertTriangle className="h-4 w-4 text-orange-500" />
+            <div className="flex flex-wrap items-center gap-2 rounded-xl bg-[hsl(var(--status-warning))]/10 px-3.5 py-2.5 text-[13px]">
+              <AlertTriangle className="h-4 w-4 text-[hsl(var(--status-warning))]" />
               <span>
                 <b>{toCrm.length}</b> piste{toCrm.length > 1 ? 's' : ''} déjà contactée{toCrm.length > 1 ? 's' : ''} mais absente{toCrm.length > 1 ? 's' : ''} du pipeline (
                 {toCrm.slice(0, 3).map((l) => l.name).join(', ')}
@@ -564,7 +563,7 @@ export function RadarView() {
             </div>
           )}
           {outbox.length > 0 && (
-            <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
+            <div className="rounded-xl bg-secondary px-3.5 py-2.5 text-[13px]">
               <b>{outbox.length}</b> brouillon{outbox.length > 1 ? 's' : ''} en file ({outbox.slice(0, 4).map((o) => o.leadName || o.leadId).join(', ')}
               {outbox.length > 4 ? '…' : ''}). Pour les créer dans Mail, demande à Claude : « crée les brouillons en attente ».
             </div>
@@ -573,19 +572,19 @@ export function RadarView() {
           {/* Upcoming deadlines */}
           {strip.length > 0 && (tab === 'todo' || tab === 'all') && (
             <section className="space-y-2">
-              <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Échéances · 60 jours</h2>
+              <h2 className="font-display text-[17px] font-semibold">Échéances <span className="text-[13px] font-normal text-muted-foreground">60 jours</span></h2>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {strip.map(({ l, k }) => (
                   <button
                     key={l.id}
                     type="button"
                     onClick={() => jump(l.id)}
-                    className={cn('w-52 shrink-0 rounded-lg border bg-card p-2.5 text-left transition-all hover:border-primary/40 hover:shadow-md', k!.n <= 14 && 'border-red-500/40')}
+                    className="w-52 shrink-0 rounded-xl bg-secondary p-3 text-left transition-colors hover:bg-secondary/60"
                   >
                     <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
                       {CATL[l.cat]} · {k!.kind}
                     </div>
-                    <div className={cn('mt-0.5 font-mono text-xs', k!.n <= 14 ? 'text-red-500' : 'text-orange-500')}>
+                    <div className={cn('nums mt-0.5 text-[12px] font-medium', k!.n <= 14 ? 'text-[hsl(var(--status-urgent))]' : 'text-[hsl(var(--status-warning))]')}>
                       {fmtDate(k!.d)} · J-{k!.n}
                     </div>
                     <div className="mt-0.5 truncate text-sm font-medium">{l.name}</div>
@@ -659,7 +658,7 @@ export function RadarView() {
               </label>
             </div>
             {showFilters && (
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3">
+              <div className="flex flex-wrap items-center gap-2 rounded-xl bg-secondary p-3">
                 <Select value={filters.zone || 'all'} onValueChange={(v) => setF({ zone: v === 'all' ? '' : (v as RadarFilters['zone']) })}>
                   <SelectTrigger className="h-8 w-auto text-xs">
                     <SelectValue />
@@ -778,11 +777,11 @@ export function RadarView() {
               }}
             />
           ) : list.length === 0 ? (
-            <div className="rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground">
+            <p className="border-y py-6 text-[15px] text-muted-foreground">
               {leads.length ? 'Aucune piste ne correspond aux filtres.' : 'Aucune piste pour l’instant.'}
-            </div>
+            </p>
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y border-y">
               {visible.map((l, i) => (
                 <LeadRow
                   key={l.id}

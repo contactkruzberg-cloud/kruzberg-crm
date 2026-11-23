@@ -18,7 +18,7 @@ export function Button({
         'inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors disabled:pointer-events-none disabled:opacity-50',
         size === 'sm' ? 'h-7 px-2.5 text-xs' : 'h-9 px-3.5 text-sm',
         variant === 'primary' && 'bg-primary text-primary-foreground hover:bg-primary/90',
-        variant === 'default' && 'border border-border bg-card hover:bg-accent',
+        variant === 'default' && 'bg-secondary hover:bg-secondary/70',
         variant === 'ghost' && 'hover:bg-accent text-muted-foreground hover:text-foreground',
         variant === 'danger' && 'text-destructive hover:bg-destructive/10',
         className,
@@ -50,7 +50,7 @@ export function Dot({ color, className }: { color: string; className?: string })
 
 export function Empty({ icon, title, children }: { icon?: React.ReactNode; title: string; children?: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border px-6 py-14 text-center">
+    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-6 py-14 text-center">
       {icon && <div className="text-muted-foreground">{icon}</div>}
       <p className="font-medium">{title}</p>
       {children && <div className="max-w-md text-sm text-muted-foreground">{children}</div>}

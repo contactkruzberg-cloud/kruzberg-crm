@@ -20,17 +20,15 @@ export function TourLogistics({ stops }: TourLogisticsProps) {
 
   if (stops.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground text-center py-10 border rounded-xl border-dashed">
-        Ajoute des dates dans l&apos;onglet Itinéraire pour gérer la logistique.
-      </div>
+      <p className="border-y py-6 text-[15px] text-muted-foreground">Ajoute des dates dans l&apos;onglet Itinéraire pour gérer la logistique.</p>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="divide-y border-y">
       {unbookedHotels > 0 && (
-        <div className="flex items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/5 px-3 py-2 text-xs">
-          <AlertCircle className="h-4 w-4 text-orange-500" />
+        <div className="flex items-center gap-2 py-3 text-[13px] text-[hsl(var(--status-warning))]">
+          <AlertCircle className="h-4 w-4" />
           <span>
             {unbookedHotels} hôtel{unbookedHotels > 1 ? 's' : ''} pas encore réservé
             {unbookedHotels > 1 ? 's' : ''}.
@@ -91,7 +89,7 @@ function StopLogisticsCard({ stop, index }: { stop: TourStop; index: number }) {
     : '';
 
   return (
-    <div className="rounded-xl border bg-card p-4 space-y-4">
+    <div className="space-y-4 py-5">
       {/* header */}
       <div className="flex items-center gap-2 flex-wrap">
         <div
@@ -167,7 +165,7 @@ function StopLogisticsCard({ stop, index }: { stop: TourStop; index: number }) {
       )}
 
       {/* hotel */}
-      <div className="space-y-2 rounded-lg bg-muted/30 p-3">
+      <div className="space-y-2 rounded-xl bg-secondary p-3">
         <div className="flex items-center justify-between">
           <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Hotel className="h-3.5 w-3.5" />

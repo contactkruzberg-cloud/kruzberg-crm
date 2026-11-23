@@ -97,7 +97,7 @@ export function LinksTab({ data, pairs, onEntity, onBand }: { data: State; pairs
             className="h-9 w-64 rounded-md border border-input bg-card pr-3 pl-8 text-sm outline-none focus:ring-2 focus:ring-ring/40"
           />
         </div>
-        <div className="flex items-center rounded-md border border-border bg-card p-0.5 text-xs">
+        <div className="flex items-center rounded-[10px] bg-secondary p-[3px] text-xs">
           {[2, 3].map((n) => (
             <button key={n} onClick={() => setMin(n)} className={cn('rounded px-2.5 py-1.5', min === n ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
               ≥ {n} groupes en commun
@@ -115,7 +115,7 @@ export function LinksTab({ data, pairs, onEntity, onBand }: { data: State; pairs
       {shown.length === 0 ? (
         <Empty title="Rien avec ces filtres" />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="border-y">
           <ul className="divide-y divide-border/60">
             {shown.slice(0, 200).map((r) => (
               <li key={r.id} className="grid gap-2 px-4 py-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_minmax(0,1.2fr)] md:items-center">

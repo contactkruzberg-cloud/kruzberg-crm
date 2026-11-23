@@ -247,7 +247,7 @@ export function Graph({ data, pairs, onEntity, onBand, selected }: { data: State
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        <div className="flex items-center rounded-md border border-border bg-card p-0.5">
+        <div className="flex items-center rounded-[10px] bg-secondary p-[3px]">
           {MODES.map((m) => (
             <button key={m.id} onClick={() => {
                 setMode(m.id);
@@ -257,7 +257,7 @@ export function Graph({ data, pairs, onEntity, onBand, selected }: { data: State
             </button>
           ))}
         </div>
-        <div className="flex items-center rounded-md border border-border bg-card p-0.5">
+        <div className="flex items-center rounded-[10px] bg-secondary p-[3px]">
           {(mode === 'bands' ? [2, 3, 4] : [1, 2, 3]).map((n) => (
             <button key={n} onClick={() => setMin(n)} className={cn('rounded px-2.5 py-1.5', min === n ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
               {mode === 'bands' ? `≥ ${n} acteurs en commun` : n === 1 ? 'Tous les acteurs' : `≥ ${n} groupes`}
@@ -274,7 +274,7 @@ export function Graph({ data, pairs, onEntity, onBand, selected }: { data: State
           </button>
         ))}
       </div>
-      <div className="relative overflow-hidden rounded-xl border border-border bg-card">
+      <div className="relative border-y">
         <svg ref={svgRef} className="h-[68vh] min-h-[480px] w-full touch-none" />
         <div className="pointer-events-none absolute bottom-3 left-3 space-y-1 rounded-md bg-background/80 px-3 py-2 text-[11px] text-muted-foreground backdrop-blur">
           <div className="flex items-center gap-2">

@@ -24,7 +24,6 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/alert-dialog';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
 import { Plus, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -117,7 +116,7 @@ export function TourBudget({ tour, stops }: TourBudgetProps) {
       </p>
 
       {/* chart */}
-      <Card className="p-4">
+      <section className="border-t pt-4">
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
@@ -125,7 +124,7 @@ export function TourBudget({ tour, stops }: TourBudgetProps) {
               <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={50} />
               <RechartsTooltip
                 formatter={(v) => euro(Number(v))}
-                contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                contentStyle={{ fontSize: 12, borderRadius: 10, background: 'hsl(var(--popover))', border: '0.5px solid var(--line)' }}
               />
               <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                 {chartData.map((entry, i) => (
@@ -135,11 +134,11 @@ export function TourBudget({ tour, stops }: TourBudgetProps) {
             </BarChart>
           </ResponsiveContainer>
         </div>
-      </Card>
+      </section>
 
       {/* params */}
-      <Card className="p-4 space-y-3">
-        <h3 className="text-sm font-medium">Paramètres de calcul</h3>
+      <section className="space-y-3 border-t pt-4">
+        <h3 className="font-display text-[17px] font-semibold">Paramètres de calcul</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {([
             ['members_count', 'Personnes', tour.members_count],
@@ -161,11 +160,11 @@ export function TourBudget({ tour, stops }: TourBudgetProps) {
             </div>
           ))}
         </div>
-      </Card>
+      </section>
 
       {/* expenses */}
-      <Card className="p-4 space-y-3">
-        <h3 className="text-sm font-medium">Dépenses ponctuelles</h3>
+      <section className="space-y-3 border-t pt-4">
+        <h3 className="font-display text-[17px] font-semibold">Dépenses ponctuelles</h3>
         <div className="space-y-1.5">
           {(expenses || []).map((exp) => (
             <ExpenseRow key={exp.id} expense={exp} onDelete={() => deleteExpense.mutate({ id: exp.id, tourId: tour.id })} />
@@ -218,7 +217,7 @@ export function TourBudget({ tour, stops }: TourBudgetProps) {
             Ajouter
           </Button>
         </div>
-      </Card>
+      </section>
     </div>
   );
 }
@@ -237,15 +236,15 @@ function KpiBox({
   icon?: 'up' | 'down';
 }) {
   return (
-    <Card className="p-3">
-      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+    <div>
+      <div className="flex items-center gap-1 text-[12px] text-muted-foreground">
         {icon === 'up' && <TrendingUp className="h-3 w-3 text-green-500" />}
         {icon === 'down' && <TrendingDown className="h-3 w-3 text-red-500" />}
         {label}
       </div>
-      <div className={cn('text-base font-bold mt-0.5', accent)}>{value}</div>
-      {sub && <div className="text-[10px] text-muted-foreground">{sub}</div>}
-    </Card>
+      <div className={cn('font-display nums mt-0.5 text-[22px] font-semibold', accent)}>{value}</div>
+      {sub && <div className="text-[12px] text-muted-foreground">{sub}</div>}
+    </div>
   );
 }
 

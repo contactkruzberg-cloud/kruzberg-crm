@@ -4,9 +4,7 @@ import Link from 'next/link';
 import type { Tour, TourStop, TourExpense } from '@/types/database';
 import { TOUR_STATUSES } from '@/types/database';
 import { tourBudget, formatKm } from '@/lib/tour-math';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CalendarDays, MapPin, Route, Users } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TourCardProps {
@@ -32,48 +30,24 @@ export function TourCard({ tour, stops, expenses }: TourCardProps) {
   const showCount = stops.filter((s) => s.type === 'show').length;
 
   return (
-    <Link href={`/tours/${tour.id}`}>
-      <Card className="p-4 h-full hover:border-primary/50 hover:shadow-md transition-all cursor-pointer space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold leading-tight">{tour.name}</h3>
-          <Badge variant="outline" className={cn('text-[10px] shrink-0', status?.color)}>
-            {status?.label}
-          </Badge>
+    <Link href={`/tours/${tour.id}`} className="-mx-3 flex items-center gap-4 rounded-lg px-3 py-3.5 transition-colors hover:bg-secondary">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline gap-2">
+          <span className="truncate text-[16px] font-semibold">{tour.name}</span>
+          <span className="shrink-0 text-[13px] text-muted-foreground">{status?.label}</span>
         </div>
-
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <CalendarDays className="h-3.5 w-3.5" />
-          {dateRange(tour, stops)}
+        <div className="mt-0.5 truncate text-[13px] text-muted-foreground">
+          {[dateRange(tour, stops), `${showCount} date${showCount > 1 ? 's' : ''}`, formatKm(budget.km), `${tour.members_count} pers.`].join(' · ')}
         </div>
-
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <MapPin className="h-3.5 w-3.5" />
-            {showCount} date{showCount > 1 ? 's' : ''}
-          </span>
-          <span className="flex items-center gap-1">
-            <Route className="h-3.5 w-3.5" />
-            {formatKm(budget.km)}
-          </span>
-          <span className="flex items-center gap-1">
-            <Users className="h-3.5 w-3.5" />
-            {tour.members_count}
-          </span>
+      </div>
+      <div className="shrink-0 text-right">
+        <div className={cn('nums text-[15px] font-semibold', budget.net >= 0 ? 'text-[hsl(var(--status-success))]' : 'text-[hsl(var(--status-urgent))]')}>
+          {budget.net >= 0 ? '+' : ''}
+          {Math.round(budget.net).toLocaleString('fr-FR')} €
         </div>
-
-        <div className="flex items-baseline justify-between border-t pt-2">
-          <span className="text-xs text-muted-foreground">Net estimé</span>
-          <span
-            className={cn(
-              'text-sm font-bold',
-              budget.net >= 0 ? 'text-green-500' : 'text-red-500'
-            )}
-          >
-            {budget.net >= 0 ? '+' : ''}
-            {Math.round(budget.net).toLocaleString('fr-FR')} €
-          </span>
-        </div>
-      </Card>
+        <div className="text-[12px] text-muted-foreground">net estimé</div>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />
     </Link>
   );
 }

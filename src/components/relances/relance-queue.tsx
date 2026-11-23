@@ -127,7 +127,7 @@ export function RelanceQueue() {
       ) : (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
           {/* Queue */}
-          <ol className="space-y-1.5 lg:sticky lg:top-[4.5rem] lg:self-start">
+          <ol className="space-y-px lg:sticky lg:top-[4.5rem] lg:self-start">
             {queue.map((d, i) => {
               const st = status(d);
               const on = d.id === current?.id;
@@ -137,8 +137,8 @@ export function RelanceQueue() {
                     type="button"
                     onClick={() => setPickedId(d.id)}
                     className={cn(
-                      'flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-colors',
-                      on ? 'border-primary/50 bg-primary/5' : 'bg-card hover:border-primary/30',
+                      'flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left transition-colors',
+                      on ? 'bg-secondary dark:bg-white/10' : 'hover:bg-secondary/60',
                     )}
                   >
                     <span className="w-5 shrink-0 text-xs tabular-nums text-muted-foreground">{i + 1}</span>
@@ -158,13 +158,13 @@ export function RelanceQueue() {
 
           {/* Current follow-up */}
           {current && (
-            <section className="space-y-4 rounded-xl border bg-card p-4 sm:p-5">
+            <section className="space-y-4 lg:border-l lg:pl-8">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">
                     {idx + 1} / {queue.length}
                   </p>
-                  <h2 className="truncate text-lg font-semibold">{dealLabel(current, 'Lieu inconnu')}</h2>
+                  <h2 className="font-display truncate text-[24px] font-bold">{dealLabel(current, 'Lieu inconnu')}</h2>
                   <p className="text-xs text-muted-foreground">
                     {[current.contact?.name, current.venue?.city].filter(Boolean).join(' · ')}
                     {current.last_message_at && ` · dernier échange le ${formatDate(current.last_message_at)}`}
@@ -202,8 +202,8 @@ export function RelanceQueue() {
               </p>
 
               {status(current) === 'todo' ? (
-                <div className="space-y-3 rounded-lg border border-dashed py-10 text-center">
-                  <p className="text-sm text-muted-foreground">Pas encore de brouillon pour cette relance.</p>
+                <div className="space-y-3 border-y py-8">
+                  <p className="text-[15px] text-muted-foreground">Pas encore de brouillon pour cette relance.</p>
                   <Button
                     className="gap-1.5"
                     disabled={requestOne.isPending}

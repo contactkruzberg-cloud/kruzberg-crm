@@ -1,10 +1,10 @@
 'use client';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { cn, formatRelativeDate } from '@/lib/utils';
+import { EmptyState } from '@/components/ui/empty-state';
+import { cn } from '@/lib/utils';
 import type { Venue, VenueType } from '@/types/database';
-import { MapPin, Star, Building2, Target, Ban, CalendarClock } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 import { applicationWindow } from '@/lib/application-dates';
 
 const TYPE_LABELS: Record<VenueType, string> = {
@@ -27,78 +27,43 @@ interface VenueListProps {
 export function VenueList({ venues, selectedId, onSelect }: VenueListProps) {
   if (venues.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground border rounded-xl border-dashed">
-        <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
-        <p className="text-sm">Aucun lieu trouvé</p>
-        <p className="text-xs mt-1">Ajoutez votre premier lieu pour commencer</p>
-      </div>
+      <EmptyState icon={Building2} title="Aucun lieu" hint="Ajoute un lieu avec « Nouveau », ou importe un fichier." />
     );
   }
 
   return (
     <ScrollArea className="h-[calc(100vh-280px)]">
-      <div className="space-y-2 pr-2">
+      <div className="divide-y pr-2">
         {venues.map((venue) => {
           const appWindow = applicationWindow(venue.application_opens, venue.application_deadline);
           const blocked = !!venue.do_not_contact_until && venue.do_not_contact_until > new Date().toISOString().slice(0, 10);
+          const on = selectedId === venue.id;
           return (
-          <div
-            key={venue.id}
-            onClick={() => onSelect(venue.id)}
-            className={cn(
-              'rounded-lg border p-3 cursor-pointer transition-all duration-200 hover:shadow-md',
-              selectedId === venue.id
-                ? 'border-primary/50 bg-primary/5 shadow-sm'
-                : 'hover:border-border/80'
-            )}
-          >
-            <div className="flex items-start justify-between">
-              <div className="min-w-0">
-                <h3 className="font-medium text-sm truncate">{venue.name}</h3>
-                <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
-                  <MapPin className="h-3 w-3" />
-                  {venue.city}
-                </div>
-              </div>
-              <Badge variant="secondary" className="text-[10px] shrink-0">
-                {TYPE_LABELS[venue.type]}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between mt-2">
-              <div className="flex items-center gap-0.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={cn(
-                      'h-3 w-3',
-                      i < venue.fit_score
-                        ? 'text-yellow-500 fill-yellow-500'
-                        : 'text-muted-foreground/30'
-                    )}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-1.5">
-                {venue.style_fit === 'yes' && (
-                  <span title="Programme notre style"><Target className="h-3 w-3 text-primary" /></span>
-                )}
-                {blocked && (
-                  <span title={`Ne pas recontacter avant le ${venue.do_not_contact_until}`}><Ban className="h-3 w-3 text-destructive" /></span>
-                )}
-                {appWindow && appWindow.days_left <= 45 && (
-                  <span title={`Candidature : clôture dans ${appWindow.days_left} j`} className="flex items-center gap-0.5 text-[10px] text-orange-500">
-                    <CalendarClock className="h-3 w-3" />
-                    {appWindow.days_left} j
+            <button
+              type="button"
+              key={venue.id}
+              onClick={() => onSelect(venue.id)}
+              className={cn(
+                'block w-full rounded-lg px-3 py-2.5 text-left transition-colors',
+                on ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary',
+              )}
+            >
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="truncate text-[15px] font-medium">{venue.name}</span>
+                {appWindow && appWindow.days_left <= 45 ? (
+                  <span className={cn('shrink-0 text-[12px]', on ? 'text-primary-foreground/80' : 'text-[hsl(var(--status-warning))]')}>
+                    candidature J-{appWindow.days_left}
                   </span>
-                )}
-                {venue.capacity && (
-                  <span className="text-[10px] text-muted-foreground">
-                    {venue.capacity} pers.
-                  </span>
+                ) : (
+                  venue.fit_score > 0 && <span className={cn('shrink-0 text-[12px]', on ? 'text-primary-foreground/80' : 'text-muted-foreground')}>{'★'.repeat(venue.fit_score)}</span>
                 )}
               </div>
-            </div>
-          </div>
+              <div className={cn('mt-0.5 truncate text-[13px]', on ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
+                {[venue.city, TYPE_LABELS[venue.type], venue.capacity ? `${venue.capacity} pers.` : null, venue.style_fit === 'yes' ? 'notre style' : null, blocked ? 'ne pas recontacter' : null]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </div>
+            </button>
           );
         })}
       </div>

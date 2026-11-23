@@ -40,7 +40,7 @@ export function BandPanel({
   const busy = b.status === 'queued' || b.status === 'running';
 
   return (
-    <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[460px] flex-col border-l border-border bg-card shadow-2xl">
+    <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[460px] flex-col border-l material-thick shadow-pop">
       <div className="flex items-start justify-between gap-3 border-b border-border p-5">
         <div>
           <div className="flex flex-wrap gap-2">
@@ -80,7 +80,7 @@ export function BandPanel({
           </section>
         )}
         {b.lesson && (
-          <section className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+          <section className="rounded-xl bg-primary/[0.07] p-3 text-sm">
             <div className="mb-1 flex items-center gap-1.5 font-semibold text-primary">
               <Lightbulb className="size-4" /> Pour KRUZBERG
             </div>
@@ -134,7 +134,7 @@ export function BandPanel({
               <h3 className="mb-1.5 flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 <KindBadge kind={k} /> {rs.length}
               </h3>
-              <ul className="divide-y divide-border/60 rounded-lg border border-border">
+              <ul className="divide-y border-y">
                 {rs.map((r) => (
                   <li key={r.id} className="flex items-start justify-between gap-2 px-3 py-2 text-sm">
                     <div className="min-w-0">
@@ -178,7 +178,7 @@ function NearBands({ near, data, onBand, onEntity }: { near: BandLink[]; data: S
     <section>
       <h3 className="mb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">Groupes au parcours proche</h3>
       <p className="mb-2 text-xs text-muted-foreground">Ils partagent au moins deux acteurs avec ce groupe : mêmes salles, même tourneur, mêmes festivals.</p>
-      <ul className="divide-y divide-border/60 rounded-lg border border-border">
+      <ul className="divide-y border-y">
         {rows.slice(0, more ? undefined : 6).map((l) => {
           const b = bands.get(l.id);
           return (
