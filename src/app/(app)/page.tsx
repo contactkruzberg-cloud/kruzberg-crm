@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { TodayStrip } from '@/components/dashboard/today-strip';
 import { KpiCards } from '@/components/dashboard/kpi-cards';
 import { RelanceAlerts } from '@/components/dashboard/relance-alerts';
 import { UpcomingConcerts } from '@/components/dashboard/upcoming-concerts';
@@ -25,26 +26,15 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
 };
 
-// Action first (what to do this week), then the overview, which can be folded.
+// Today at a glance, then what to do now, then the overview (foldable).
 export default function DashboardPage() {
-  const now = new Date();
-  const greeting =
-    now.getHours() < 12 ? 'Bonjour' : now.getHours() < 18 ? 'Bon après-midi' : 'Bonsoir';
-  const dateStr = now.toLocaleDateString('fr-FR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      {/* Hero */}
-      <motion.div variants={item} className="gradient-hero rounded-2xl p-5 lg:p-6">
-        <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
-          {greeting}, <span className="text-primary">KRUZBERG</span>
-        </h1>
-        <p className="text-muted-foreground mt-1 capitalize">{dateStr}</p>
+      <h1 className="sr-only">Dashboard</h1>
+
+      {/* Today at a glance */}
+      <motion.div variants={item}>
+        <TodayStrip />
       </motion.div>
 
       {/* To do now */}
@@ -52,7 +42,7 @@ export default function DashboardPage() {
         <motion.div variants={item}>
           <RelanceAlerts />
         </motion.div>
-        <motion.div variants={item}>
+        <motion.div variants={item} id="taches" className="scroll-mt-20">
           <PendingTasks />
         </motion.div>
       </div>
@@ -62,6 +52,13 @@ export default function DashboardPage() {
         <ApplicationDeadlines />
       </motion.div>
 
+      {/* Pipeline overview */}
+      <motion.div variants={item}>
+        <CollapsibleSection id="kpis" title="Pipeline">
+          <KpiCards />
+        </CollapsibleSection>
+      </motion.div>
+
       {/* Upcoming */}
       <motion.div variants={item}>
         <CollapsibleSection id="upcoming" title="Prochaines dates">
@@ -69,13 +66,6 @@ export default function DashboardPage() {
             <UpcomingConcerts />
             <NextTour />
           </div>
-        </CollapsibleSection>
-      </motion.div>
-
-      {/* Overview */}
-      <motion.div variants={item}>
-        <CollapsibleSection id="kpis" title="Chiffres clés">
-          <KpiCards />
         </CollapsibleSection>
       </motion.div>
 
