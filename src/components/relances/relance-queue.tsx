@@ -8,9 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { canQuickRelance, useDeals, useSnoozeRelance } from '@/hooks/use-deals';
-import { useRelanceDocs, useRequestRelance, useRequestRelances } from '@/hooks/use-relance';
-import { freshDraft, RelanceBasis, RelanceEditor } from '@/components/pipeline/relance-dialog';
-import { DealConversation } from '@/components/messages/entity-conversation';
+import { useRelanceDocs, useRequestRelances } from '@/hooks/use-relance';
+import { freshDraft, RelanceBasis } from '@/components/pipeline/relance-dialog';
+import { RelanceConversation } from './relance-conversation';
 import { cn, daysUntil, dealLabel, formatDate } from '@/lib/utils';
 import type { RelanceDoc } from '@/lib/relance/prompt';
 import type { Deal } from '@/types/database';
@@ -22,7 +22,7 @@ const STATUS: Record<Status, { label: string; cls: string }> = {
   ready: { label: 'Prête', cls: 'bg-green-500/15 text-green-600 dark:text-green-400' },
   writing: { label: 'Rédaction…', cls: 'bg-primary/10 text-primary' },
   error: { label: 'Erreur', cls: 'bg-red-500/15 text-red-500' },
-  todo: { label: 'À préparer', cls: 'bg-muted text-muted-foreground' },
+  todo: { label: 'À rédiger', cls: 'bg-muted text-muted-foreground' },
 };
 
 function statusOf(doc: RelanceDoc | undefined, deal: Deal): Status {
@@ -45,7 +45,6 @@ export function RelanceQueue() {
   const { data: deals, isLoading } = useDeals();
   const docs = useRelanceDocs();
   const requestAll = useRequestRelances();
-  const requestOne = useRequestRelance();
   const snooze = useSnoozeRelance();
   const [pickedId, setPickedId] = useState<string | null>(null);
 
@@ -107,7 +106,7 @@ export function RelanceQueue() {
         {toPrepare.length > 0 && (
           <Button onClick={prepareAll} disabled={requestAll.isPending} className="gap-1.5">
             {requestAll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            Préparer {toPrepare.length === queue.length ? 'toutes les relances' : `les ${toPrepare.length} restantes`} ({toPrepare.length})
+            Rédiger {toPrepare.length === queue.length ? 'toutes les relances' : `les ${toPrepare.length} restantes`} avec Claude ({toPrepare.length})
           </Button>
         )}
           </>
@@ -198,33 +197,12 @@ export function RelanceQueue() {
                 </div>
               </div>
 
-              {/* What was said so far, before writing the follow-up. */}
-              <div>
-                <h3 className="text-[13px] font-semibold text-muted-foreground">Échanges</h3>
-                <DealConversation key={current.id} deal={current} readOnly className="max-h-[42vh] rounded-2xl bg-secondary/40 px-2 dark:bg-white/[0.03]" />
-              </div>
+              <p className="text-xs text-muted-foreground">
+                <RelanceBasis deal={current} />
+              </p>
 
-              <div>
-                <h3 className="text-[13px] font-semibold text-muted-foreground">Relance</h3>
-                <p className="text-xs text-muted-foreground">
-                  <RelanceBasis deal={current} />
-                </p>
-              </div>
-
-              {status(current) === 'todo' ? (
-                <div className="space-y-3 border-y py-8">
-                  <p className="text-[15px] text-muted-foreground">Pas encore de brouillon pour cette relance.</p>
-                  <Button
-                    className="gap-1.5"
-                    disabled={requestOne.isPending}
-                    onClick={() => requestOne.mutate({ dealId: current.id }, { onError: (e) => toast.error(e.message) })}
-                  >
-                    <Sparkles className="h-4 w-4" /> Préparer ce brouillon
-                  </Button>
-                </div>
-              ) : (
-                <RelanceEditor key={current.id} deal={current} onDone={next} />
-              )}
+              {/* The conversation, with the follow-up written in its reply box. Greg sends it himself. */}
+              <RelanceConversation key={current.id} deal={current} onSent={next} className="h-[calc(100dvh-17rem)] min-h-[420px]" />
 
               {status(current) === 'writing' && queue.some((d) => d.id !== current.id && status(d) === 'ready') && (
                 <button

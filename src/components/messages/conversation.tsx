@@ -126,6 +126,10 @@ export function Conversation({
   emptyLabel,
   className,
   readOnly = false,
+  draft = null,
+  composerTop,
+  sendExtra,
+  onSent,
 }: {
   match: Match;
   fallbackTo?: string[];
@@ -133,6 +137,14 @@ export function Conversation({
   emptyLabel?: string;
   /** History only, no reply box (e.g. above a follow-up draft). */
   readOnly?: boolean;
+  /** Pre-fills the reply box (e.g. Claude's follow-up). A new key loads a new version. */
+  draft?: { key: string; to: string; subject: string; body: string; inReplyTo?: string | null; references?: string | null } | null;
+  /** Shown just above the reply box (draft status, actions). */
+  composerTop?: React.ReactNode;
+  /** Extra send options (e.g. relance: true). */
+  sendExtra?: { relance?: boolean };
+  /** Called once the mail has left. */
+  onSent?: () => void;
   className?: string;
 }) {
   const emails = useEmails();
@@ -146,6 +158,9 @@ export function Conversation({
   );
   const target = useMemo(() => replyTarget(thread, fallbackTo), [thread, fallbackTo]);
 
+  // Threading of a pre-filled draft (it knows which mail it answers).
+  const [draftThread, setDraftThread] = useState<{ inReplyTo: string | null; references: string | null } | null>(null);
+  const [loadedDraft, setLoadedDraft] = useState<string | null>(null);
   const [to, setTo] = useState<string | null>(null);
   const [subject, setSubject] = useState<string | null>(null);
   const [body, setBody] = useState('');
@@ -181,6 +196,13 @@ export function Conversation({
       area.current?.setSelectionRange(r.caret, r.caret);
     });
   };
+  if (draft && draft.key !== loadedDraft) {
+    setLoadedDraft(draft.key);
+    setTo(draft.to || null);
+    setSubject(draft.subject || null);
+    setBody(draft.body);
+    setDraftThread({ inReplyTo: draft.inReplyTo ?? null, references: draft.references ?? null });
+  }
   const toValue = to ?? target.to.join(', ');
   const subjectValue = subject ?? target.subject;
 
@@ -208,15 +230,19 @@ export function Conversation({
         to: toValue,
         subject: subjectValue,
         emailBody: text,
-        inReplyTo: subject === null ? target.inReplyTo : null,
-        references: subject === null ? target.references : null,
+        inReplyTo: draftThread ? draftThread.inReplyTo : subject === null ? target.inReplyTo : null,
+        references: draftThread ? draftThread.references : subject === null ? target.references : null,
         ...context,
+        ...sendExtra,
       },
       {
         onSuccess: () => {
           setBody('');
           setTo(null);
           setSubject(null);
+          setDraftThread(null);
+          toast.success('Mail envoyé');
+          onSent?.();
         },
       },
     );
@@ -251,6 +277,7 @@ export function Conversation({
       {/* Composer */}
       {!readOnly && (
       <div className="border-t px-1 pt-2.5">
+        {composerTop}
         <div className="flex flex-wrap gap-x-3 gap-y-1 px-2 pb-1.5 text-[12.5px] text-muted-foreground">
           <label className="flex min-w-0 flex-1 items-center gap-1.5">
             À
@@ -333,9 +360,9 @@ export function Conversation({
                 requestAnimationFrame(() => el.setSelectionRange(r.caret, r.caret));
               }
             }}
-            rows={Math.min(8, Math.max(1, body.split('\n').length))}
+            rows={Math.min(14, Math.max(1, body.split('\n').length))}
             placeholder={thread.length ? 'Répondre…' : 'Écrire un mail…'}
-            className="max-h-48 min-h-[28px] flex-1 resize-none bg-transparent py-1 text-[14.5px] outline-none placeholder:text-muted-foreground/70 focus-visible:outline-none"
+            className="max-h-80 min-h-[28px] flex-1 resize-none bg-transparent py-1 text-[14.5px] outline-none placeholder:text-muted-foreground/70 focus-visible:outline-none"
           />
           <button
             type="button"

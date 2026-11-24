@@ -1,55 +1,35 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
-import { Check, Copy, Loader2, Mail, RefreshCw, Reply, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useQuickRelance } from '@/hooks/use-deals';
-import { useMarkRelanceSent, useRelanceDocs, useRequestRelance } from '@/hooks/use-relance';
+import { useRelanceDocs } from '@/hooks/use-relance';
+import { RelanceConversation } from '@/components/relances/relance-conversation';
 import { dealLabel, formatDate } from '@/lib/utils';
 import type { RelanceDoc } from '@/lib/relance/prompt';
 import type { Deal } from '@/types/database';
-
-const mailto = (d: { to: string; subject: string; body: string }) =>
-  `mailto:${d.to.split(/[,;\s]+/).filter(Boolean).join(',')}?subject=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(d.body)}`;
 
 /** A ready draft written after the last contact (an older one is stale). */
 export function freshDraft(doc: RelanceDoc | undefined, deal: Deal) {
   return !!doc && doc.state === 'ready' && (!deal.last_message_at || (doc.requestedAt || '') > deal.last_message_at);
 }
 
-function Elapsed({ since }: { since: string }) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  const s = Math.max(0, Math.round((now - Date.parse(since)) / 1000));
-  return <>{s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')}`}</>;
-}
-
 /**
- * "Relancer": Claude (a routine on Greg's subscription) writes a personalised
- * follow-up from the deal's history and the email sent from booking@; then it
- * opens in Mail.
+ * "Relancer": the conversation with the venue / contact, Claude's follow-up in
+ * the reply box. Greg reads it, edits it and sends it himself from the CRM.
  */
 export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: boolean; onOpenChange: (o: boolean) => void }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="flex h-[min(820px,92dvh)] max-w-2xl flex-col gap-0 p-0">
+        <DialogHeader className="border-b px-5 py-3.5 text-left">
+          <DialogTitle className="flex items-center gap-2 text-[16px]">
             <Sparkles className="h-4 w-4 text-primary" /> Relancer · {dealLabel(deal, '')}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-[12.5px]">
             <RelanceBasis deal={deal} />
           </DialogDescription>
         </DialogHeader>
-        {open && <RelanceEditor deal={deal} autoRequest onDone={() => onOpenChange(false)} />}
+        {open && <RelanceConversation deal={deal} autoRequest onSent={() => onOpenChange(false)} className="min-h-0 flex-1 px-3 pb-3" />}
       </DialogContent>
     </Dialog>
   );
@@ -58,214 +38,13 @@ export function RelanceDialog({ deal, open, onOpenChange }: { deal: Deal; open: 
 /** Where the draft comes from (the email it follows up, or the deal's history). */
 export function RelanceBasis({ deal }: { deal: Deal }) {
   const doc = useRelanceDocs().data?.get(deal.id);
-  if (!doc?.basedOn) return <>Relance personnalisée rédigée par Claude.</>;
+  if (!doc?.basedOn) return <>Relance personnalisée rédigée par Claude, à relire avant envoi.</>;
   return doc.basedOn.lastSent ? (
     <>
       À partir de ton mail « {doc.basedOn.lastSent.subject} » du {formatDate(doc.basedOn.lastSent.date)}
       {doc.basedOn.relances ? ` · relance n° ${doc.basedOn.relances + 1}` : ''}.
     </>
   ) : (
-    <>
-      Aucun mail envoyé à {doc.basedOn.addresses?.join(', ') || 'ce contact'} retrouvé dans booking@ (dossiers fouillés : {doc.basedOn.searchedIn || '?'}) : à partir de
-      la fiche et de l’historique.
-    </>
-  );
-}
-
-/**
- * The follow-up itself: waits for Claude's draft, lets Greg edit it, put it in
- * Mail and note it as sent. Used by the "Relancer" dialog and the relance queue.
- * Mount it with a `key` per deal: its state belongs to one deal.
- */
-export function RelanceEditor({ deal, autoRequest = false, onDone }: { deal: Deal; autoRequest?: boolean; onDone?: () => void }) {
-  const docs = useRelanceDocs();
-  const doc = docs.data?.get(deal.id);
-  const asked = useRef(false);
-  const request = useRequestRelance();
-  const markSent = useMarkRelanceSent();
-  const relance = useQuickRelance();
-  const [edit, setEdit] = useState<{ to: string; subject: string; body: string } | null>(null);
-  const [note, setNote] = useState('');
-  const [opened, setOpened] = useState(false);
-
-  const [savingDraft, setSavingDraft] = useState(false);
-  const [draftId, setDraftId] = useState<string | null>(null);
-  const ready = freshDraft(doc, deal);
-  const threaded = !!doc?.thread?.messageId;
-  const createDraft = async () => {
-    if (!edit) return;
-    setSavingDraft(true);
-    try {
-      const res = await fetch('/api/relance/draft', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ dealId: deal.id, ...edit }) });
-      const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(body?.error || `Erreur ${res.status}`);
-      setDraftId(body.messageId);
-      setOpened(true);
-      toast.success('Brouillon de réponse créé dans Mail (Brouillons)');
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Brouillon impossible');
-    } finally {
-      setSavingDraft(false);
-    }
-  };
-  const writing = doc?.state === 'requested';
-
-  // On mount (dialog): ask for a draft unless one is ready or being written.
-  useEffect(() => {
-    if (!autoRequest || asked.current || !docs.isSuccess) return;
-    asked.current = true;
-    if (!ready && !writing) request.mutate({ dealId: deal.id }, { onError: (e) => toast.error(e.message) });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [docs.isSuccess]);
-
-  // Editable copy of the draft, reset when a new version arrives.
-  const draftKey = ready ? `${doc!.readyAt}` : '';
-  useEffect(() => {
-    if (ready && doc) setEdit({ to: doc.to || '', subject: doc.subject || '', body: doc.body || '' });
-    else setEdit(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftKey]);
-
-  const again = () =>
-    request.mutate(
-      { dealId: deal.id, note },
-      { onSuccess: () => setNote(''), onError: (e) => toast.error(e.message) },
-    );
-
-  return (
-    <div className="space-y-4">
-
-        {(writing || request.isPending) && (
-          <div className="space-y-2 py-10 text-center text-sm">
-            <p className="flex items-center justify-center gap-2 font-medium">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" /> Claude rédige la relance…
-              {doc?.requestedAt && writing && (
-                <span className="font-normal text-muted-foreground">
-                  (<Elapsed since={doc.requestedAt} />)
-                </span>
-              )}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              En général 2 à 4 minutes. Tu peux fermer cette fenêtre : le bouton deviendra « Relance prête ».
-            </p>
-          </div>
-        )}
-
-        {doc?.state === 'error' && !writing && !request.isPending && (
-          <div className="space-y-2 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm">
-            <p>Claude n’a pas pu rédiger cette relance{doc.error ? ` : ${doc.error}` : '.'}</p>
-            <Button size="sm" variant="outline" onClick={again}>
-              Réessayer
-            </Button>
-          </div>
-        )}
-
-        {ready && edit && !writing && !request.isPending && (
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <Label className="text-xs">À</Label>
-              <Input value={edit.to} onChange={(e) => setEdit({ ...edit, to: e.target.value })} placeholder="adresse@exemple.com" />
-              {!edit.to && <p className="text-xs text-orange-500">Aucune adresse email sur la fiche : ajoute-la ici (ou dans Mail).</p>}
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Objet</Label>
-              <Input value={edit.subject} onChange={(e) => setEdit({ ...edit, subject: e.target.value })} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Message (modifiable)</Label>
-              <Textarea value={edit.body} onChange={(e) => setEdit({ ...edit, body: e.target.value })} className="min-h-[260px] text-sm leading-relaxed" />
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {threaded ? (
-                <>
-                  <Button className="gap-1.5" disabled={savingDraft} onClick={createDraft}>
-                    {savingDraft ? <Loader2 className="h-4 w-4 animate-spin" /> : <Reply className="h-4 w-4" />} Créer la réponse dans Mail
-                  </Button>
-                  <Button asChild variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" title="Nouveau message, hors du fil">
-                    <a href={mailto(edit)} onClick={() => setOpened(true)}>
-                      <Mail className="h-3.5 w-3.5" /> Nouveau message
-                    </a>
-                  </Button>
-                </>
-              ) : (
-                <Button asChild className="gap-1.5">
-                  <a href={mailto(edit)} onClick={() => setOpened(true)}>
-                    <Mail className="h-4 w-4" /> Ouvrir dans Mail
-                  </a>
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                className="gap-1.5"
-                onClick={() =>
-                  navigator.clipboard
-                    .writeText(`${edit.subject}\n\n${edit.body}`)
-                    .then(() => toast.success('Objet et message copiés'))
-                    .catch(() => toast.error('Copie impossible'))
-                }
-              >
-                <Copy className="h-4 w-4" /> Copier
-              </Button>
-            </div>
-            {threaded ? (
-              <p className="text-xs text-muted-foreground">
-                La réponse est déposée dans <b>Brouillons</b> de booking@, dans le même fil que ton mail du {formatDate(doc!.thread!.date)} (citation incluse).
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground">Mail initial introuvable dans booking@ : la relance part en nouveau message.</p>
-            )}
-            {draftId && (
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm">
-                <Check className="h-4 w-4 text-green-600" /> Brouillon créé dans Mail → Brouillons (booking@).
-                <Button asChild size="sm" variant="outline" className="h-7 gap-1">
-                  <a href={`message://${encodeURIComponent(draftId)}`}>
-                    <Mail className="h-3.5 w-3.5" /> L’ouvrir dans Mail
-                  </a>
-                </Button>
-                <span className="text-xs text-muted-foreground">(si Mail ne l’affiche pas encore, attends quelques secondes la synchro)</span>
-              </div>
-            )}
-
-            {opened && (
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
-                <span>Envoyée depuis Mail ?</span>
-                <Button
-                  size="sm"
-                  className="h-7 gap-1"
-                  disabled={relance.isPending}
-                  onClick={() =>
-                    relance.mutate(
-                      { deal, channel: 'email' },
-                      {
-                        onSuccess: () => {
-                          markSent.mutate(deal.id);
-                          onDone?.();
-                        },
-                      },
-                    )
-                  }
-                >
-                  <Check className="h-3.5 w-3.5" /> Oui, noter la relance
-                </Button>
-                <span className="text-xs text-muted-foreground">(historique, étape « Relancé », prochaine relance dans 7 j)</span>
-              </div>
-            )}
-
-            <div className="flex flex-wrap items-center gap-2 border-t pt-3">
-              <Input
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && again()}
-                placeholder="Consigne pour une autre version (ex. plus court, en anglais, proposer mars)…"
-                className="h-8 flex-1 text-xs"
-              />
-              <Button size="sm" variant="ghost" className="gap-1.5" onClick={again}>
-                <RefreshCw className="h-3.5 w-3.5" /> Autre version
-              </Button>
-            </div>
-          </div>
-        )}
-    </div>
+    <>À partir de la fiche et de l’historique (aucun mail envoyé à {doc.basedOn.addresses?.join(', ') || 'ce contact'} retrouvé dans booking@).</>
   );
 }

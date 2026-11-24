@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { to, cc, subject, emailBody, dealId, contactId, venueId, templateId, inReplyTo, references } = body;
+    const { to, cc, subject, emailBody, dealId, contactId, venueId, templateId, inReplyTo, references, relance } = body;
 
     if (!to || !subject || !emailBody) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 });
@@ -69,8 +69,9 @@ export async function POST(request: NextRequest) {
       deal_id: dealId || null,
       venue_id: venueId || null,
       contact_id: contactId || null,
-      type: 'email_sent',
-      content: `À : ${to}\nObjet : ${subject}\n\n${emailBody}`,
+      type: relance ? 'relance' : 'email_sent',
+      channel: 'email',
+      content: `${relance ? 'Relance envoyée depuis le CRM\n' : ''}À : ${to}\nObjet : ${subject}\n\n${emailBody}`,
     });
 
     // Update deal if linked
@@ -84,6 +85,7 @@ export async function POST(request: NextRequest) {
 
       const updates: Record<string, string> = {
         last_message_at: now,
+        last_relance_method: 'email',
       };
 
       // Auto-advance stage
@@ -92,6 +94,10 @@ export async function POST(request: NextRequest) {
         updates.first_contact_at = now;
       } else if (deal?.stage === 'contacte') {
         updates.stage = 'relance';
+      }
+      // Waiting for an answer: next follow-up in 7 days (the relance queue picks it up then).
+      if (['a_contacter', 'contacte', 'relance'].includes(deal?.stage ?? '') || relance) {
+        updates.next_relance_at = new Date(Date.now() + 7 * 86_400_000).toISOString();
       }
 
       await supabase

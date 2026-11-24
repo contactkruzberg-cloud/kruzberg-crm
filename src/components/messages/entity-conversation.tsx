@@ -24,7 +24,9 @@ function useDealMatch(deal: Deal): { match: Match; fallbackTo: string[] } {
   }, [deal.venue, deal.contact, contacts]);
 }
 
-export function DealConversation({ deal, className, readOnly }: { deal: Deal; className?: string; readOnly?: boolean }) {
+type PassThrough = Pick<React.ComponentProps<typeof Conversation>, 'readOnly' | 'draft' | 'composerTop' | 'sendExtra' | 'onSent'>;
+
+export function DealConversation({ deal, className, ...rest }: { deal: Deal; className?: string } & PassThrough) {
   const { match, fallbackTo } = useDealMatch(deal);
   return (
     <Conversation
@@ -33,7 +35,7 @@ export function DealConversation({ deal, className, readOnly }: { deal: Deal; cl
       context={{ dealId: deal.id, venueId: deal.venue_id ?? undefined, contactId: deal.contact_id ?? undefined }}
       emptyLabel={fallbackTo.length ? 'Aucun mail échangé avec ce lieu pour l’instant.' : 'Ajoute un email au lieu ou au contact pour retrouver vos échanges ici.'}
       className={className}
-      readOnly={readOnly}
+      {...rest}
     />
   );
 }

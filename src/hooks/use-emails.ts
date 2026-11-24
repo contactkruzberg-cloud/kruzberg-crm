@@ -153,6 +153,8 @@ export interface SendParams {
   dealId?: string;
   venueId?: string;
   contactId?: string;
+  /** A follow-up: logged as « Relance », next one in 7 days. */
+  relance?: boolean;
 }
 
 export function useSendMessage() {
