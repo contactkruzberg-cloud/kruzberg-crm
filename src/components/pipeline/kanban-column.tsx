@@ -24,11 +24,11 @@ export function KanbanColumn({ stage, count, headerAction, children }: KanbanCol
         isOver && 'bg-primary/[0.06]',
       )}
     >
-      <div className="flex items-center justify-between gap-2 border-b px-1 pb-2">
+      <div className="flex items-center justify-between gap-2 border-b-2 px-1 pb-2" style={{ borderColor: color }}>
         <div className="flex min-w-0 items-center gap-2">
           <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
           <h3 className="truncate text-[13.5px] font-semibold">{stage.label}</h3>
-          <span className="nums text-[13px] text-muted-foreground">{count}</span>
+          <span className="nums rounded-full px-1.5 text-[12px] font-semibold" style={{ color, backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)` }}>{count}</span>
         </div>
         {headerAction}
       </div>
