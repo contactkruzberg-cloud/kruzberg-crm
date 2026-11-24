@@ -3,10 +3,11 @@ import type { Store } from '@/lib/mcp/store';
 import { aggregate } from './aggregate';
 import { mutate, type Launch, type Loaded } from './docs';
 import { isNoise, slug } from './normalize';
-import { BAND_SCHEMA, DISCOVER_SCHEMA, SYNTHESIS_SCHEMA, bandPrompt, discoverPrompt, rosterPrompt, synthesisPrompt } from './prompts';
+import { BAND_SCHEMA, DISCOVER_SCHEMA, MANAGERS_SCHEMA, SYNTHESIS_SCHEMA, bandPrompt, discoverPrompt, managersPrompt, rosterPrompt, synthesisPrompt } from './prompts';
 import { SEED_BANDS, SEED_WATCH } from './seed';
 import {
   ANGLE_LABEL,
+  ENTITY_KINDS,
   STAGE_LABEL,
   type Band,
   type Db,
@@ -50,6 +51,7 @@ export function enqueue(db: Db, kind: JobKind, target: string | undefined, label
       j.label = b.name;
     }
   }
+  if (kind === 'managers') j.label = `Managers · ${db.bands.find((x) => x.id === target)?.name ?? target}`;
   return j;
 }
 
@@ -185,6 +187,7 @@ export type Action =
   | { type: 'exploreAll' }
   | { type: 'discoverLyon' }
   | { type: 'roster'; key: string; name: string }
+  | { type: 'findManagers' }
   | { type: 'cancelJob'; id: string }
   | { type: 'entity'; key: string; hidden?: boolean; mergedInto?: string | null; note?: string };
 
@@ -248,6 +251,8 @@ export function applyAction(l: Loaded, a: Action): Record<string, unknown> {
     }
     case 'roster':
       return { ok: true, job: enqueue(db, 'roster', a.key, a.name) };
+    case 'findManagers':
+      return { ok: true, count: enqueueManagers(db) };
     case 'cancelJob': {
       const j = db.jobs.find((x) => x.id === a.id);
       if (j && j.status === 'queued') {
@@ -277,6 +282,25 @@ export function applyAction(l: Loaded, a: Action): Record<string, unknown> {
   throw new ActionError('Action inconnue');
 }
 
+/** Queues a managers search for every explored band (not already searched or queued). Returns how many. */
+export function enqueueManagers(db: Db): number {
+  let n = 0;
+  for (const b of db.bands) {
+    if (b.status !== 'done') continue;
+    if (db.jobs.some((j) => j.kind === 'managers' && j.target === b.id && j.status !== 'error')) continue;
+    if (enqueue(db, 'managers', b.id, b.name)) n++;
+  }
+  return n;
+}
+
+/**
+ * Managers were added after the first explorations: the first time the page
+ * loads with explored bands and no managers search ever made, search them all.
+ */
+export function needsManagersBackfill(db: Db) {
+  return !db.jobs.some((j) => j.kind === 'managers') && db.bands.some((b) => b.status === 'done');
+}
+
 /** Base de départ quand la constellation est vide : la niche du Radar et les noms cités en séance. */
 export function seed(db: Db) {
   if (db.bands.length || db.watch.length) return;
@@ -303,6 +327,11 @@ function build(job: Job, db: Db): { prompt: string; schema: object; web: boolean
     return { prompt: discoverPrompt(angle, knownNames(db)), schema: DISCOVER_SCHEMA, web: true };
   }
   if (job.kind === 'synthesis') return { prompt: synthesisPrompt(dossier(db)), schema: SYNTHESIS_SCHEMA, web: false };
+  if (job.kind === 'managers') {
+    const b = db.bands.find((x) => x.id === job.target);
+    if (!b) throw new Error('Groupe introuvable');
+    return { prompt: managersPrompt(b), schema: MANAGERS_SCHEMA, web: true };
+  }
   const ent = aggregate(db).find((e) => e.key === job.target);
   if (!ent) throw new Error('Acteur introuvable');
   return {
@@ -330,7 +359,7 @@ function dossier(db: Db): string {
   return lines.join('\n');
 }
 
-const KINDS: EntityKind[] = ['tourneur', 'label', 'salle', 'festival', 'organisateur', 'tete_affiche', 'plateau', 'media', 'dispositif'];
+const KINDS: EntityKind[] = ENTITY_KINDS;
 
 function sceneOf(city?: string, country?: string): Scene | undefined {
   const c = (city ?? '').toLowerCase();
@@ -356,6 +385,37 @@ function apply(db: Db, job: Job, output: unknown): { added: number; explore: str
     if (!Array.isArray(o.patterns)) throw new Error('patterns manquant');
     db.synthesis = { ...o, generatedAt: new Date().toISOString() };
     return { added: o.patterns.length, explore: [] };
+  }
+  if (job.kind === 'managers') {
+    const o = output as { findings?: Array<Record<string, unknown>> };
+    if (!Array.isArray(o.findings)) throw new Error('findings attendu');
+    const b = db.bands.find((x) => x.id === job.target);
+    if (!b) return { added: 0, explore: [] };
+    // The latest search replaces the band's managers.
+    db.findings = db.findings.filter((f) => !(f.bandId === b.id && f.kind === 'manager'));
+    const fresh: Finding[] = [];
+    for (const r of o.findings) {
+      const name = clean(r.name);
+      const sourceUrl = clean(r.sourceUrl);
+      if (!name || !sourceUrl || isNoise({ name, detail: clean(r.detail), bandId: b.id })) continue;
+      fresh.push(
+        compact({
+          id: randomUUID(),
+          bandId: b.id,
+          kind: 'manager' as const,
+          name,
+          city: clean(r.city),
+          country: clean(r.country),
+          when: clean(r.when),
+          detail: clean(r.detail),
+          scale: (['local', 'national', 'international'] as const).find((s) => s === r.scale),
+          website: clean(r.website),
+          sourceUrl,
+        }),
+      );
+    }
+    db.findings.push(...fresh);
+    return { added: fresh.length, explore: [] };
   }
   if (job.kind === 'band') {
     const o = output as { band?: Record<string, string>; findings?: Array<Record<string, unknown>>; milestones?: Array<Record<string, unknown>> };

@@ -5,7 +5,7 @@ import { registerFullCrmTools } from '@/lib/mcp/crm-tools';
 import { createMemoryStore } from '@/lib/mcp/__tests__/memory-store';
 import { aggregate } from '../aggregate';
 import { loadDb, mutate } from '../docs';
-import { applyAction, seed, workersToFire, STALE_MS } from '../engine';
+import { applyAction, enqueueManagers, needsManagersBackfill, seed, workersToFire, STALE_MS } from '../engine';
 
 let mem: ReturnType<typeof createMemoryStore>;
 let handler: (req: Request) => Promise<Response>;
@@ -159,5 +159,57 @@ describe('constellation : réveil de la routine', () => {
 
   it('hands off to a new routine only when one is configured', async () => {
     expect(await ok('constellation_handoff')).toEqual({ fired: 0, error: 'Routine Constellation non configurée.' });
+  });
+});
+
+describe('constellation : managers', () => {
+  const explore = async (id: string) => {
+    await mutate(mem.store, (l) => applyAction(l, { type: 'exploreBand', id }));
+    const brief = await ok('constellation_next_job');
+    await ok('constellation_submit_job', { job_id: brief.job.id, output: bandOutput() });
+  };
+
+  it('asks for managers when exploring a band', async () => {
+    await mutate(mem.store, (l) => applyAction(l, { type: 'exploreBand', id: 'johnnie-carwash' }));
+    const brief = await ok('constellation_next_job');
+    expect(brief.instructions).toContain('kind "manager"');
+    expect(brief.output_schema.properties.findings.items.properties.kind.enum).toContain('manager');
+  });
+
+  it('backfills once: a managers search per explored band, results filed as managers', async () => {
+    await explore('johnnie-carwash');
+    let { db } = await loadDb(mem.store);
+    expect(needsManagersBackfill(db)).toBe(true);
+
+    await mutate(mem.store, (l) => enqueueManagers(l.db));
+    ({ db } = await loadDb(mem.store));
+    expect(needsManagersBackfill(db)).toBe(false);
+    expect(db.jobs.filter((j) => j.kind === 'managers').map((j) => j.label)).toEqual(['Managers · Johnnie Carwash']);
+    // Already queued: not queued twice.
+    await mutate(mem.store, (l) => expect(enqueueManagers(l.db)).toBe(0));
+
+    const brief = await ok('constellation_next_job');
+    expect(brief.job.kind).toBe('managers');
+    expect(brief.instructions).toContain('managers du groupe « Johnnie Carwash »');
+    const r = await ok('constellation_submit_job', {
+      job_id: brief.job.id,
+      output: { findings: [{ name: 'Ditto Music Management', detail: 'manager de Johnnie Carwash', sourceUrl: 'https://example.org/m' }, { name: 'Sans source' }] },
+    });
+    expect(r).toMatchObject({ status: 'done', added: 1 });
+
+    ({ db } = await loadDb(mem.store));
+    const managers = db.findings.filter((f) => f.kind === 'manager');
+    expect(managers.map((f) => f.name)).toEqual(['Ditto Music Management']);
+    // The band's other findings are kept.
+    expect(db.findings.filter((f) => f.bandId === 'johnnie-carwash').length).toBe(3);
+    expect(aggregate(db).find((e) => e.kind === 'manager')?.bandIds).toEqual(['johnnie-carwash']);
+  });
+
+  it('the « Chercher les managers » action only queues explored bands not searched yet', async () => {
+    await explore('johnnie-carwash');
+    const r = await mutate(mem.store, (l) => applyAction(l, { type: 'findManagers' }));
+    expect(r).toEqual({ ok: true, count: 1 });
+    const again = await mutate(mem.store, (l) => applyAction(l, { type: 'findManagers' }));
+    expect(again).toEqual({ ok: true, count: 0 });
   });
 });

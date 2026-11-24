@@ -8,7 +8,7 @@ import type { State } from './use-constellation';
 
 // Le cœur de l'outil : pour chaque type d'acteur, les noms qui reviennent chez
 // le plus de groupes de la niche (la règle de récurrence), lisibles d'un coup d'œil.
-const CARDS: EntityKind[] = ['tourneur', 'label', 'salle', 'festival', 'dispositif', 'organisateur', 'tete_affiche', 'media'];
+const CARDS: EntityKind[] = ['tourneur', 'manager', 'label', 'salle', 'festival', 'dispositif', 'organisateur', 'tete_affiche', 'media'];
 const PER_CARD = 5;
 
 type Zone = 'all' | 'france' | 'abroad';

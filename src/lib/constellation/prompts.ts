@@ -11,7 +11,7 @@ const RULES = `Règles :
 - Écris les noms tels qu'ils s'écrivent officiellement (ex. « Howlin' Banana Records », « Le Périscope »).
 - Réponds en français pour les textes libres.`;
 
-const KINDS = ['tourneur', 'label', 'salle', 'festival', 'organisateur', 'tete_affiche', 'plateau', 'media', 'dispositif'] as const;
+const KINDS = ['tourneur', 'manager', 'label', 'salle', 'festival', 'organisateur', 'tete_affiche', 'plateau', 'media', 'dispositif'] as const;
 const STAGES = [
   'formation',
   'premier_concert',
@@ -30,6 +30,8 @@ const STAGES = [
   'session_live',
   'autre',
 ] as const;
+
+const MANAGER_HOW = `la personne ou la société qui manage le groupe (name = la société de management si elle existe, sinon le nom de la personne ; detail = « manager de X », la personne de contact, le territoire et la période si connus ; website = site de la société). Où le trouver : rubrique « contact » / « management » du site et du Linktree, bio Instagram et Facebook, page Bandcamp, dossier de presse (EPK), page artiste du label ou du tourneur, fiches IRMA / annuaires pros, articles et interviews (« managé par », « management : », « mgmt »). Relève aussi les anciens managers. Un tourneur n'est pas un manager : ne le relève ici que s'il est explicitement présenté comme manager.`;
 
 export const BAND_SCHEMA = {
   type: 'object',
@@ -113,7 +115,8 @@ A. Faits (« findings ») — relève, avec le plus de détails possible :
 6. groupes dont il a fait la 1re partie → kind "tete_affiche" (name = le groupe en tête d'affiche, detail = lieu) ;
 7. groupes croisés en co-plateau → kind "plateau" ;
 8. médias, webzines, radios, blogs, émissions et sessions live qui l'ont chroniqué, interviewé ou passé (KEXP, BBC 6 Music, Les Inrocks, Rock&Folk, New Noise, Gonzaï, Mowno, Section 26, Le Petit Bulletin, radios associatives…) → kind "media" (detail = type de mention) ;
-9. tremplins, concours, dispositifs d'accompagnement, résidences, aides (iNOUïS du Printemps de Bourges, Ninkasi Musik Lab, FAIR, Ricard Live, Buzz Booster, Les Inouïs régionaux, SMAC qui accompagnent, résidences de création…) → kind "dispositif" (detail = « lauréat », « sélectionné », « finaliste », année).
+9. tremplins, concours, dispositifs d'accompagnement, résidences, aides (iNOUïS du Printemps de Bourges, Ninkasi Musik Lab, FAIR, Ricard Live, Buzz Booster, Les Inouïs régionaux, SMAC qui accompagnent, résidences de création…) → kind "dispositif" (detail = « lauréat », « sélectionné », « finaliste », année) ;
+10. manager / management → kind "manager" : ${MANAGER_HOW}
 
 Vise 40 à 80 faits.
 
@@ -237,4 +240,46 @@ ${dossier}
 Tâche : identifie les PATTERNS DE SUCCÈS. Compare les débuts : combien d'années entre la formation et le premier tourneur, le premier label, la première tournée hors de la ville ; par quels tremplins, salles, festivals, premières parties et médias ils sont passés ; ce qui a fait basculer chaque carrière ; ce qui est commun aux groupes français (Last Train, Johnny Mafia, Johnnie Carwash) d'un côté, aux groupes irlandais et britanniques de l'autre. Cite des faits datés du dossier, pas des généralités. Puis propose une feuille de route concrète pour KRUZBERG, avec les acteurs précis du dossier à approcher.
 
 Réponds en français.`;
+}
+
+/** Managers only: a light search for groups already explored before managers were tracked. */
+export const MANAGERS_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['findings'],
+  properties: {
+    findings: {
+      type: 'array',
+      description: 'Managers et sociétés de management du groupe (vide si aucun n’est trouvé dans une source).',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['name', 'sourceUrl'],
+        properties: {
+          name: { type: 'string', description: 'Société de management, sinon nom de la personne.' },
+          detail: { type: 'string', description: '« manager de X », personne de contact, territoire, période.' },
+          city: { type: 'string' },
+          country: { type: 'string', description: 'Pays en français.' },
+          when: { type: 'string', description: 'YYYY si connu.' },
+          scale: { type: 'string', enum: ['local', 'national', 'international'] },
+          website: { type: 'string' },
+          sourceUrl: { type: 'string' },
+        },
+      },
+    },
+  },
+} as const;
+
+export function managersPrompt(b: Band): string {
+  const where = [b.city, b.country].filter(Boolean).join(', ');
+  const site = b.links?.website || b.links?.bandcamp || b.links?.instagram;
+  return `${KRUZBERG}
+
+Tâche : trouver le ou les managers du groupe « ${b.name} »${where ? ` (${where})` : ''}${site ? ` — en ligne : ${site}` : ''}. Assure-toi que c'est le bon groupe (post-punk / cold wave / garage / rock indé).
+
+Relève ${MANAGER_HOW}
+
+S'il n'y a aucun manager nommé dans une source, rends une liste vide : ne devine jamais.
+
+${RULES}`;
 }

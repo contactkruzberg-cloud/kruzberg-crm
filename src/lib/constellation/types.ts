@@ -87,6 +87,7 @@ export interface Synthesis {
 
 export type EntityKind =
   | 'tourneur' // agence de booking / tourneur
+  | 'manager' // manager / société de management d'un artiste
   | 'label'
   | 'salle'
   | 'festival'
@@ -136,7 +137,7 @@ export interface Watch {
   source: string;
 }
 
-export type JobKind = 'band' | 'discover' | 'discover_lyon' | 'roster' | 'synthesis';
+export type JobKind = 'band' | 'discover' | 'discover_lyon' | 'roster' | 'synthesis' | 'managers';
 
 /** Angles de découverte de nouveaux groupes. */
 export type DiscoverAngle = 'lyon_scene' | 'lyon_agendas' | 'aura_dispositifs' | 'france_niche' | 'europe_niche';
@@ -191,8 +192,12 @@ export interface Entity {
   note?: string;
 }
 
+/** Every actor kind, in display order (one list for the whole app). */
+export const ENTITY_KINDS: EntityKind[] = ['tourneur', 'manager', 'label', 'salle', 'festival', 'organisateur', 'tete_affiche', 'plateau', 'media', 'dispositif'];
+
 export const KIND_LABEL: Record<EntityKind, string> = {
   tourneur: 'Tourneur',
+  manager: 'Manager',
   label: 'Label',
   salle: 'Salle',
   festival: 'Festival',
@@ -205,6 +210,7 @@ export const KIND_LABEL: Record<EntityKind, string> = {
 
 export const KIND_PLURAL: Record<EntityKind, string> = {
   tourneur: 'Tourneurs',
+  manager: 'Managers',
   label: 'Labels',
   salle: 'Salles',
   festival: 'Festivals',
@@ -218,6 +224,7 @@ export const KIND_PLURAL: Record<EntityKind, string> = {
 /** Couleur par type (HSL, lisible sur fond sombre comme clair). */
 export const KIND_COLOR: Record<EntityKind, string> = {
   tourneur: 'hsl(211 100% 58%)',
+  manager: 'hsl(310 65% 66%)',
   label: 'hsl(280 75% 66%)',
   salle: 'hsl(189 72% 56%)',
   festival: 'hsl(25 95% 56%)',

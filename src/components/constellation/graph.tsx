@@ -7,7 +7,7 @@ import { zoom, zoomIdentity } from 'd3-zoom';
 import { drag } from 'd3-drag';
 import { Sparkles } from 'lucide-react';
 import type { Pair } from '@/lib/constellation/links';
-import { KIND_COLOR, KIND_PLURAL, type EntityKind } from '@/lib/constellation/types';
+import { ENTITY_KINDS, KIND_COLOR, KIND_PLURAL, type EntityKind } from '@/lib/constellation/types';
 import { bandEntityKey } from './band-panel';
 import { Dot, Empty, cn } from './ui';
 import type { State } from './use-constellation';
@@ -31,13 +31,13 @@ const MODES: { id: Mode; label: string; hint: string }[] = [
   { id: 'bands', label: 'Groupes entre eux', hint: 'Trait = acteurs en commun entre deux groupes (≥ 2) : salles, tourneur, festivals…' },
 ];
 
-const KINDS: EntityKind[] = ['tourneur', 'label', 'salle', 'festival', 'organisateur', 'tete_affiche', 'plateau', 'media', 'dispositif'];
+const KINDS: EntityKind[] = ENTITY_KINDS;
 
 export function Graph({ data, pairs, onEntity, onBand, selected }: { data: State; pairs: Pair[]; onEntity: (k: string) => void; onBand: (id: string) => void; selected: string | null }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [min, setMin] = useState(2);
   const [mode, setMode] = useState<Mode>('bipartite');
-  const [kinds, setKinds] = useState<Set<EntityKind>>(new Set(['tourneur', 'label', 'salle', 'festival', 'organisateur', 'tete_affiche', 'plateau']));
+  const [kinds, setKinds] = useState<Set<EntityKind>>(new Set(['tourneur', 'manager', 'label', 'salle', 'festival', 'organisateur', 'tete_affiche', 'plateau']));
 
   const { nodes, links } = useMemo(() => {
     const seeds = data.bands.filter((b) => b.status === 'done' || (b.exploredAt && b.status !== 'rejected'));

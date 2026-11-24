@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertTriangle, Check, CheckCircle2, Compass, Loader2, Play, Plus, Rocket, Trophy, Undo2, X } from 'lucide-react';
+import { AlertTriangle, Check, CheckCircle2, Compass, Loader2, Play, Plus, Rocket, Trophy, Undo2, X, UserRound } from 'lucide-react';
 import { ANGLE_LABEL, ORIGIN_LABEL, type Band, type DiscoverAngle } from '@/lib/constellation/types';
 import { Badge, Button, Empty, cn } from './ui';
 import type { State } from './use-constellation';
@@ -52,11 +52,20 @@ export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<s
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="font-semibold">Groupes explorés ou à explorer · {active.length}</h2>
-            <p className="text-xs text-muted-foreground">Chaque exploration relève tourneurs, labels, salles, festivals, tremplins, premières parties et médias, plus la trajectoire datée. 3 à 8 min par groupe, 4 en parallèle, les Lyonnais en premier.</p>
+            <p className="text-xs text-muted-foreground">Chaque exploration relève tourneurs, managers, labels, salles, festivals, tremplins, premières parties et médias, plus la trajectoire datée. 3 à 8 min par groupe, 4 en parallèle, les Lyonnais en premier.</p>
           </div>
-          <Button variant="primary" disabled={!todo} onClick={() => act({ type: 'exploreAll' })}>
-            <Play className="size-4" /> Explorer {todo ? `les ${todo} restants` : 'tout'}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              disabled={!data.bands.some((b) => b.status === 'done')}
+              onClick={() => act({ type: 'findManagers' })}
+              title="Cherche le manager de chaque groupe déjà exploré (les groupes déjà cherchés ne sont pas refaits)"
+            >
+              <UserRound className="size-4" /> Chercher les managers
+            </Button>
+            <Button variant="primary" disabled={!todo} onClick={() => act({ type: 'exploreAll' })}>
+              <Play className="size-4" /> Explorer {todo ? `les ${todo} restants` : 'tout'}
+            </Button>
+          </div>
         </div>
 
         {GROUPS.map((g) => {

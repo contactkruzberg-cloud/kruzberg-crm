@@ -8,7 +8,7 @@ import { reachable } from './ranking';
 import { Badge, Empty, KindBadge, cn } from './ui';
 import type { State } from './use-constellation';
 
-const ORDER: EntityKind[] = ['tourneur', 'label', 'salle', 'festival', 'organisateur', 'dispositif', 'tete_affiche', 'plateau', 'media'];
+const ORDER: EntityKind[] = ['tourneur', 'manager', 'label', 'salle', 'festival', 'organisateur', 'dispositif', 'tete_affiche', 'plateau', 'media'];
 // Les liens qui mènent à des dates passent en premier.
 const PRIORITY = ['tourneur|salle', 'tourneur|festival', 'label|salle', 'salle|salle', 'salle|festival', 'tourneur|label', 'festival|festival', 'label|festival', 'tourneur|organisateur', 'salle|organisateur'];
 

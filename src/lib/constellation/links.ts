@@ -73,7 +73,7 @@ export function bandLinks(entities: Entity[], bands: Band[]): Map<string, BandLi
   return out;
 }
 
-const PRO: EntityKind[] = ['tourneur', 'label'];
+const PRO: EntityKind[] = ['tourneur', 'manager', 'label'];
 const PLACE: EntityKind[] = ['salle', 'festival', 'organisateur'];
 
 /** Titre d'un groupe de liens vu depuis un acteur : ce que l'autre acteur est pour lui. */
@@ -94,6 +94,7 @@ export function relationTitle(self: EntityKind, other: EntityKind): string {
 
 const KIND_WORD: Record<EntityKind, string> = {
   tourneur: 'tourneurs',
+  manager: 'managers',
   label: 'labels',
   salle: 'salles',
   festival: 'festivals',
@@ -106,6 +107,6 @@ const KIND_WORD: Record<EntityKind, string> = {
 
 /** Ordre d'affichage des liens depuis un acteur : d'abord ce qui mène à des dates. */
 export function relationOrder(self: EntityKind): EntityKind[] {
-  if (PRO.includes(self)) return ['salle', 'festival', 'organisateur', 'tourneur', 'label', 'dispositif', 'tete_affiche', 'plateau', 'media'];
-  return ['tourneur', 'label', 'salle', 'festival', 'organisateur', 'dispositif', 'tete_affiche', 'plateau', 'media'];
+  if (PRO.includes(self)) return ['salle', 'festival', 'organisateur', 'tourneur', 'manager', 'label', 'dispositif', 'tete_affiche', 'plateau', 'media'];
+  return ['tourneur', 'manager', 'label', 'salle', 'festival', 'organisateur', 'dispositif', 'tete_affiche', 'plateau', 'media'];
 }

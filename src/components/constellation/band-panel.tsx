@@ -9,7 +9,7 @@ import { KIND_COLOR, ORIGIN_LABEL, STAGE_COLOR, STAGE_LABEL, type Band, type Ent
 import { Badge, Button, Dot, KindBadge, cn, host } from './ui';
 import type { State } from './use-constellation';
 
-const ORDER: EntityKind[] = ['tourneur', 'label', 'festival', 'salle', 'organisateur', 'tete_affiche', 'plateau', 'media', 'dispositif'];
+const ORDER: EntityKind[] = ['tourneur', 'manager', 'label', 'festival', 'salle', 'organisateur', 'tete_affiche', 'plateau', 'media', 'dispositif'];
 
 export function BandPanel({
   band: b,

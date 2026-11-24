@@ -1,5 +1,5 @@
 import { loadDb, mutate } from '@/lib/constellation/docs';
-import { needsScrub, scrub, seed } from '@/lib/constellation/engine';
+import { enqueueManagers, needsManagersBackfill, needsScrub, scrub, seed } from '@/lib/constellation/engine';
 import { crmKnown, kick, ownerStore, routineConfigured } from '@/lib/constellation/server';
 
 // Données de la page /constellation. La page calcule elle-même le classement
@@ -26,6 +26,14 @@ export async function GET(request: Request) {
   }
   if (needsScrub(db)) {
     await mutate(store, (l) => scrub(l.db));
+    ({ db, launch } = await loadDb(store));
+  }
+  // One-time: managers of the bands explored before managers were tracked.
+  if (needsManagersBackfill(db)) {
+    await mutate(store, (l) => {
+      if (needsManagersBackfill(l.db)) enqueueManagers(l.db);
+    });
+    await kick(store).catch((e) => console.error('[constellation] kick failed', e));
     ({ db, launch } = await loadDb(store));
   }
   const [last] = await store.select('constellation_docs', { order: [{ col: 'updated_at', asc: false }], limit: 1 });

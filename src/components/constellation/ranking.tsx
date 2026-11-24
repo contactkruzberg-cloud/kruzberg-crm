@@ -3,13 +3,13 @@
 import { useMemo, useRef, useState } from 'react';
 import { Database, MapPin, Search, Star, Trophy } from 'lucide-react';
 import { isEstablished } from '@/lib/constellation/tier';
-import { KIND_COLOR, KIND_PLURAL, type Entity, type EntityKind } from '@/lib/constellation/types';
+import { ENTITY_KINDS, KIND_COLOR, KIND_PLURAL, type Entity, type EntityKind } from '@/lib/constellation/types';
 import { Badge, Button, Dot, Empty, KindBadge, cn } from './ui';
 import type { State } from './use-constellation';
 import { TopActors } from './top-actors';
 import { Upcoming } from './upcoming';
 
-const KINDS: EntityKind[] = ['tourneur', 'label', 'salle', 'festival', 'organisateur', 'tete_affiche', 'plateau', 'media', 'dispositif'];
+const KINDS: EntityKind[] = ENTITY_KINDS;
 
 /** Une salle de plus de 600 places ou un tourneur international, c'est trop gros pour nous aujourd'hui (comme Alias). */
 export function reachable(e: Entity) {

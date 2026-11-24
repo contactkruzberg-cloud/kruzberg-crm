@@ -36,6 +36,8 @@ export function hook(e: Entity, bandName: (id: string) => string): string | null
     case 'festival':
     case 'organisateur':
       return `J’ai vu que vous aviez accueilli ${names} : c’est exactement la scène dans laquelle on joue avec KRUZBERG, un quatuor post-punk lyonnais.`;
+    case 'manager':
+      return `Vous managez ${names}, des groupes dont on se sent très proches : KRUZBERG est un quatuor post-punk lyonnais, chant en anglais, dans la même veine, et on cherche à s’entourer.`;
     case 'tourneur':
       return `Vous accompagnez ${names}, des groupes dont on se sent très proches : KRUZBERG est un quatuor post-punk lyonnais, chant en anglais, dans la même veine.`;
     case 'label':
