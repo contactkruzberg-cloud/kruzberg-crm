@@ -44,7 +44,7 @@ export function Graph({ data, pairs, onEntity, onBand, selected }: { data: State
     const bandName = new Map(data.bands.map((b) => [b.id, b.name]));
     const list = (xs: string[]) => xs.map((id) => bandName.get(id) ?? id).join(', ');
     if (mode === 'actors') {
-      const ents = new Map(data.entities.filter((e) => kinds.has(e.kind) && e.bandIds.length >= min).map((e) => [e.key, e]));
+      const ents = new Map(data.entities.filter((e) => kinds.has(e.kind) && e.bandIds.length >= (e.kind === 'manager' ? 1 : min)).map((e) => [e.key, e]));
       const links: L[] = [];
       const used = new Set<string>();
       for (const p of pairs) {
@@ -91,7 +91,7 @@ export function Graph({ data, pairs, onEntity, onBand, selected }: { data: State
     const links: L[] = [];
     const used = new Set<string>();
     for (const e of data.entities) {
-      if (!kinds.has(e.kind) || e.bandIds.length < min) continue;
+      if (!kinds.has(e.kind) || e.bandIds.length < (e.kind === 'manager' ? 1 : min)) continue;
       const seed = seedByKey.get(e.key);
       const target = seed ? `b:${seed}` : `e:${e.key}`;
       if (!seed) nodes.push({ id: target, label: e.name, type: 'entity', kind: e.kind, count: e.bandIds.length, r: 3.5 + 3.2 * Math.sqrt(e.bandIds.length) });

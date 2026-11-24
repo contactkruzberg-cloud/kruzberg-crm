@@ -29,7 +29,7 @@ export function TopActors({ data, onOpen, onSeeAll }: { data: State; onOpen: (k:
   const bands = useMemo(() => new Map(data.bands.map((b) => [b.id, b])), [data.bands]);
 
   const { cards, max, total } = useMemo(() => {
-    const sig = data.entities.filter((e) => e.bandIds.length >= 2 && inZone(e, zone));
+    const sig = data.entities.filter((e) => e.bandIds.length >= (e.kind === 'manager' ? 1 : 2) && inZone(e, zone));
     // Plus de groupes d'abord ; à égalité, le score (Lyonnais, groupes à succès, récent).
     const sorted = [...sig].sort((a, b) => b.bandIds.length - a.bandIds.length || b.score - a.score);
     const cards = CARDS.map((k) => ({ kind: k, rows: sorted.filter((e) => e.kind === k) })).filter((c) => c.rows.length);

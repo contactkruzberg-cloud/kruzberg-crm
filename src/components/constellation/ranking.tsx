@@ -35,7 +35,9 @@ export function Ranking({ data: all, onOpen, onBand, selected, goBands }: { data
 
   const bandName = useMemo(() => new Map(data.bands.map((b) => [b.id, b])), [data.bands]);
 
-  const base = data.entities.filter((e) => e.bandIds.length >= min || (min <= 1 && e.watch));
+  // A manager usually works with a single band of the niche: shown from one band, unlike the others.
+  const minFor = (e: Entity) => (e.kind === 'manager' ? 1 : min);
+  const base = data.entities.filter((e) => e.bandIds.length >= minFor(e) || (min <= 1 && e.watch));
   const counts = useMemo(() => {
     const c: Partial<Record<EntityKind, number>> = {};
     for (const e of base) c[e.kind] = (c[e.kind] ?? 0) + 1;
