@@ -24,7 +24,7 @@ function useDealMatch(deal: Deal): { match: Match; fallbackTo: string[] } {
   }, [deal.venue, deal.contact, contacts]);
 }
 
-export function DealConversation({ deal, className }: { deal: Deal; className?: string }) {
+export function DealConversation({ deal, className, readOnly }: { deal: Deal; className?: string; readOnly?: boolean }) {
   const { match, fallbackTo } = useDealMatch(deal);
   return (
     <Conversation
@@ -33,6 +33,7 @@ export function DealConversation({ deal, className }: { deal: Deal; className?: 
       context={{ dealId: deal.id, venueId: deal.venue_id ?? undefined, contactId: deal.contact_id ?? undefined }}
       emptyLabel={fallbackTo.length ? 'Aucun mail échangé avec ce lieu pour l’instant.' : 'Ajoute un email au lieu ou au contact pour retrouver vos échanges ici.'}
       className={className}
+      readOnly={readOnly}
     />
   );
 }

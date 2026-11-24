@@ -125,11 +125,14 @@ export function Conversation({
   context = {},
   emptyLabel,
   className,
+  readOnly = false,
 }: {
   match: Match;
   fallbackTo?: string[];
   context?: ConversationContext;
   emptyLabel?: string;
+  /** History only, no reply box (e.g. above a follow-up draft). */
+  readOnly?: boolean;
   className?: string;
 }) {
   const emails = useEmails();
@@ -246,6 +249,7 @@ export function Conversation({
       </div>
 
       {/* Composer */}
+      {!readOnly && (
       <div className="border-t px-1 pt-2.5">
         <div className="flex flex-wrap gap-x-3 gap-y-1 px-2 pb-1.5 text-[12.5px] text-muted-foreground">
           <label className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -359,6 +363,7 @@ export function Conversation({
           Envoyé depuis booking@ avec ta signature, dans le même fil · ⌘K lien · ⌘↩ envoyer
         </p>
       </div>
+      )}
     </div>
   );
 }

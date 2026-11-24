@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { canQuickRelance, useDeals, useSnoozeRelance } from '@/hooks/use-deals';
 import { useRelanceDocs, useRequestRelance, useRequestRelances } from '@/hooks/use-relance';
 import { freshDraft, RelanceBasis, RelanceEditor } from '@/components/pipeline/relance-dialog';
+import { DealConversation } from '@/components/messages/entity-conversation';
 import { cn, daysUntil, dealLabel, formatDate } from '@/lib/utils';
 import type { RelanceDoc } from '@/lib/relance/prompt';
 import type { Deal } from '@/types/database';
@@ -197,9 +198,18 @@ export function RelanceQueue() {
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                <RelanceBasis deal={current} />
-              </p>
+              {/* What was said so far, before writing the follow-up. */}
+              <div>
+                <h3 className="text-[13px] font-semibold text-muted-foreground">Échanges</h3>
+                <DealConversation key={current.id} deal={current} readOnly className="max-h-[42vh] rounded-2xl bg-secondary/40 px-2 dark:bg-white/[0.03]" />
+              </div>
+
+              <div>
+                <h3 className="text-[13px] font-semibold text-muted-foreground">Relance</h3>
+                <p className="text-xs text-muted-foreground">
+                  <RelanceBasis deal={current} />
+                </p>
+              </div>
 
               {status(current) === 'todo' ? (
                 <div className="space-y-3 border-y py-8">
