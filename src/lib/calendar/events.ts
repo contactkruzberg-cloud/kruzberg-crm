@@ -4,7 +4,7 @@
 
 import { isMonthDay } from '@/lib/application-dates';
 
-export type CalKind = 'concert' | 'option' | 'tour' | 'deadline' | 'opening';
+export type CalKind = 'concert' | 'option' | 'tour' | 'deadline' | 'opening' | 'plan';
 
 export interface CalEvent {
   id: string;
@@ -25,7 +25,13 @@ export const CAL_KINDS: { key: CalKind; label: string; dot: string }[] = [
   { key: 'tour', label: 'Tournées', dot: 'hsl(var(--primary))' },
   { key: 'deadline', label: 'Clôtures de candidature', dot: 'hsl(var(--stage-refuse))' },
   { key: 'opening', label: 'Ouvertures de candidature', dot: 'hsl(var(--stage-a-contacter))' },
+  { key: 'plan', label: 'Plan de route', dot: 'hsl(280 60% 55%)' },
 ];
+
+export interface CalPlan {
+  projects: { id: string; title: string; target_date: string; archived_at?: string | null }[];
+  steps: { id: string; project_id: string; title: string; offset_days: number; done_at: string | null }[];
+}
 
 type Named = { name: string; city?: string | null } | null | undefined;
 
@@ -66,7 +72,7 @@ const day = (iso: string) => iso.slice(0, 10);
 const label = (d: CalDeal) => d.title?.trim() || d.venue?.name || d.contact?.name || 'Concert';
 
 export function buildEvents(
-  { deals = [], stops = [], tours = [], venues = [] }: { deals?: CalDeal[]; stops?: CalStop[]; tours?: CalTour[]; venues?: CalVenue[] },
+  { deals = [], stops = [], tours = [], venues = [], plan }: { deals?: CalDeal[]; stops?: CalStop[]; tours?: CalTour[]; venues?: CalVenue[]; plan?: CalPlan },
   today = new Date(),
 ): CalEvent[] {
   const out: CalEvent[] = [];
@@ -114,7 +120,21 @@ export function buildEvents(
     }
   }
 
-  const order: Record<CalKind, number> = { concert: 0, tour: 1, option: 2, deadline: 3, opening: 4 };
+  // Plan de route: each project's day J and the steps still to do.
+  if (plan) {
+    const live = plan.projects.filter((p) => !p.archived_at);
+    const byId = new Map(live.map((p) => [p.id, p]));
+    for (const p of live) out.push({ id: `plan-${p.id}`, date: p.target_date.slice(0, 10), kind: 'plan', title: p.title, sub: 'jour J', href: '/plan' });
+    for (const st of plan.steps) {
+      const p = byId.get(st.project_id);
+      if (!p || st.done_at || st.offset_days === 0) continue;
+      const d = new Date(`${p.target_date.slice(0, 10)}T12:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + st.offset_days);
+      out.push({ id: `step-${st.id}`, date: d.toISOString().slice(0, 10), kind: 'plan', title: st.title, sub: p.title, href: '/plan' });
+    }
+  }
+
+  const order: Record<CalKind, number> = { concert: 0, tour: 1, option: 2, deadline: 3, opening: 4, plan: 5 };
   return out.sort((a, b) => a.date.localeCompare(b.date) || order[a.kind] - order[b.kind] || (a.time ?? '').localeCompare(b.time ?? '') || a.title.localeCompare(b.title));
 }
 
@@ -148,6 +168,7 @@ const ICS_PREFIX: Record<CalKind, string> = {
   tour: '🚐 ',
   deadline: 'Clôture candidature · ',
   opening: 'Ouverture candidature · ',
+  plan: '◆ ',
 };
 
 /** All-day events; an agenda app subscribed to the feed refreshes it on its own. */

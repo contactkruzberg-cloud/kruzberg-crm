@@ -10,7 +10,7 @@ export const OWNER = '11111111-1111-4111-8111-111111111111';
 
 const DEFAULTS: Record<Table, Row> = {
   venues: { type: 'bar', city: '', country: 'France', fit_score: 3, address: null, postal_code: null, capacity: null, email: null, phone: null, instagram: null, website: null, notes: null, latitude: null, longitude: null, cover_image_url: null },
-  contacts: { venue_id: null, role: null, email: null, phone: null, pref_method: 'email', tone: 'vous', notes: null },
+  contacts: { venue_id: null, kind: null, role: null, email: null, phone: null, pref_method: 'email', tone: 'vous', notes: null },
   deals: { title: null, venue_id: null, contact_id: null, stage: 'a_contacter', priority: 'medium', first_contact_at: null, last_message_at: null, last_relance_method: null, next_relance_at: null, response: null, concert_date: null, fee: null, show_on_website: false, notes: null, tags: [], external_source: null, external_id: null, deleted_show_on_website: null },
   tasks: { deal_id: null, venue_id: null, description: null, due_date: null, completed_at: null },
   activities: { deal_id: null, venue_id: null, contact_id: null, content: '', channel: null },

@@ -29,6 +29,8 @@ import type { VenueType } from '@/types/database';
 import { PageHeader } from '@/components/layout/page-header';
 import { VenueConversation } from '@/components/messages/entity-conversation';
 import { ContactDialog } from '@/components/messages/contact-dialog';
+import { KindPicker } from '@/components/contacts/contact-kind';
+import { CONTACT_KINDS, contactKind, kindFromRole } from '@/lib/contacts/roles';
 
 const TYPE_OPTIONS: { key: VenueType | 'all'; label: string }[] = [
   { key: 'all', label: 'Tous' },
@@ -56,7 +58,7 @@ const VENUE_SORT_OPTIONS: { key: VenueSortKey; label: string }[] = [
 const CONTACT_SORT_OPTIONS: { key: ContactSortKey; label: string }[] = [
   { key: 'name', label: 'Nom A→Z' },
   { key: 'venue', label: 'Lieu A→Z' },
-  { key: 'role', label: 'Rôle' },
+  { key: 'role', label: 'Fonction' },
   { key: 'created_at', label: 'Récent' },
 ];
 
@@ -96,7 +98,7 @@ export default function VenuesPage() {
   const [openContactId, setOpenContactId] = useState<string | null>(null);
 
   // Contact filters
-  const [contactRoleFilter, setContactRoleFilter] = usePersistentState<string>('venues:contact-role', 'all');
+  const [contactRoleFilter, setContactRoleFilter] = usePersistentState<string>('venues:contact-kind', 'all');
   const [contactSort, setContactSort] = usePersistentState<ContactSortKey>('venues:contact-sort', 'name');
 
   const isLoading = venuesLoading || contactsLoading;
@@ -147,10 +149,15 @@ export default function VenuesPage() {
       .sort((a, b) => a.code.localeCompare(b.code, 'fr'));
   }, [venues, venueGeo, regionFilter]);
 
-  // Extract unique roles for contact filter
-  const roles = useMemo(() => {
-    const set = new Set((contacts || []).map((c) => c.role).filter(Boolean) as string[]);
-    return Array.from(set).sort();
+  // Contacts per function, for the filter.
+  const kindCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    (contacts || []).forEach((c) => {
+      const { kind, sure } = contactKind(c);
+      m.set(kind ?? 'none', (m.get(kind ?? 'none') ?? 0) + 1);
+      if (!sure) m.set('unsure', (m.get('unsure') ?? 0) + 1);
+    });
+    return m;
   }, [contacts]);
 
   // Venue IDs that have been contacted (deal exists OR email_sent activity)
@@ -273,8 +280,10 @@ export default function VenuesPage() {
       );
     }
 
-    if (contactRoleFilter !== 'all') {
-      result = result.filter((c) => c.role === contactRoleFilter);
+    if (contactRoleFilter === 'unsure') {
+      result = result.filter((c) => !contactKind(c).sure);
+    } else if (contactRoleFilter !== 'all') {
+      result = result.filter((c) => (contactKind(c).kind ?? 'none') === contactRoleFilter);
     }
 
     result.sort((a, b) => {
@@ -284,7 +293,7 @@ export default function VenuesPage() {
         case 'venue':
           return (a.venue?.name || '').localeCompare(b.venue?.name || '', 'fr');
         case 'role':
-          return (a.role || '').localeCompare(b.role || '', 'fr');
+          return (contactKind(a).kind || 'zz').localeCompare(contactKind(b).kind || 'zz', 'fr') || a.name.localeCompare(b.name, 'fr');
         case 'created_at':
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         default:
@@ -669,19 +678,29 @@ export default function VenuesPage() {
           animate={{ opacity: 1, height: 'auto' }}
           className="flex gap-3 flex-wrap items-end"
         >
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Rôle</p>
-            <Select value={contactRoleFilter} onValueChange={setContactRoleFilter}>
-              <SelectTrigger className="w-44 h-8 text-xs">
-                <SelectValue placeholder="Tous les rôles" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les rôles</SelectItem>
-                {roles.map((role) => (
-                  <SelectItem key={role} value={role}>{role}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { key: 'all', label: 'Toutes les fonctions', color: null as string | null, n: contacts?.length ?? 0 },
+              ...CONTACT_KINDS.map((k) => ({ key: k.key as string, label: k.label, color: k.color, n: kindCounts.get(k.key) ?? 0 })),
+              { key: 'none', label: 'Inconnue', color: null, n: kindCounts.get('none') ?? 0 },
+              { key: 'unsure', label: 'À confirmer', color: null, n: kindCounts.get('unsure') ?? 0 },
+            ]
+              .filter((o) => o.n > 0 || o.key === contactRoleFilter)
+              .map((o) => (
+                <button
+                  key={o.key}
+                  type="button"
+                  onClick={() => setContactRoleFilter(o.key)}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12.5px] transition-colors',
+                    contactRoleFilter === o.key ? 'border-transparent bg-foreground text-background' : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                  )}
+                >
+                  {o.color && <span className="h-1.5 w-1.5 rounded-full" style={{ background: o.color }} />}
+                  {o.label}
+                  <span className="opacity-60">{o.n}</span>
+                </button>
+              ))}
           </div>
         </motion.div>
       )}
@@ -758,7 +777,7 @@ export default function VenuesPage() {
                 <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Nom</th>
                 <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Lieu</th>
                 <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Email</th>
-                <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Rôle</th>
+                <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Fonction</th>
                 <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Ton</th>
                 <th className="px-3 py-2 text-left text-[12px] font-medium text-muted-foreground">Méthode</th>
               </tr>
@@ -769,7 +788,10 @@ export default function VenuesPage() {
                   <td className="p-3 font-medium">{contact.name}</td>
                   <td className="p-3 text-muted-foreground">{contact.venue?.name || '—'}</td>
                   <td className="p-3 text-muted-foreground text-xs">{contact.email || '—'}</td>
-                  <td className="p-3 text-muted-foreground">{contact.role || '—'}</td>
+                  <td className="p-3">
+                    <KindPicker contact={contact} />
+                    {contact.role && kindFromRole(contact.role) !== contactKind(contact).kind && <span className="block text-[12px] text-muted-foreground">{contact.role}</span>}
+                  </td>
                   <td className="p-3">
                     <span className={`text-xs font-medium ${contact.tone === 'tu' ? 'text-primary' : 'text-muted-foreground'}`}>
                       {contact.tone === 'tu' ? 'Tu' : 'Vous'}

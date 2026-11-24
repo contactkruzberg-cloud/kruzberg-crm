@@ -27,8 +27,7 @@ import {
   Orbit,
   Send,
   MessageCircle,
-  CalendarDays,
-} from 'lucide-react';
+  CalendarDays, Compass } from 'lucide-react';
 import { useTours } from '@/hooks/use-tours';
 import { usePipelineFilters } from '@/components/pipeline/pipeline-filters';
 import type { CreateIntent } from '@/stores/app-store';
@@ -43,6 +42,7 @@ const PAGES = [
   { name: 'Pipeline', href: '/pipeline', icon: Kanban },
   { name: 'Lieux & Contacts', href: '/venues', icon: Building2 },
   { name: 'Tournées', href: '/tours', icon: Route },
+  { name: 'Plan de route (objectifs, KPI, rétroplanning)', href: '/plan', icon: Compass },
   { name: 'Templates', href: '/templates', icon: Mail },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];

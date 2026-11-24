@@ -12,6 +12,7 @@ import { useAllTourStops } from '@/hooks/use-tour-stops';
 import { useTours } from '@/hooks/use-tours';
 import { useVenues } from '@/hooks/use-venues';
 import { usePersistentState } from '@/lib/persistent-state';
+import { usePlan } from '@/hooks/use-plan';
 import { buildEvents, CAL_KINDS, type CalEvent, type CalKind } from '@/lib/calendar/events';
 import { cn } from '@/lib/utils';
 import { SubscribeButton } from './subscribe-button';
@@ -51,13 +52,14 @@ export function CalendarView() {
   const stops = useAllTourStops();
   const tours = useTours();
   const venues = useVenues();
+  const plan = usePlan();
   const today = iso(new Date());
   const [cursor, setCursor] = useState(() => ({ y: new Date().getFullYear(), m: new Date().getMonth() }));
   const [hidden, setHidden] = usePersistentState<CalKind[]>('cal:hidden', ['opening']);
 
   const events = useMemo(
-    () => buildEvents({ deals: deals.data, stops: stops.data, tours: tours.data, venues: venues.data }),
-    [deals.data, stops.data, tours.data, venues.data],
+    () => buildEvents({ deals: deals.data, stops: stops.data, tours: tours.data, venues: venues.data, plan: plan.data }),
+    [deals.data, stops.data, tours.data, venues.data, plan.data],
   );
   const shown = events.filter((e) => !hidden.includes(e.kind));
   const byDay = useMemo(() => {

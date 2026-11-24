@@ -136,6 +136,8 @@ export interface Contact {
   user_id: string;
   venue_id: string | null;
   name: string;
+  /** Fonction (programmateur, promoteur…) — src/lib/contacts/roles.ts. Null : devinée. */
+  kind?: string | null;
   role: string | null;
   email: string | null;
   phone: string | null;

@@ -11,6 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { CreateVenueDialog } from './create-venue-dialog';
 import { Plus, X } from 'lucide-react';
+import { KindSelect, missingKindColumn } from '@/components/contacts/contact-kind';
+import { kindFromRole, type ContactKind } from '@/lib/contacts/roles';
 import type { Contact, ContactMethod, ContactTone, Venue } from '@/types/database';
 import { toast } from 'sonner';
 
@@ -35,6 +37,7 @@ export function CreateContactDialog({
 
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
+  const [kind, setKind] = useState<ContactKind | null>(null);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [tone, setTone] = useState<ContactTone>('vous');
@@ -57,6 +60,7 @@ export function CreateContactDialog({
   const resetForm = () => {
     setName('');
     setRole('');
+    setKind(null);
     setEmail('');
     setPhone('');
     setTone('vous');
@@ -72,7 +76,7 @@ export function CreateContactDialog({
     }
 
     try {
-      const contact = await createContact.mutateAsync({
+      const fields = {
         venue_id: venueId === NO_VENUE ? null : venueId,
         name: name.trim(),
         role: role.trim() || null,
@@ -81,6 +85,12 @@ export function CreateContactDialog({
         tone,
         pref_method: prefMethod,
         notes: notes.trim() || null,
+      };
+      const k = kind ?? kindFromRole(role);
+      const contact = await createContact.mutateAsync(k ? { ...fields, kind: k } : fields).catch((e) => {
+        // Migration 021 not run yet: save without the function.
+        if (k && missingKindColumn(e)) return createContact.mutateAsync(fields);
+        throw e;
       });
 
       toast.success(`"${contact.name}" ajouté`);
@@ -114,12 +124,16 @@ export function CreateContactDialog({
                   autoFocus
                 />
               </div>
+              <div className="space-y-2 col-span-2">
+                <Label>Fonction</Label>
+                <KindSelect value={kind} onChange={setKind} />
+              </div>
               <div className="space-y-2">
-                <Label>Rôle</Label>
+                <Label>Intitulé exact</Label>
                 <Input
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  placeholder="Programmateur"
+                  placeholder="Chargée de programmation"
                 />
               </div>
               <div className="space-y-2">

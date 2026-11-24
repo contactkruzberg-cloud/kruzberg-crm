@@ -10,6 +10,8 @@ import { useVenues } from '@/hooks/use-venues';
 import { useRadar } from '@/hooks/use-radar';
 import { useContacts } from '@/hooks/use-contacts';
 import { useEmails } from '@/hooks/use-emails';
+import { usePlan } from '@/hooks/use-plan';
+import { isoDay, upcomingSteps } from '@/lib/plan/model';
 import { buildConversations } from '@/lib/email/messages';
 import { applicationWindow } from '@/lib/application-dates';
 import { triQueue } from '@/lib/radar/logic';
@@ -49,6 +51,7 @@ function useTodayRows() {
   const radar = useRadar();
   const { data: emails } = useEmails();
   const { data: contacts } = useContacts();
+  const { data: plan } = usePlan();
 
   return useMemo(() => {
     const rows: Row[] = [];
@@ -90,6 +93,15 @@ function useTodayRows() {
       rows.push({ key: `task-${t.id}`, level: n < 0 ? 'late' : n === 0 ? 'today' : 'soon', title: t.title, meta: inDays(n), task: t });
     }
 
+    // Plan de route: steps late or due within 3 days.
+    if (plan) {
+      const today = isoDay(new Date());
+      for (const { step, project, date } of upcomingSteps(plan.projects, plan.steps, today, 3)) {
+        const n = daysUntil(date);
+        rows.push({ key: `step-${step.id}`, level: n < 0 ? 'late' : n === 0 ? 'today' : 'soon', title: step.title, detail: project.title, meta: inDays(n), href: '/plan' });
+      }
+    }
+
     // Festival / tremplin applications closing within 3 weeks.
     for (const v of venues || []) {
       if (v.style_fit === 'no') continue;
@@ -126,7 +138,7 @@ function useTodayRows() {
     }
 
     return rows.sort((a, b) => RANK[a.level] - RANK[b.level]);
-  }, [deals, tasks, venues, radar.isLoading, radar.error, radar.leads, radar.meta, emails, contacts]);
+  }, [deals, tasks, venues, radar.isLoading, radar.error, radar.leads, radar.meta, emails, contacts, plan]);
 }
 
 function TaskCheck({ task }: { task: Task }) {

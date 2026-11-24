@@ -43,6 +43,7 @@ export const STYLE_FIT_IDS = keys(STYLE_FITS);
 export const EXCHANGE_STATUS_IDS = keys(EXCHANGE_STATUSES);
 export const BAND_ROLE_IDS = keys(BAND_ROLES);
 export const CONTACT_METHOD_IDS = ['email', 'phone', 'instagram', 'other'] as const;
+export const CONTACT_KIND_IDS = ['programmateur', 'promoteur', 'organisateur', 'booker', 'tourneur', 'manager', 'direction', 'label', 'media', 'accompagnement', 'technique', 'artiste', 'autre'] as const;
 export const TONE_IDS = ['tu', 'vous'] as const;
 /** Activity types that can be logged by hand (status_change is written by the database). */
 export const LOGGABLE_ACTIVITY_TYPES = ['email_sent', 'relance', 'call', 'message', 'reply_received', 'note', 'concert_played'] as const;
@@ -126,7 +127,8 @@ const venueShape = {
 const contactShape = {
   venue_id: opt(uuid('de structure')),
   name: str(200).min(1),
-  role: opt(str(200)),
+  kind: opt(enumOf(CONTACT_KIND_IDS, 'Fonction')).describe(`Fonction du contact : ${CONTACT_KIND_IDS.join(', ')} (promoteur = promoteur local / asso qui monte des concerts).`),
+  role: opt(str(200)).describe('Intitulé exact (ex. « Chargée de programmation »).'),
   email: opt(email),
   phone: opt(str(50)),
   pref_method: z.enum(CONTACT_METHOD_IDS, { error: `Valeurs possibles : ${CONTACT_METHOD_IDS.join(', ')}.` }),

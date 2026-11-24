@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useUpdateVenue, useDeleteVenue } from '@/hooks/use-venues';
 import { useDeals, useCreateDeal } from '@/hooks/use-deals';
 import { useCreateContact } from '@/hooks/use-contacts';
+import { KindPicker } from '@/components/contacts/contact-kind';
+import { contactKind, kindFromRole } from '@/lib/contacts/roles';
 import { useVenueActivities } from '@/hooks/use-activities';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/alert-dialog';
@@ -448,7 +450,7 @@ export function VenueDetail({ venue, contacts, onOpenContact }: VenueDetailProps
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[11px]">Rôle</Label>
+                  <Label className="text-[11px]">Intitulé (ex. programmateur, promoteur, booker)</Label>
                   <Input
                     value={newContactRole}
                     onChange={(e) => setNewContactRole(e.target.value)}
@@ -558,11 +560,12 @@ export function VenueDetail({ venue, contacts, onOpenContact }: VenueDetailProps
                   title={onOpenContact ? 'Voir les messages' : undefined}
                   className={cn('-mx-2 flex items-center justify-between rounded-lg px-2 py-2.5', onOpenContact && 'cursor-pointer hover:bg-secondary')}
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">{c.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {c.role || 'Contact'}
-                      {c.email && ` · ${c.email}`}
+                    <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                      <KindPicker contact={{ ...c, venue }} />
+                      {c.role && kindFromRole(c.role) !== contactKind({ ...c, venue }).kind && <span className="truncate">· {c.role}</span>}
+                      {c.email && <span className="truncate">· {c.email}</span>}
                     </p>
                   </div>
                   <Badge variant={c.tone === 'tu' ? 'default' : 'secondary'} className="text-[10px]">

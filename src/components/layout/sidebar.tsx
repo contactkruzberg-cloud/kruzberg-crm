@@ -22,6 +22,7 @@ import {
   Send,
   MessageCircle,
   CalendarDays,
+  Compass,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -48,6 +49,7 @@ export const NAV_GROUPS: { title: string | null; items: { href: string; label: s
     ],
   },
   { title: 'Concerts', items: [{ href: '/tours', label: 'Tournées', icon: Route }] },
+  { title: 'Projet', items: [{ href: '/plan', label: 'Plan de route', icon: Compass }] },
   {
     title: 'Outils',
     items: [
