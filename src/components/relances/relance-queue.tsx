@@ -87,7 +87,8 @@ export function RelanceQueue() {
   }
 
   return (
-    <div className="space-y-5">
+    // On large screens the page itself does not scroll: the queue and the conversation scroll on their own.
+    <div className="space-y-5 lg:flex lg:h-[calc(100dvh-6.5rem)] lg:flex-col lg:gap-5 lg:space-y-0">
       <PageHeader
         icon={Send}
         title="File de relances"
@@ -125,9 +126,9 @@ export function RelanceQueue() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
+        <div className="grid grid-cols-1 gap-5 lg:min-h-0 lg:flex-1 lg:grid-cols-[18rem_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]">
           {/* Queue */}
-          <ol className="space-y-px lg:sticky lg:top-[4.5rem] lg:self-start">
+          <ol className="space-y-px lg:h-full lg:overflow-y-auto lg:pr-1">
             {queue.map((d, i) => {
               const st = status(d);
               const on = d.id === current?.id;
@@ -158,7 +159,7 @@ export function RelanceQueue() {
 
           {/* Current follow-up */}
           {current && (
-            <section className="space-y-4 lg:border-l lg:pl-8">
+            <section className="space-y-4 lg:flex lg:min-h-0 lg:flex-col lg:border-l lg:pl-8">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs text-muted-foreground">
@@ -202,7 +203,7 @@ export function RelanceQueue() {
               </p>
 
               {/* The conversation, with the follow-up written in its reply box. Greg sends it himself. */}
-              <RelanceConversation key={current.id} deal={current} onSent={next} className="h-[calc(100dvh-17rem)] min-h-[420px]" />
+              <RelanceConversation key={current.id} deal={current} onSent={next} className="h-[75dvh] min-h-[420px] lg:h-auto lg:min-h-0 lg:flex-1" />
 
               {status(current) === 'writing' && queue.some((d) => d.id !== current.id && status(d) === 'ready') && (
                 <button
