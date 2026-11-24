@@ -3,8 +3,6 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { useDeals } from '@/hooks/use-deals';
-import { useAllTourStops } from '@/hooks/use-tour-stops';
-import { useTours } from '@/hooks/use-tours';
 import { buildEvents } from '@/lib/calendar/events';
 import { STAGES } from '@/types/database';
 
@@ -26,14 +24,13 @@ function SectionTitle({ children, href, more }: { children: React.ReactNode; hre
 /** The next concerts and tour days (confirmed only). */
 export function NextDates() {
   const { data: deals } = useDeals();
-  const { data: stops } = useAllTourStops();
-  const { data: tours } = useTours();
+  // Only dates confirmed in the pipeline — not the stops of tours being planned.
   const next = useMemo(() => {
     const t = today();
-    return buildEvents({ deals, stops, tours })
-      .filter((e) => e.date >= t && (e.kind === 'concert' || (e.kind === 'tour' && !e.title.startsWith('Route') && e.title !== 'Jour off')))
+    return buildEvents({ deals })
+      .filter((e) => e.date >= t && e.kind === 'concert')
       .slice(0, 5);
-  }, [deals, stops, tours]);
+  }, [deals]);
 
   return (
     <section>
