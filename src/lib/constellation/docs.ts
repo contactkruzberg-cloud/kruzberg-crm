@@ -29,6 +29,14 @@ export interface Loaded {
   snap: Map<string, { version: number; json: string }>;
   /** Collections chargées (toutes si absent) : seules celles-ci sont enregistrées. */
   only?: Collection[];
+  /** Avec only : faits chargés (et enregistrés) pour ces groupes seulement. */
+  findingsFor?: string[];
+}
+
+/** What a partial load covers: some collections, plus the facts of some bands. */
+export interface Scope {
+  only: Collection[];
+  findingsFor?: string[];
 }
 
 const k = (c: Collection, id: string) => `${c}/${id}`;
@@ -40,13 +48,24 @@ const PAGE = 200;
  * Loads the base. With `only`, just those collections (e.g. jobs + config to
  * look at the queue): saving it then touches only those documents.
  */
-export async function loadDb(store: Store, only?: Collection[]): Promise<Loaded> {
-  const rows = await selectAll(
-    store,
-    'constellation_docs',
-    { filters: only ? [{ col: 'collection', op: 'in', value: only }] : [], order: [{ col: 'collection', asc: true }, { col: 'id', asc: true }] },
-    PAGE,
-  );
+export async function loadDb(store: Store, scope?: Collection[] | Scope): Promise<Loaded> {
+  const t0 = Date.now();
+  const only = Array.isArray(scope) ? scope : scope?.only;
+  const findingsFor = Array.isArray(scope) ? undefined : scope?.findingsFor?.filter((id) => DOC_ID.test(id));
+  const order = [{ col: 'collection', asc: true }, { col: 'id', asc: true }];
+  const rows = await selectAll(store, 'constellation_docs', { filters: only ? [{ col: 'collection', op: 'in', value: only }] : [], order }, PAGE);
+  if (only && findingsFor?.length)
+    rows.push(
+      ...(await selectAll(store, 'constellation_docs', {
+        filters: [
+          { col: 'collection', op: 'eq', value: 'findings' },
+          { col: 'id', op: 'in', value: findingsFor },
+        ],
+        order,
+      })),
+    );
+  const ms = Date.now() - t0;
+  if (!only && ms > 1500) console.warn(`[constellation] full load: ${rows.length} docs in ${ms} ms`);
   const db: Db = { version: 1, bands: [], findings: [], overrides: {}, watch: [], jobs: [] };
   let launch: Launch = { fires: [] };
   const snap = new Map<string, { version: number; json: string }>();
@@ -65,7 +84,11 @@ export async function loadDb(store: Store, only?: Collection[]): Promise<Loaded>
   }
   db.bands.sort((a, b) => a.addedAt.localeCompare(b.addedAt));
   db.jobs.sort((a, b) => a.requestedAt.localeCompare(b.requestedAt));
-  return { db, launch, snap, only };
+  if (!only) {
+    const kb = Math.round([...snap.values()].reduce((n, v) => n + v.json.length, 0) / 1024);
+    console.log(`[constellation] load ${rows.length} docs · ${kb} KB · ${db.bands.length} bands · ${db.findings.length} findings · ${db.jobs.length} jobs · ${ms} ms`);
+  }
+  return { db, launch, snap, only, findingsFor };
 }
 
 /** Les documents qui représentent la base en mémoire. */
@@ -97,7 +120,11 @@ export class ConflictError extends Error {
 /** Écrit les documents nouveaux ou modifiés depuis le chargement. */
 export async function saveDb(store: Store, loaded: Loaded): Promise<number> {
   const docs = toDocs(loaded.db, loaded.launch);
-  if (loaded.only) for (const [key, d] of docs) if (!loaded.only.includes(d.c)) docs.delete(key);
+  if (loaded.only)
+    for (const [key, d] of docs) {
+      const facts = d.c === 'findings' && loaded.findingsFor?.includes(d.id);
+      if (!loaded.only.includes(d.c) && !facts) docs.delete(key);
+    }
   const inserts: Row[] = [];
   let writes = 0;
   for (const [key, d] of docs) {
@@ -144,9 +171,9 @@ export async function saveDb(store: Store, loaded: Loaded): Promise<number> {
  * Charge, applique fn, enregistre. Une écriture concurrente sur le même
  * document (la routine rend une recherche pendant un clic) fait recommencer.
  */
-export async function mutate<T>(store: Store, fn: (l: Loaded) => T | Promise<T>, only?: Collection[]): Promise<T> {
+export async function mutate<T>(store: Store, fn: (l: Loaded) => T | Promise<T>, scope?: Collection[] | Scope): Promise<T> {
   for (let attempt = 0; ; attempt++) {
-    const loaded = await loadDb(store, only);
+    const loaded = await loadDb(store, scope);
     const out = await fn(loaded);
     try {
       await saveDb(store, loaded);

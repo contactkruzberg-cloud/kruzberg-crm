@@ -261,3 +261,21 @@ describe('constellation : file allégée', () => {
     expect(launch.fires).toBeDefined();
   });
 });
+
+describe('constellation : chargement partiel de la routine', () => {
+  it('exploring one band leaves the facts of the others intact', async () => {
+    for (const id of ['johnnie-carwash', 'sunday-panic']) {
+      await mutate(mem.store, (l) => applyAction(l, { type: 'exploreBand', id }));
+      const brief = await ok('constellation_next_job');
+      await ok('constellation_submit_job', { job_id: brief.job.id, output: bandOutput(id === 'sunday-panic' ? 'Le Sonic' : 'Le Périscope') });
+    }
+    await mutate(mem.store, (l) => applyAction(l, { type: 'exploreBand', id: 'johnnie-carwash' }));
+    const brief = await ok('constellation_next_job');
+    expect(brief.job.label).toBe('Johnnie Carwash');
+    await ok('constellation_submit_job', { job_id: brief.job.id, output: bandOutput('Le Farmer') });
+    const { db } = await loadDb(mem.store);
+    expect(db.findings.some((f) => f.bandId === 'sunday-panic' && f.name === 'Le Sonic')).toBe(true);
+    expect(db.findings.some((f) => f.bandId === 'johnnie-carwash' && f.name === 'Le Farmer')).toBe(true);
+    expect(db.findings.some((f) => f.bandId === 'johnnie-carwash' && f.name === 'Le Périscope')).toBe(false);
+  });
+});

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Store } from '@/lib/mcp/store';
 import { aggregate } from './aggregate';
-import { mutate, pruneJobs, type Launch, type Loaded } from './docs';
+import { loadDb, mutate, pruneJobs, type Launch, type Loaded, type Scope } from './docs';
 import { isNoise, slug } from './normalize';
 import { ASK_SCHEMA, BAND_SCHEMA, DISCOVER_SCHEMA, MANAGERS_SCHEMA, SYNTHESIS_SCHEMA, askPrompt, bandPrompt, discoverPrompt, managersPrompt, rosterPrompt, synthesisPrompt } from './prompts';
 import { SEED_BANDS, SEED_WATCH } from './seed';
@@ -83,41 +83,75 @@ export interface Brief {
   remaining: number;
 }
 
+/**
+ * What a search needs from the base: the queue, the groups and, for a band,
+ * only its own facts. Questions, catalogues and the synthesis read the whole
+ * network. Keeps the routine's calls short (the full base is heavy).
+ */
+function scopeFor(j: Pick<Job, 'kind' | 'target'>): Scope | undefined {
+  if (j.kind === 'band' || j.kind === 'managers') return { only: ['jobs', 'config', 'bands'], findingsFor: j.target ? [j.target] : [] };
+  if (j.kind === 'discover' || j.kind === 'discover_lyon') return { only: ['jobs', 'config', 'bands'] };
+  return undefined;
+}
+
 /** La routine prend la prochaine recherche : elle passe « en cours » et on lui remet les consignes. */
-export function claimNext(store: Store): Promise<Brief | { job: null; remaining: 0 }> {
-  return mutate(store, (l) => {
-    const { db } = l;
-    requeueStale(db);
-    l.launch.activeAt = new Date().toISOString();
-    const queued = db.jobs.filter((j) => j.status === 'queued').sort((a, b) => rank(db, a) - rank(db, b) || a.requestedAt.localeCompare(b.requestedAt));
-    for (const j of queued) {
-      let built: ReturnType<typeof build>;
-      try {
-        built = build(j, db);
-      } catch (e) {
-        finishIn(db, j.id, { status: 'error', error: e instanceof Error ? e.message : String(e) });
-        continue;
-      }
-      j.status = 'running';
-      j.startedAt = new Date().toISOString();
-      if (j.kind === 'band') {
-        const b = db.bands.find((x) => x.id === j.target);
-        if (b) b.status = 'running';
-      }
-      return {
-        job: { id: j.id, kind: j.kind, label: j.label },
-        instructions: built.prompt,
-        output_schema: built.schema,
-        web_search: built.web,
-        remaining: queued.length - 1,
-      };
+export async function claimNext(store: Store): Promise<Brief | { job: null; remaining: 0 }> {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    // 1. Which search is next (queue and groups only).
+    const peek = await loadDb(store, ['jobs', 'bands']);
+    requeueStale(peek.db);
+    const next = peek.db.jobs
+      .filter((j) => j.status === 'queued')
+      .sort((a, b) => rank(peek.db, a) - rank(peek.db, b) || a.requestedAt.localeCompare(b.requestedAt))[0];
+    if (!next) {
+      await mutate(store, (l) => {
+        requeueStale(l.db);
+        l.launch.activeAt = new Date().toISOString();
+      }, ['jobs', 'config']);
+      const again = await loadDb(store, ['jobs']);
+      if (!again.db.jobs.some((j) => j.status === 'queued')) return { job: null, remaining: 0 };
+      continue;
     }
-    return { job: null, remaining: 0 as const };
-  });
+    // 2. Take it, loading only what it needs.
+    const out = await mutate(
+      store,
+      (l): Brief | 'taken' => {
+        const { db } = l;
+        requeueStale(db);
+        l.launch.activeAt = new Date().toISOString();
+        const j = db.jobs.find((x) => x.id === next.id);
+        if (!j || j.status !== 'queued') return 'taken';
+        let built: ReturnType<typeof build>;
+        try {
+          built = build(j, db);
+        } catch (e) {
+          finishIn(db, j.id, { status: 'error', error: e instanceof Error ? e.message : String(e) });
+          return 'taken';
+        }
+        j.status = 'running';
+        j.startedAt = new Date().toISOString();
+        if (j.kind === 'band') {
+          const b = db.bands.find((x) => x.id === j.target);
+          if (b) b.status = 'running';
+        }
+        return {
+          job: { id: j.id, kind: j.kind, label: j.label },
+          instructions: built.prompt,
+          output_schema: built.schema,
+          web_search: built.web,
+          remaining: db.jobs.filter((x) => x.status === 'queued').length,
+        };
+      },
+      scopeFor(next) ?? undefined,
+    );
+    if (out !== 'taken') return out;
+  }
+  return { job: null, remaining: 0 };
 }
 
 /** La routine rend une recherche : résultat (objet conforme au schéma) ou erreur. */
-export function submit(store: Store, args: { job_id: string; output?: unknown; error?: string }) {
+export async function submit(store: Store, args: { job_id: string; output?: unknown; error?: string }) {
+  const peek = (await loadDb(store, ['jobs'])).db.jobs.find((j) => j.id === args.job_id);
   return mutate(store, (l) => {
     const { db } = l;
     l.launch.activeAt = new Date().toISOString();
@@ -148,7 +182,7 @@ export function submit(store: Store, args: { job_id: string; output?: unknown; e
     // Découverte en mode « recherche massive » : on explore aussitôt les groupes très proches.
     for (const id of res.explore) enqueue(db, 'band', id, id);
     return { ok: true, status: 'done' as const, added: res.added, remaining: remaining() };
-  });
+  }, peek ? scopeFor(peek) : undefined);
 }
 
 export class EngineError extends Error {}
