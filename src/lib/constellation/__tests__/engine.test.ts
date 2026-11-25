@@ -213,3 +213,33 @@ describe('constellation : managers', () => {
     expect(again).toEqual({ ok: true, count: 0 });
   });
 });
+
+describe('constellation : questions libres', () => {
+  it('a question jumps the queue, its answer and findings are kept', async () => {
+    await mutate(mem.store, (l) => applyAction(l, { type: 'exploreBand', id: 'johnnie-carwash' }));
+    await mutate(mem.store, (l) => applyAction(l, { type: 'ask', question: 'Qui est le tourneur de Johnnie Carwash ?' }));
+    const brief = await ok('constellation_next_job');
+    expect(brief.job.kind).toBe('ask');
+    expect(brief.instructions).toContain('Qui est le tourneur de Johnnie Carwash ?');
+    const r = await ok('constellation_submit_job', {
+      job_id: brief.job.id,
+      output: {
+        answer: '- **Tourneur** : Super Booking',
+        sources: [{ title: 'Site', url: 'https://example.org/t' }],
+        bands: [{ name: 'Nouveau Groupe', city: 'Nantes', country: 'France', why: 'proche', fit: 4, sourceUrl: 'https://example.org/b' }],
+        facts: [{ band: 'Johnnie Carwash', kind: 'tourneur', name: 'Super Booking', sourceUrl: 'https://example.org/t' }],
+      },
+    });
+    expect(r).toMatchObject({ status: 'done', added: 2 });
+    const { db } = await loadDb(mem.store);
+    const job = db.jobs.find((j) => j.kind === 'ask')!;
+    expect(job.answer).toContain('Super Booking');
+    expect(job.bandIds?.sort()).toEqual(['johnnie-carwash', 'nouveau-groupe']);
+    expect(db.findings.some((f) => f.bandId === 'johnnie-carwash' && f.name === 'Super Booking')).toBe(true);
+    expect(db.bands.find((b) => b.id === 'nouveau-groupe')?.status).toBe('idle');
+  });
+
+  it('refuses an empty question', async () => {
+    await expect(mutate(mem.store, (l) => applyAction(l, { type: 'ask', question: ' ' }))).rejects.toThrow('Écris ta question');
+  });
+});

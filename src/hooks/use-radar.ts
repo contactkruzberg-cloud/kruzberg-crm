@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { CATL, crmInput, STATUS_TO_STAGE, today } from '@/lib/radar/logic';
 import { markKnown, type KnownData } from '@/lib/radar/known';
 import type { GeoCache } from '@/lib/radar/geo';
-import type { Lead, OutboxItem, RadarCat, RadarLaunch, RadarLearned, RadarMeta, RadarRun, RadarScope } from '@/lib/radar/types';
+import type { Lead, OutboxItem, RadarAsk, RadarCat, RadarLaunch, RadarLearned, RadarMeta, RadarRun, RadarScope } from '@/lib/radar/types';
 
 // Booking Radar data (table radar_docs via /api/radar/*). Refreshed every 30 s:
 // the search launched from this page writes there too.
@@ -63,6 +63,7 @@ export function useRadar() {
     scope: (configById.get('scope') ?? {}) as RadarScope,
     learned: (configById.get('learned') ?? {}) as RadarLearned,
     launch: (configById.get('launch') ?? {}) as RadarLaunch,
+    asks: (config.data ?? []).filter((d) => d.id.startsWith('ask-')).map((d) => ({ ...(d.data as unknown as RadarAsk), id: d.id })),
     /** City coordinates for the map (see src/lib/radar/geo.ts). */
     geo: (configById.get('geo') ?? {}) as GeoCache,
     geoExists: configById.has('geo'),
@@ -81,6 +82,16 @@ export function useLaunchVeille() {
     onSuccess: (r) =>
       toast.success(`Recherche lancée${r.scope && r.scope !== 'all' ? ` (${CATL[r.scope]})` : ' sur toutes les rubriques'} : les nouvelles pistes arrivent ici dans 10 à 20 minutes.`),
     onError: (err) => toast.error(err instanceof Error ? err.message : 'Impossible de lancer la recherche.'),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['radar', 'config'] }),
+  });
+}
+
+/** "Demander à Claude": a free request to the search routine (see /api/radar/ask). */
+export function useAskRadar() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (brief: string) => api<{ id: string }>('/api/radar/ask', { method: 'POST', body: JSON.stringify({ brief }) }),
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Impossible d’envoyer la demande.'),
     onSettled: () => qc.invalidateQueries({ queryKey: ['radar', 'config'] }),
   });
 }

@@ -5,7 +5,7 @@ import { AlertTriangle, CheckCircle2, History, Loader2, X } from 'lucide-react';
 import type { Job } from '@/lib/constellation/types';
 import { Button } from './ui';
 
-const KIND: Record<Job['kind'], string> = { band: 'Parcours', discover: 'Découverte', discover_lyon: 'Découverte', roster: 'Catalogue', synthesis: 'Synthèse', managers: 'Managers' };
+const KIND: Record<Job['kind'], string> = { band: 'Parcours', discover: 'Découverte', discover_lyon: 'Découverte', roster: 'Catalogue', synthesis: 'Synthèse', managers: 'Managers', ask: 'Question' };
 
 function dur(j: Job) {
   if (!j.startedAt) return '';

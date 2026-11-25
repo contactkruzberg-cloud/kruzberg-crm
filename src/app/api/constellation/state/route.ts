@@ -38,7 +38,9 @@ export async function GET(request: Request) {
   }
   const [last] = await store.select('constellation_docs', { order: [{ col: 'updated_at', asc: false }], limit: 1 });
   const stamp = `${last?.updated_at ?? ''}|${db.bands.length}|${db.jobs.length}`;
-  const jobs = db.jobs.slice(-40).reverse();
+  // The last searches, plus every recent question asked from the page (their answers live on the job).
+  const asks = db.jobs.filter((j) => j.kind === 'ask').slice(-30);
+  const jobs = [...db.jobs.filter((j) => j.kind !== 'ask').slice(-40), ...asks].sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
   const routine = { configured: routineConfigured(), error: launch.error, sessionUrl: launch.sessionUrl, activeAt: launch.activeAt };
 
   if (new URL(request.url).searchParams.get('light')) return json({ stamp, jobs, routine });

@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { AlertTriangle, ClipboardCopy, Filter, List, Loader2, Mail, Map as MapIcon, MoreHorizontal, Play, Plus, Radar, Search, Settings2, Sparkles, X } from 'lucide-react';
+import { AlertTriangle, ClipboardCopy, Filter, List, Loader2, Mail, Map as MapIcon, MessageCircle, MoreHorizontal, Play, Plus, Radar, Search, Settings2, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useLaunchVeille, useRadar } from '@/hooks/use-radar';
+import { useAskRadar, useLaunchVeille, useRadar } from '@/hooks/use-radar';
+import { AskClaude } from '@/components/shared/ask-claude';
+import { Dialog as AskDialog, DialogContent as AskDialogContent, DialogDescription as AskDialogDescription, DialogHeader as AskDialogHeader, DialogTitle as AskDialogTitle } from '@/components/ui/dialog';
 import { usePersistentState } from '@/lib/persistent-state';
 import { cn } from '@/lib/utils';
 import {
@@ -209,7 +211,15 @@ function LeadRow({
 // ---------------------------------------------------------------- view
 
 export function RadarView() {
-  const { leads, meta, scope, learned, launch, runs, outbox, isLoading, error, known, knownError, geo, geoExists } = useRadar();
+  const { leads, meta, scope, learned, launch, asks, runs, outbox, isLoading, error, known, knownError, geo, geoExists } = useRadar();
+  const askRadar = useAskRadar();
+  const [askOpen, setAskOpen] = useState(false);
+  // Clock for "pas de réponse après 45 min" (no Date.now() during render).
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(t);
+  }, []);
   const launchVeille = useLaunchVeille();
   const searching = launchVeille.isPending || searchRunning(launch);
   const actions = useRadarActions();
@@ -496,6 +506,10 @@ export function RadarView() {
               </a>
             </Button>
           )}
+          <Button variant="outline" onClick={() => setAskOpen(true)} className="gap-1.5">
+            <MessageCircle className="h-4 w-4" /> Demander à Claude
+            {asks.some((a) => !a.doneAt && now - Date.parse(a.requestedAt) < 45 * 60_000) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          </Button>
           <Button onClick={() => setTriageOpen(true)} disabled={!triCount} className="gap-1.5">
             <Sparkles className="h-4 w-4" /> {triCount ? `Trier les nouvelles (${triCount})` : 'Rien à trier'}
           </Button>
@@ -876,6 +890,66 @@ export function RadarView() {
         }}
       />
       <VeilleDialog open={veilleOpen} onOpenChange={setVeilleOpen} scope={scope} learned={learned} runs={runs} leads={leads} idx={idx} />
+      <AskDialog open={askOpen} onOpenChange={setAskOpen}>
+        <AskDialogContent className="flex h-[min(780px,90dvh)] max-w-2xl flex-col gap-3">
+          <AskDialogHeader>
+            <AskDialogTitle>Demander à Claude</AskDialogTitle>
+            <AskDialogDescription>Une recherche ciblée : une région, un événement, un type de lieu. Les pistes trouvées arrivent dans le radar.</AskDialogDescription>
+          </AskDialogHeader>
+          <AskClaude
+            className="min-h-0 flex-1"
+            items={asks.map((a) => {
+              const found = leads.filter((l) => l.ask === a.id);
+              const stale = !a.doneAt && now - Date.parse(a.requestedAt) > 45 * 60_000;
+              return {
+                id: a.id,
+                question: a.brief,
+                requestedAt: a.requestedAt,
+                status: a.error || stale ? 'error' : a.doneAt ? 'done' : 'running',
+                error: a.error ?? (stale ? 'pas de réponse après 45 minutes' : undefined),
+                answer: a.answer,
+                sources: a.sources,
+                sessionUrl: a.sessionUrl,
+                extra: found.length ? (
+                  <div className="flex flex-wrap items-center gap-1.5 text-[12.5px]">
+                    <span className="text-muted-foreground">{found.length} piste{found.length > 1 ? 's' : ''} ajoutée{found.length > 1 ? 's' : ''} :</span>
+                    {found.slice(0, 20).map((l) => (
+                      <button
+                        key={l.id}
+                        type="button"
+                        onClick={() => {
+                          setAskOpen(false);
+                          setOpenId(l.id);
+                        }}
+                        className="rounded-full border bg-card px-2 py-0.5 hover:border-primary hover:text-primary"
+                      >
+                        {l.name}
+                        {l.city ? ` · ${l.city}` : ''}
+                      </button>
+                    ))}
+                  </div>
+                ) : undefined,
+              };
+            })}
+            sending={askRadar.isPending}
+            onAsk={(brief) => askRadar.mutateAsync(brief)}
+            placeholder="Ex. Bars-concerts et assos qui programment du post-punk en Bretagne"
+            busyNote="Réponse dans 10 à 20 minutes, tu peux fermer cette fenêtre."
+            intro={
+              <>
+                Demande une recherche précise : une région, une ville, un festival, un type de lieu, une période. Claude cherche sur le web, ajoute les pistes au
+                radar (sans doublon avec le CRM) et te fait un compte rendu ici.
+              </>
+            }
+            suggestions={[
+              'Bars-concerts et assos qui programment du post-punk en Bretagne',
+              'Festivals d’été 2027 en Auvergne-Rhône-Alpes avec appel à candidatures',
+              'Lieux en Belgique et aux Pays-Bas pour la tournée de mai 2027',
+              'Premières parties possibles de groupes post-punk en tournée en France au printemps',
+            ]}
+          />
+        </AskDialogContent>
+      </AskDialog>
     </div>
   );
 }

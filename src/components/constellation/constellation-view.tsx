@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Link2, ListOrdered, Loader2, Orbit, Sparkles, Trophy, Users } from 'lucide-react';
+import { Link2, ListOrdered, Loader2, MessageCircle, Orbit, Sparkles, Trophy, Users } from 'lucide-react';
+import { toast } from 'sonner';
+import { AskClaude } from '@/components/shared/ask-claude';
 import { bandLinks, entityLinks, entityPairs } from '@/lib/constellation/links';
 import { BandsTab } from './bands-tab';
 import { EntityPanel } from './entity-panel';
@@ -16,7 +18,7 @@ import { cn } from './ui';
 import { useConstellation, type Routine } from './use-constellation';
 import { PageHeader } from '@/components/layout/page-header';
 
-type Tab = 'ranking' | 'links' | 'graph' | 'patterns' | 'bands';
+type Tab = 'ask' | 'ranking' | 'links' | 'graph' | 'patterns' | 'bands';
 
 export function ConstellationView() {
   const { data, error, act, reload } = useConstellation();
@@ -107,6 +109,9 @@ export function ConstellationView() {
         <TabBtn on={tab === 'bands'} onClick={() => setTab('bands')} icon={<Users className="size-4" />}>
           Groupes {stats?.suggested ? <span className="rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">{stats.suggested}</span> : null}
         </TabBtn>
+        <TabBtn on={tab === 'ask'} onClick={() => setTab('ask')} icon={<MessageCircle className="size-4" />}>
+          Demander à Claude
+        </TabBtn>
       </nav>
 
       {data && <RoutineNotice routine={data.routine} pending={queued.length + running.length} />}
@@ -123,6 +128,7 @@ export function ConstellationView() {
           {tab === 'graph' && <Graph data={data} pairs={links.pairs} onEntity={openEntity} onBand={openBand} selected={entityKey ?? bandId} />}
           {tab === 'patterns' && <Patterns data={data} act={act} onBand={openBand} />}
           {tab === 'bands' && <BandsTab data={data} act={act} onOpen={openBand} />}
+          {tab === 'ask' && <AskTab data={data} act={act} onBand={openBand} />}
         </main>
       )}
 
@@ -179,4 +185,64 @@ function RoutineNotice({ routine, pending }: { routine: Routine; pending: number
       </a>
     </p>
   ) : null;
+}
+
+function AskTab({ data, act, onBand }: { data: NonNullable<ReturnType<typeof useConstellation>['data']>; act: (b: Record<string, unknown>) => Promise<unknown>; onBand: (id: string) => void }) {
+  const [sending, setSending] = useState(false);
+  const names = new Map(data.bands.map((b) => [b.id, b.name]));
+  const items = data.jobs
+    .filter((j) => j.kind === 'ask')
+    .map((j) => ({
+      id: j.id,
+      question: j.question ?? j.label,
+      status: j.status,
+      requestedAt: j.requestedAt,
+      answer: j.answer,
+      error: j.error,
+      sources: j.sources,
+      sessionUrl: data.routine.sessionUrl,
+      extra:
+        j.bandIds?.length || j.added ? (
+          <div className="flex flex-wrap items-center gap-1.5 text-[12.5px]">
+            {!!j.added && <span className="text-muted-foreground">{j.added} ajout{j.added > 1 ? 's' : ''} à la constellation ·</span>}
+            {(j.bandIds ?? []).filter((id) => names.has(id)).map((id) => (
+              <button key={id} type="button" onClick={() => onBand(id)} className="rounded-full border bg-card px-2 py-0.5 hover:border-primary hover:text-primary">
+                {names.get(id)}
+              </button>
+            ))}
+          </div>
+        ) : undefined,
+    }));
+  return (
+    <AskClaude
+      className="h-[calc(100dvh-24rem)] min-h-[420px]"
+      items={items}
+      sending={sending}
+      onAsk={async (question) => {
+        setSending(true);
+        try {
+          await act({ type: 'ask', question });
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : 'Impossible d’envoyer la question');
+          throw e;
+        } finally {
+          setSending(false);
+        }
+      }}
+      placeholder="Ex. Quels tourneurs travaillent avec les groupes de Howlin’ Banana ?"
+      busyNote="Réponse dans 3 à 10 minutes, tu peux quitter la page."
+      intro={
+        <>
+          Pose une question sur un groupe, un label, un tourneur, un festival ou une scène. Claude cherche sur le web, te répond ici, et ajoute à la carte
+          les groupes et les liens qu’il a vérifiés.
+        </>
+      }
+      suggestions={[
+        'Quel est le parcours de Lambrini Girls jusqu’à leur premier album ?',
+        'Quels groupes post-punk a signés Howlin’ Banana Records depuis 2022 ?',
+        'Quels tourneurs français travaillent avec des groupes de notre niche ?',
+        'Quels festivals belges programment des groupes post-punk émergents ?',
+      ]}
+    />
+  );
 }

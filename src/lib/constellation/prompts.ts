@@ -283,3 +283,75 @@ S'il n'y a aucun manager nommé dans une source, rends une liste vide : ne devin
 
 ${RULES}`;
 }
+
+// ---------------------------------------------------------------- question libre
+
+export const ASK_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['answer', 'sources', 'bands', 'facts'],
+  properties: {
+    answer: {
+      type: 'string',
+      description:
+        'La réponse à la question, en français, directe et utile pour KRUZBERG : 5 à 25 lignes, listes à puces bienvenues (« - »), noms exacts, dates, et ce qu’on peut en faire concrètement. Dis clairement ce que tu n’as pas trouvé.',
+    },
+    sources: {
+      type: 'array',
+      description: 'Les pages consultées qui appuient la réponse (5 à 15).',
+      items: { type: 'object', additionalProperties: false, required: ['title', 'url'], properties: { title: { type: 'string' }, url: { type: 'string' } } },
+    },
+    bands: {
+      type: 'array',
+      description: 'Groupes pertinents pour la question, à ajouter à la constellation (vide si la question ne porte pas sur des groupes).',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['name', 'why', 'fit', 'sourceUrl'],
+        properties: {
+          name: { type: 'string' },
+          city: { type: 'string' },
+          country: { type: 'string', description: 'Pays en français.' },
+          genre: { type: 'string' },
+          why: { type: 'string', description: 'Le lien avec la question et avec KRUZBERG (1 à 2 phrases).' },
+          fit: { type: 'integer', minimum: 1, maximum: 5 },
+          sourceUrl: { type: 'string' },
+        },
+      },
+    },
+    facts: {
+      type: 'array',
+      description: 'Liens sourcés entre un groupe et un acteur (tourneur, label, salle, festival, manager…), à ajouter au réseau. Le groupe peut être déjà connu ou listé dans bands.',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['band', 'kind', 'name', 'sourceUrl'],
+        properties: {
+          band: { type: 'string', description: 'Nom du groupe.' },
+          kind: { type: 'string', enum: [...KINDS] },
+          name: { type: 'string', description: 'Nom de l’acteur.' },
+          city: { type: 'string' },
+          country: { type: 'string' },
+          when: { type: 'string', description: 'AAAA ou AAAA-MM.' },
+          detail: { type: 'string' },
+          sourceUrl: { type: 'string' },
+        },
+      },
+    },
+  },
+} as const;
+
+export function askPrompt(question: string, context: string): string {
+  return `${KRUZBERG}
+
+Greg (le booker du groupe) te pose une question depuis la Constellation, la carte du réseau de notre niche (groupes proches, leurs tourneurs, labels, salles, festivals, managers, médias).
+
+Question : « ${question} »
+
+Ce que la constellation contient déjà (pour ne pas répéter et pour relier ta réponse) :
+${context}
+
+Fais les recherches nécessaires sur le web, puis réponds à la question. Si elle porte sur un groupe, un label, un tourneur, un festival ou une scène précise, va chercher les faits datés et sourcés. Ajoute dans « bands » les groupes nouveaux pertinents et dans « facts » chaque lien groupe → acteur que tu as vérifié, pour enrichir la carte.
+
+${RULES}`;
+}

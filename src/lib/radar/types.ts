@@ -5,6 +5,8 @@ export type RadarCat = 'festivals' | 'tremplins' | 'booking_fr' | 'booking_eu' |
 
 export interface Lead {
   id: string;
+  /** Id of the "Demander à Claude" request that found it (config/ask-…). */
+  ask?: string;
   cat: RadarCat;
   name: string;
   org?: string;
@@ -116,4 +118,17 @@ export interface RadarLearned {
   works?: string[];
   avoid?: string[];
   angles?: string[];
+}
+
+/** "Demander à Claude" on the radar: one config document per request (id "ask-…"). */
+export interface RadarAsk {
+  brief: string;
+  requestedAt: string;
+  sessionUrl?: string;
+  /** Written by the routine when it is done. */
+  doneAt?: string;
+  answer?: string;
+  added?: number;
+  sources?: { title: string; url: string }[];
+  error?: string;
 }

@@ -3,7 +3,7 @@ import type { Store } from '@/lib/mcp/store';
 import { aggregate } from './aggregate';
 import { mutate, type Launch, type Loaded } from './docs';
 import { isNoise, slug } from './normalize';
-import { BAND_SCHEMA, DISCOVER_SCHEMA, MANAGERS_SCHEMA, SYNTHESIS_SCHEMA, bandPrompt, discoverPrompt, managersPrompt, rosterPrompt, synthesisPrompt } from './prompts';
+import { ASK_SCHEMA, BAND_SCHEMA, DISCOVER_SCHEMA, MANAGERS_SCHEMA, SYNTHESIS_SCHEMA, askPrompt, bandPrompt, discoverPrompt, managersPrompt, rosterPrompt, synthesisPrompt } from './prompts';
 import { SEED_BANDS, SEED_WATCH } from './seed';
 import {
   ANGLE_LABEL,
@@ -67,6 +67,8 @@ function requeueStale(db: Db, now = Date.now()) {
 
 // Priorités : découvertes et catalogues, puis groupes lyonnais (le local d'abord), puis le reste ; la synthèse en dernier.
 function rank(db: Db, j: Job) {
+  // A question asked from the page: Greg is waiting for it.
+  if (j.kind === 'ask') return -1;
   if (j.kind === 'discover' || j.kind === 'discover_lyon' || j.kind === 'roster') return 0;
   if (j.kind === 'synthesis') return 3;
   const b = db.bands.find((x) => x.id === j.target);
@@ -188,6 +190,7 @@ export type Action =
   | { type: 'discoverLyon' }
   | { type: 'roster'; key: string; name: string }
   | { type: 'findManagers' }
+  | { type: 'ask'; question: string }
   | { type: 'cancelJob'; id: string }
   | { type: 'entity'; key: string; hidden?: boolean; mergedInto?: string | null; note?: string };
 
@@ -253,6 +256,13 @@ export function applyAction(l: Loaded, a: Action): Record<string, unknown> {
       return { ok: true, job: enqueue(db, 'roster', a.key, a.name) };
     case 'findManagers':
       return { ok: true, count: enqueueManagers(db) };
+    case 'ask': {
+      const q = String(a.question ?? '').trim().slice(0, 1500);
+      if (q.length < 3) throw new ActionError('Écris ta question.');
+      const j = enqueue(db, 'ask', randomUUID(), q.length > 80 ? `${q.slice(0, 77)}…` : q);
+      if (j) j.question = q;
+      return { ok: true, id: j?.id };
+    }
     case 'cancelJob': {
       const j = db.jobs.find((x) => x.id === a.id);
       if (j && j.status === 'queued') {
@@ -327,6 +337,7 @@ function build(job: Job, db: Db): { prompt: string; schema: object; web: boolean
     return { prompt: discoverPrompt(angle, knownNames(db)), schema: DISCOVER_SCHEMA, web: true };
   }
   if (job.kind === 'synthesis') return { prompt: synthesisPrompt(dossier(db)), schema: SYNTHESIS_SCHEMA, web: false };
+  if (job.kind === 'ask') return { prompt: askPrompt(job.question ?? job.label, askContext(db)), schema: ASK_SCHEMA, web: true };
   if (job.kind === 'managers') {
     const b = db.bands.find((x) => x.id === job.target);
     if (!b) throw new Error('Groupe introuvable');
@@ -339,6 +350,16 @@ function build(job: Job, db: Db): { prompt: string; schema: object; web: boolean
     schema: DISCOVER_SCHEMA,
     web: true,
   };
+}
+
+/** Ce que la constellation sait déjà, en bref, pour une question libre. */
+function askContext(db: Db): string {
+  const bands = db.bands.filter((b) => b.status !== 'rejected');
+  const ents = aggregate(db).slice(0, 60);
+  return [
+    `Groupes (${bands.length}) : ${bands.map((b) => `${b.name}${b.city ? ` (${b.city})` : ''}`).join(', ')}.`,
+    `Acteurs principaux : ${ents.map((e) => `${e.name} [${e.kind}, ${e.bandIds.length} groupe${e.bandIds.length > 1 ? 's' : ''}]`).join(', ')}.`,
+  ].join('\n');
 }
 
 /** Le dossier remis à la synthèse : trajectoires datées et acteurs récurrents. */
@@ -386,6 +407,7 @@ function apply(db: Db, job: Job, output: unknown): { added: number; explore: str
     db.synthesis = { ...o, generatedAt: new Date().toISOString() };
     return { added: o.patterns.length, explore: [] };
   }
+  if (job.kind === 'ask') return applyAsk(db, job, output as Record<string, unknown>);
   if (job.kind === 'managers') {
     const o = output as { findings?: Array<Record<string, unknown>> };
     if (!Array.isArray(o.findings)) throw new Error('findings attendu');
@@ -520,6 +542,63 @@ function apply(db: Db, job: Job, output: unknown): { added: number; explore: str
     added++;
   }
   return { added, explore };
+}
+
+function applyAsk(db: Db, job: Job, o: Record<string, unknown>): { added: number; explore: string[] } {
+  const answer = clean(o.answer);
+  if (!answer) throw new Error('answer manquant');
+  job.answer = answer;
+  job.sources = (Array.isArray(o.sources) ? o.sources : [])
+    .map((x) => ({ title: clean((x as Record<string, unknown>).title) ?? '', url: clean((x as Record<string, unknown>).url) ?? '' }))
+    .filter((x) => /^https?:\/\//.test(x.url))
+    .slice(0, 20);
+  const ids = new Set<string>();
+  let added = 0;
+  for (const r of (Array.isArray(o.bands) ? o.bands : []) as Array<Record<string, unknown>>) {
+    const name = clean(r.name);
+    const id = name ? slug(name) : '';
+    if (!name || !id) continue;
+    ids.add(id);
+    if (db.bands.some((b) => b.id === id)) continue;
+    const city = clean(r.city);
+    const country = clean(r.country);
+    const fit = Math.min(5, Math.max(1, Math.round(Number(r.fit) || 3)));
+    db.bands.push(
+      compact({
+        id,
+        name,
+        city,
+        country,
+        genre: clean(r.genre),
+        scene: sceneOf(city, country),
+        origin: 'decouverte' as const,
+        why: [clean(r.why), `(question : ${job.label})`].filter(Boolean).join(' '),
+        links: compact({ website: clean(r.sourceUrl) }),
+        fit,
+        status: fit >= 4 ? ('idle' as const) : ('suggested' as const),
+        addedAt: new Date().toISOString(),
+      }),
+    );
+    added++;
+  }
+  for (const r of (Array.isArray(o.facts) ? o.facts : []) as Array<Record<string, unknown>>) {
+    const bandName = clean(r.band);
+    const name = clean(r.name);
+    const sourceUrl = clean(r.sourceUrl);
+    const kind = r.kind as EntityKind;
+    const band = bandName ? db.bands.find((b) => b.id === slug(bandName) || b.name.toLowerCase() === bandName.toLowerCase()) : undefined;
+    if (!band || !name || !sourceUrl || !KINDS.includes(kind)) continue;
+    if (isNoise({ name, detail: clean(r.detail), bandId: band.id })) continue;
+    ids.add(band.id);
+    const dup = db.findings.some((f) => f.bandId === band.id && f.kind === kind && f.name.toLowerCase() === name.toLowerCase());
+    if (dup) continue;
+    db.findings.push(
+      compact({ id: randomUUID(), bandId: band.id, kind, name, city: clean(r.city), country: clean(r.country), when: clean(r.when), detail: clean(r.detail), sourceUrl }),
+    );
+    added++;
+  }
+  job.bandIds = [...ids];
+  return { added, explore: [] };
 }
 
 // ---------------------------------------------------------------- noms retirés

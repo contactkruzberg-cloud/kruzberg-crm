@@ -137,7 +137,7 @@ export interface Watch {
   source: string;
 }
 
-export type JobKind = 'band' | 'discover' | 'discover_lyon' | 'roster' | 'synthesis' | 'managers';
+export type JobKind = 'band' | 'discover' | 'discover_lyon' | 'roster' | 'synthesis' | 'managers' | 'ask';
 
 /** Angles de découverte de nouveaux groupes. */
 export type DiscoverAngle = 'lyon_scene' | 'lyon_agendas' | 'aura_dispositifs' | 'france_niche' | 'europe_niche';
@@ -158,6 +158,12 @@ export interface Job {
   added?: number;
   /** Découverte : explorer aussitôt les groupes très proches. */
   autoExplore?: boolean;
+  /** Question libre posée depuis l'interface ('ask'), et la réponse de Claude. */
+  question?: string;
+  answer?: string;
+  sources?: { title: string; url: string }[];
+  /** Groupes ajoutés ou cités par la réponse (ids). */
+  bandIds?: string[];
 }
 
 export interface Db {
