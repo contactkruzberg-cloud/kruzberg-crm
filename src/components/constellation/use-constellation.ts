@@ -41,6 +41,8 @@ const URL = '/api/constellation/state';
 // Le serveur envoie les données brutes ; le classement est calculé ici. Pendant
 // les recherches, on n'interroge que la file (léger) et on ne recharge tout
 // que si quelque chose a changé.
+export type RawCore = Omit<Raw, 'jobs' | 'routine'>;
+
 export function useConstellation() {
   const [raw, setRaw] = useState<Omit<Raw, 'jobs' | 'routine'> | null>(null);
   // The queue changes often: kept apart so the ranking is not recomputed each time.
@@ -117,16 +119,25 @@ export function useConstellation() {
   }, [raw]);
   const data = useMemo<State | null>(() => (core && queue ? { ...core, jobs: queue.jobs, routine: queue.routine } : null), [core, queue]);
 
+  /**
+   * An action of the page. With `local`, the change shows at once (optimistic)
+   * and the page is not reloaded after: the server sends back its new stamp.
+   */
   const act = useCallback(
-    async (body: Record<string, unknown>) => {
+    async (body: Record<string, unknown>, local?: (r: NonNullable<typeof raw>) => NonNullable<typeof raw>) => {
+      if (local) setRaw((r) => (r ? local(r) : r));
       const r = await fetch('/api/constellation/action', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       const j = await r.json().catch(() => ({}));
-      // Reloads everything only if the network changed (a queued search just updates the queue).
+      if (!r.ok) {
+        if (local) await load();
+        throw new Error(j.error ?? 'Erreur');
+      }
+      if (local && j.stamp) stamp.current = j.stamp;
+      // Reloads everything only if the network changed in a way the page does not show yet.
       await poll();
-      if (!r.ok) throw new Error(j.error ?? 'Erreur');
       return j;
     },
-    [poll],
+    [poll, load],
   );
 
   return { data, error, act, reload: load };

@@ -185,7 +185,7 @@ export type Action =
   | { type: 'discover'; angle: DiscoverAngle; autoExplore?: boolean }
   | { type: 'discoverAll'; autoExplore?: boolean }
   | { type: 'synthesis' }
-  | { type: 'setBandStatus'; id: string; status: 'idle' | 'rejected' }
+  | { type: 'setBandStatus'; id: string; status: 'idle' | 'rejected'; explore?: boolean }
   | { type: 'exploreBand'; id: string }
   | { type: 'exploreAll' }
   | { type: 'discoverLyon' }
@@ -217,6 +217,8 @@ export function applyAction(l: Loaded, a: Action): Record<string, unknown> {
     case 'setBandStatus': {
       const b = db.bands.find((x) => x.id === a.id);
       if (b) b.status = a.status === 'idle' && b.exploredAt ? 'done' : a.status;
+      // "Retenir et explorer" in one step (one round trip instead of two).
+      if (b && a.status === 'idle' && a.explore && !b.exploredAt) enqueue(db, 'band', b.id, b.name);
       return { ok: true };
     }
     case 'exploreBand':

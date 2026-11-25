@@ -1,7 +1,6 @@
 import { loadDb, mutate, pruneJobs, KEEP_ASKS, KEEP_DONE_JOBS } from '@/lib/constellation/docs';
 import { enqueueManagers, needsManagersBackfill, needsScrub, scrub, seed } from '@/lib/constellation/engine';
-import { crmKnown, kick, ownerStore, routineConfigured } from '@/lib/constellation/server';
-import type { Store } from '@/lib/mcp/store';
+import { crmKnown, kick, networkStamp, ownerStore, routineConfigured } from '@/lib/constellation/server';
 import type { Job } from '@/lib/constellation/types';
 
 // Données de la page /constellation. La page calcule elle-même le classement
@@ -13,23 +12,6 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'cache-control': 'no-store' } });
-
-/** Changes when the network itself changes (not the queue). */
-async function networkStamp(store: Store) {
-  const [last] = await store.select('constellation_docs', {
-    filters: [{ col: 'collection', op: 'in', value: ['bands', 'findings', 'overrides', 'watch'] }],
-    order: [{ col: 'updated_at', asc: false }],
-    limit: 1,
-  });
-  const [syn] = await store.select('constellation_docs', {
-    filters: [
-      { col: 'collection', op: 'eq', value: 'config' },
-      { col: 'id', op: 'eq', value: 'synthesis' },
-    ],
-    limit: 1,
-  });
-  return `${last?.updated_at ?? ''}|${syn?.updated_at ?? ''}`;
-}
 
 /** The last searches, plus the recent questions asked from the page (their answers live on the job). */
 const visibleJobs = (jobs: Job[]) => {

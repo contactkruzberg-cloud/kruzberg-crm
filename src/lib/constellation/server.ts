@@ -37,3 +37,20 @@ export async function crmKnown(store: Store): Promise<CrmKnown> {
   }
   return out;
 }
+
+/** Changes when the network itself changes (groups, facts, settings, synthesis), not the queue. */
+export async function networkStamp(store: Store) {
+  const [last] = await store.select('constellation_docs', {
+    filters: [{ col: 'collection', op: 'in', value: ['bands', 'findings', 'overrides', 'watch'] }],
+    order: [{ col: 'updated_at', asc: false }],
+    limit: 1,
+  });
+  const [syn] = await store.select('constellation_docs', {
+    filters: [
+      { col: 'collection', op: 'eq', value: 'config' },
+      { col: 'id', op: 'eq', value: 'synthesis' },
+    ],
+    limit: 1,
+  });
+  return `${last?.updated_at ?? ''}|${syn?.updated_at ?? ''}`;
+}

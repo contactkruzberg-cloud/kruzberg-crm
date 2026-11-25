@@ -1,10 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AlertTriangle, Check, CheckCircle2, Compass, Loader2, Play, Plus, Rocket, Trophy, Undo2, X, UserRound } from 'lucide-react';
 import { ANGLE_LABEL, ORIGIN_LABEL, type Band, type DiscoverAngle } from '@/lib/constellation/types';
 import { Badge, Button, Empty, cn } from './ui';
-import type { State } from './use-constellation';
+import { toast } from 'sonner';
+import type { RawCore, State } from './use-constellation';
+
+type Act = (b: Record<string, unknown>, local?: (r: RawCore) => RawCore) => Promise<unknown>;
+
+/** The band's new status, shown at once while the server records it. */
+const setStatus = (id: string, status: Band['status']) => (r: RawCore): RawCore => ({
+  ...r,
+  bands: r.bands.map((b) => (b.id === id ? { ...b, status: status === 'idle' && b.exploredAt ? 'done' : status } : b)),
+});
 
 const SCENE: Record<string, string> = { lyon: 'Lyon & région', france: 'France', europe: 'Europe' };
 const ANGLES = Object.keys(ANGLE_LABEL) as DiscoverAngle[];
@@ -22,7 +31,17 @@ const GROUPS: { id: string; label: string; hint: string }[] = [
   { id: 'autre', label: 'Origine à préciser', hint: '' },
 ];
 
-export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<string, unknown>) => Promise<unknown>; onOpen: (id: string) => void }) {
+export function BandsTab({ data, act, onOpen }: { data: State; act: Act; onOpen: (id: string) => void }) {
+  // Facts per band, counted once (not once per row).
+  const factsByBand = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of data.entities) for (const f of e.findings) m.set(f.bandId, (m.get(f.bandId) ?? 0) + 1);
+    return m;
+  }, [data.entities]);
+  const decide = (b: Band, status: 'idle' | 'rejected') =>
+    act({ type: 'setBandStatus', id: b.id, status, explore: status === 'idle' }, setStatus(b.id, status === 'idle' ? 'queued' : 'rejected')).catch((e) =>
+      toast.error(e instanceof Error ? e.message : 'Échec, réessaie'),
+    );
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [ref, setRef] = useState(false);
@@ -47,8 +66,8 @@ export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<s
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
-      <section className="space-y-4">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <section className="min-w-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="font-semibold">Groupes explorés ou à explorer · {active.length}</h2>
@@ -80,7 +99,7 @@ export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<s
               {g.hint && <p className="mb-2 text-xs text-muted-foreground">{g.hint}</p>}
               <ul className="divide-y divide-border/60 border-y">
                 {bs.map((b) => (
-                  <BandRow key={b.id} b={b} data={data} onOpen={onOpen} act={act} />
+                  <BandRow key={b.id} b={b} facts={factsByBand.get(b.id) ?? 0} onOpen={onOpen} act={act} />
                 ))}
               </ul>
             </div>
@@ -100,7 +119,7 @@ export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<s
         {err && <p className="text-sm text-destructive">{err}</p>}
       </section>
 
-      <section className="space-y-3">
+      <section className="min-w-0 space-y-3">
         <div className="border-t pt-5">
           <h2 className="flex items-center gap-2 font-semibold">
             <Compass className="size-4 text-primary" /> Découvrir des groupes
@@ -152,14 +171,11 @@ export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<s
                       size="sm"
                       variant="primary"
                       title="Retenir et explorer"
-                      onClick={async () => {
-                        await act({ type: 'setBandStatus', id: b.id, status: 'idle' });
-                        await act({ type: 'exploreBand', id: b.id });
-                      }}
+                      onClick={() => decide(b, 'idle')}
                     >
                       <Check className="size-3.5" />
                     </Button>
-                    <Button size="sm" variant="ghost" title="Écarter" onClick={() => act({ type: 'setBandStatus', id: b.id, status: 'rejected' })}>
+                    <Button size="sm" variant="ghost" title="Écarter" onClick={() => decide(b, 'rejected')}>
                       <X className="size-3.5" />
                     </Button>
                   </div>
@@ -182,7 +198,7 @@ export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<s
               {rejected.map((b) => (
                 <li key={b.id} className="flex items-center justify-between text-muted-foreground">
                   {b.name}
-                  <Button size="sm" variant="ghost" onClick={() => act({ type: 'setBandStatus', id: b.id, status: 'idle' })}>
+                  <Button size="sm" variant="ghost" onClick={() => act({ type: 'setBandStatus', id: b.id, status: 'idle' }, setStatus(b.id, 'idle'))}>
                     <Undo2 className="size-3.5" /> Reprendre
                   </Button>
                 </li>
@@ -195,8 +211,7 @@ export function BandsTab({ data, act, onOpen }: { data: State; act: (b: Record<s
   );
 }
 
-function BandRow({ b, data, onOpen, act }: { b: Band; data: State; onOpen: (id: string) => void; act: (x: Record<string, unknown>) => Promise<unknown> }) {
-  const facts = data.entities.reduce((n, e) => n + e.findings.filter((f) => f.bandId === b.id).length, 0);
+function BandRow({ b, facts, onOpen, act }: { b: Band; facts: number; onOpen: (id: string) => void; act: Act }) {
   const busy = b.status === 'queued' || b.status === 'running';
   return (
     <li className="flex items-center gap-3 px-4 py-2.5 hover:bg-accent/40">
@@ -225,7 +240,7 @@ function BandRow({ b, data, onOpen, act }: { b: Band; data: State; onOpen: (id: 
                   : b.why}
         </div>
       </button>
-      <Button size="sm" variant={b.status === 'done' ? 'ghost' : 'default'} disabled={busy} onClick={() => act({ type: 'exploreBand', id: b.id })}>
+      <Button size="sm" variant={b.status === 'done' ? 'ghost' : 'default'} disabled={busy} onClick={() => act({ type: 'exploreBand', id: b.id }, setStatus(b.id, 'queued'))}>
         {b.status === 'done' ? 'Relancer' : 'Explorer'}
       </Button>
     </li>
