@@ -1,6 +1,9 @@
 import type { Store } from '@/lib/mcp/store';
 import { fireConstellation } from '@/lib/relance/wake';
-import { mutate } from './docs';
+import { mutate, type Collection } from './docs';
+
+/** The queue alone: enough to decide whether to fire, without loading the whole network. */
+const QUEUE: Collection[] = ['jobs', 'config'];
 import { workersToFire } from './engine';
 
 // Réveil de la routine Constellation (déclencheur API, sur l'abonnement Claude).
@@ -21,7 +24,7 @@ export async function kick(store: Store, opts: { handoff?: boolean } = {}): Prom
     const n = opts.handoff ? Math.min(1, queued) : workersToFire(l.db, l.launch);
     if (n) l.launch.fires = [...l.launch.fires, ...Array.from({ length: n }, () => now)].slice(-20);
     return { n, queued };
-  });
+  }, QUEUE);
   if (!plan.n) return { fired: 0 };
   const results = await Promise.all(
     Array.from({ length: plan.n }, () => fireConstellation(plan.queued).catch(() => ({ ok: false as const, status: undefined, sessionUrl: undefined }))),
@@ -39,6 +42,6 @@ export async function kick(store: Store, opts: { handoff?: boolean } = {}): Prom
     if (ok?.sessionUrl) l.launch.sessionUrl = ok.sessionUrl;
     if (error) l.launch.error = error;
     else delete l.launch.error;
-  });
+  }, QUEUE);
   return { fired: results.filter((r) => r.ok).length, error };
 }

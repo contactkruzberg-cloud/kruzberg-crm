@@ -42,7 +42,9 @@ const URL = '/api/constellation/state';
 // les recherches, on n'interroge que la file (léger) et on ne recharge tout
 // que si quelque chose a changé.
 export function useConstellation() {
-  const [raw, setRaw] = useState<Raw | null>(null);
+  const [raw, setRaw] = useState<Omit<Raw, 'jobs' | 'routine'> | null>(null);
+  // The queue changes often: kept apart so the ranking is not recomputed each time.
+  const [queue, setQueue] = useState<Pick<Raw, 'jobs' | 'routine'> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stamp = useRef<string | null>(null);
@@ -58,7 +60,9 @@ export function useConstellation() {
     try {
       const d = await fetchJson<Raw>(URL);
       stamp.current = d.stamp;
-      setRaw(d);
+      const { jobs, routine, ...core } = d;
+      setRaw(core);
+      setQueue({ jobs, routine });
       setError(null);
       return d;
     } catch (e) {
@@ -72,7 +76,7 @@ export function useConstellation() {
     try {
       const d = await fetchJson<Pick<Raw, 'stamp' | 'jobs' | 'routine'>>(`${URL}?light=1`);
       if (d.stamp !== stamp.current) return load();
-      setRaw((r) => (r ? { ...r, jobs: d.jobs, routine: d.routine } : r));
+      setQueue({ jobs: d.jobs, routine: d.routine });
       setError(null);
       return d;
     } catch (e) {
@@ -97,32 +101,32 @@ export function useConstellation() {
     };
   }, [poll]);
 
-  const data = useMemo<State | null>(() => {
+  // The ranking: computed once per change of the network, not of the queue.
+  const core = useMemo(() => {
     if (!raw) return null;
-    const db: Db = { version: 1, bands: raw.bands, findings: raw.findings, overrides: raw.overrides, watch: raw.watch, jobs: raw.jobs, synthesis: raw.synthesis };
+    const db: Db = { version: 1, bands: raw.bands, findings: raw.findings, overrides: raw.overrides, watch: raw.watch, jobs: [], synthesis: raw.synthesis };
+    const withHidden = aggregate(db, raw.crm, { includeHidden: true });
     return {
       bands: raw.bands,
-      entities: aggregate(db, raw.crm),
+      entities: withHidden.filter((e) => !raw.overrides[e.key]?.hidden),
       entitiesEmerging: aggregate(emergingOnly(db), raw.crm),
-      hidden: aggregate(db, raw.crm, { includeHidden: true })
-        .filter((e) => raw.overrides[e.key]?.hidden)
-        .map((e) => ({ key: e.key, name: e.name, kind: e.kind })),
-      jobs: raw.jobs,
+      hidden: withHidden.filter((e) => raw.overrides[e.key]?.hidden).map((e) => ({ key: e.key, name: e.name, kind: e.kind })),
       crmCount: Object.keys(raw.crm).length,
       synthesis: raw.synthesis,
-      routine: raw.routine,
     };
   }, [raw]);
+  const data = useMemo<State | null>(() => (core && queue ? { ...core, jobs: queue.jobs, routine: queue.routine } : null), [core, queue]);
 
   const act = useCallback(
     async (body: Record<string, unknown>) => {
       const r = await fetch('/api/constellation/action', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
       const j = await r.json().catch(() => ({}));
-      await load();
+      // Reloads everything only if the network changed (a queued search just updates the queue).
+      await poll();
       if (!r.ok) throw new Error(j.error ?? 'Erreur');
       return j;
     },
-    [load],
+    [poll],
   );
 
   return { data, error, act, reload: load };

@@ -243,3 +243,21 @@ describe('constellation : questions libres', () => {
     await expect(mutate(mem.store, (l) => applyAction(l, { type: 'ask', question: ' ' }))).rejects.toThrow('Écris ta question');
   });
 });
+
+describe('constellation : file allégée', () => {
+  it('old finished searches are pruned from the base, live ones and recent questions kept', async () => {
+    const { pruneJobs, KEEP_DONE_JOBS } = await import('../docs');
+    await mutate(mem.store, (l) => {
+      for (let i = 0; i < KEEP_DONE_JOBS + 30; i++)
+        l.db.jobs.push({ id: `old-${String(i).padStart(4, '0')}`, kind: 'band', target: `b${i}`, label: 'x', status: 'done', requestedAt: `2026-01-01T00:00:${String(i % 60).padStart(2, '0')}.${String(i).padStart(3, '0')}Z` });
+      l.db.jobs.push({ id: 'live', kind: 'band', target: 'z', label: 'z', status: 'queued', requestedAt: '2025-01-01T00:00:00Z' });
+    });
+    await mutate(mem.store, (l) => pruneJobs(l.db), ['jobs']);
+    const { db, launch } = await loadDb(mem.store);
+    expect(db.jobs.length).toBe(KEEP_DONE_JOBS + 1);
+    expect(db.jobs.some((j) => j.id === 'live')).toBe(true);
+    // Saving the queue alone leaves the rest of the base as it was.
+    expect(db.bands.length).toBeGreaterThan(0);
+    expect(launch.fires).toBeDefined();
+  });
+});

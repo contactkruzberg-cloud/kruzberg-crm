@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Store } from '@/lib/mcp/store';
 import { aggregate } from './aggregate';
-import { mutate, type Launch, type Loaded } from './docs';
+import { mutate, pruneJobs, type Launch, type Loaded } from './docs';
 import { isNoise, slug } from './normalize';
 import { ASK_SCHEMA, BAND_SCHEMA, DISCOVER_SCHEMA, MANAGERS_SCHEMA, SYNTHESIS_SCHEMA, askPrompt, bandPrompt, discoverPrompt, managersPrompt, rosterPrompt, synthesisPrompt } from './prompts';
 import { SEED_BANDS, SEED_WATCH } from './seed';
@@ -144,6 +144,7 @@ export function submit(store: Store, args: { job_id: string; output?: unknown; e
       throw new EngineError(`Résultat illisible pour « ${job.label} » : ${e instanceof Error ? e.message : String(e)}. Respecte output_schema puis rends-le à nouveau.`);
     }
     finishIn(db, job.id, { status: 'done', added: res.added });
+    pruneJobs(db);
     // Découverte en mode « recherche massive » : on explore aussitôt les groupes très proches.
     for (const id of res.explore) enqueue(db, 'band', id, id);
     return { ok: true, status: 'done' as const, added: res.added, remaining: remaining() };

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { CATL, crmInput, STATUS_TO_STAGE, today } from '@/lib/radar/logic';
@@ -24,12 +25,27 @@ async function api<T>(url: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
-function useCollection(collection: Collection) {
+/**
+ * Leads are ~900 documents: refreshed every 30 s only while a search runs
+ * (it writes there), otherwise when the window comes back into focus.
+ */
+function useCollection(collection: Collection, busy = false) {
   return useQuery({
     queryKey: ['radar', collection],
     queryFn: async () => (await api<{ docs: Doc[] }>(`/api/radar/docs?collection=${collection}`)).docs,
-    refetchInterval: 30_000,
+    refetchInterval: busy ? 30_000 : collection === 'config' ? 60_000 : false,
+    staleTime: 20_000,
     refetchOnWindowFocus: true,
+  });
+}
+
+/** A search or a question is running (launched less than 45 min ago, not done). */
+function searchBusy(docs: Doc[] | undefined) {
+  const now = Date.now();
+  return (docs ?? []).some((d) => {
+    if (d.id !== 'launch' && !d.id.startsWith('ask-')) return false;
+    const x = d.data as { requestedAt?: string; doneAt?: string };
+    return !!x.requestedAt && !(x.doneAt && x.doneAt >= x.requestedAt) && now - Date.parse(x.requestedAt) < 45 * 60_000;
   });
 }
 
@@ -44,33 +60,46 @@ export function useRadarKnown() {
 }
 
 export function useRadar() {
-  const leads = useCollection('leads');
-  const known = useRadarKnown();
   const config = useCollection('config');
-  const runs = useCollection('runs');
-  const outbox = useCollection('outbox');
+  const busy = searchBusy(config.data);
+  const leads = useCollection('leads', busy);
+  const known = useRadarKnown();
+  const runs = useCollection('runs', busy);
+  const outbox = useCollection('outbox', busy);
   const configById = new Map((config.data ?? []).map((d) => [d.id, d.data]));
+  // Same array as long as the data is the same: every list, count and filter of the page is memoized on it.
+  const leadList = useMemo(
+    () => markKnown((leads.data ?? []).map((d) => ({ ...(d.data as Omit<Lead, 'id'>), id: d.id }) as Lead), known.data),
+    [leads.data, known.data],
+  );
+  const asks = useMemo(() => (config.data ?? []).filter((d) => d.id.startsWith('ask-')).map((d) => ({ ...(d.data as unknown as RadarAsk), id: d.id })), [config.data]);
+  const runList = useMemo(
+    () =>
+      ((runs.data ?? []).map((d) => ({ ...d.data, id: d.id })) as unknown as (RadarRun & { id: string })[])
+        .sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.id.localeCompare(a.id))
+        .slice(0, 90),
+    [runs.data],
+  );
+  const outboxList = useMemo(
+    () => (outbox.data ?? []).map((d) => ({ ...(d.data as Omit<OutboxItem, 'id'>), id: d.id }) as OutboxItem).filter((o) => o.state === 'pending' && (o as { kind?: string }).kind !== 'relance'),
+    [outbox.data],
+  );
   return {
     isLoading: leads.isLoading,
     error: leads.error,
-    leads: markKnown(
-      (leads.data ?? []).map((d) => ({ ...(d.data as Omit<Lead, 'id'>), id: d.id }) as Lead),
-      known.data,
-    ),
+    leads: leadList,
     known: known.data,
     knownError: known.error,
     meta: (configById.get('meta') ?? {}) as RadarMeta,
     scope: (configById.get('scope') ?? {}) as RadarScope,
     learned: (configById.get('learned') ?? {}) as RadarLearned,
     launch: (configById.get('launch') ?? {}) as RadarLaunch,
-    asks: (config.data ?? []).filter((d) => d.id.startsWith('ask-')).map((d) => ({ ...(d.data as unknown as RadarAsk), id: d.id })),
+    asks,
     /** City coordinates for the map (see src/lib/radar/geo.ts). */
     geo: (configById.get('geo') ?? {}) as GeoCache,
     geoExists: configById.has('geo'),
-    runs: ((runs.data ?? []).map((d) => ({ ...d.data, id: d.id })) as unknown as (RadarRun & { id: string })[])
-      .sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.id.localeCompare(a.id))
-      .slice(0, 90),
-    outbox: (outbox.data ?? []).map((d) => ({ ...(d.data as Omit<OutboxItem, 'id'>), id: d.id }) as OutboxItem).filter((o) => o.state === 'pending' && (o as { kind?: string }).kind !== 'relance'),
+    runs: runList,
+    outbox: outboxList,
   };
 }
 
@@ -108,11 +137,27 @@ export function useRadarWrite() {
       qc.setQueryData<Doc[]>(['radar', w.collection], (docs = []) => {
         const exists = docs.some((d) => d.id === w.id);
         if (!exists) return [...docs, { id: w.id!, data: w.data, version: 1 }];
-        return docs.map((d) => (d.id === w.id ? { ...d, data: w.op === 'set' ? w.data : { ...d.data, ...w.data } } : d));
+        // Same merge as the server: a field {"__delete__": true} is removed.
+        const merge = (cur: Record<string, unknown>) => {
+          const out = { ...cur };
+          for (const [k, v] of Object.entries(w.data)) {
+            if (v && typeof v === 'object' && !Array.isArray(v) && (v as { __delete__?: boolean }).__delete__ === true) delete out[k];
+            else out[k] = v;
+          }
+          return out;
+        };
+        return docs.map((d) => (d.id === w.id ? { ...d, data: w.op === 'set' ? w.data : merge(d.data) } : d));
       });
     },
-    onError: (err) => toast.error(`Échec de l'enregistrement : ${err instanceof Error ? err.message : ''}`),
-    onSettled: (_r, _e, w) => qc.invalidateQueries({ queryKey: ['radar', w.collection] }),
+    onError: (err, w) => {
+      toast.error(`Échec de l'enregistrement : ${err instanceof Error ? err.message : ''}`);
+      void qc.invalidateQueries({ queryKey: ['radar', w.collection] });
+    },
+    // Already applied above: only the new version is recorded (no reload of the ~900 leads after each click).
+    onSuccess: (r, w) => {
+      if (w.op === 'add' || !w.id) return void qc.invalidateQueries({ queryKey: ['radar', w.collection] });
+      qc.setQueryData<Doc[]>(['radar', w.collection], (docs = []) => docs.map((d) => (d.id === r.id ? { ...d, version: r.version } : d)));
+    },
   });
 }
 

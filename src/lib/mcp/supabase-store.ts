@@ -102,5 +102,11 @@ export function createSupabaseStore(url: string, serviceRoleKey: string, ownerId
       if (error) fail(error);
       return (data ?? []) as Row[];
     },
+
+    async remove(table, filters) {
+      if (!filters.length) throw new Error('remove() needs filters');
+      const { error } = await applyFilters(db.from(table).delete().eq('user_id', ownerId), filters);
+      if (error) fail(error);
+    },
   };
 }

@@ -64,6 +64,8 @@ export function withAudit(store: Store, actor: string, tool: string): Store {
 
     insertMany: (table, rows) => store.insertMany(table, rows),
 
+    remove: (table, filters) => store.remove(table, filters),
+
     async update(table, filters, patch) {
       const before = ENTITY_BY_TABLE[table] ? await selectAll(store, table, { filters }) : [];
       const updated = await store.update(table, filters, patch);

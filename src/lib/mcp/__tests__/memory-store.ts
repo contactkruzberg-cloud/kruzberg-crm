@@ -132,6 +132,10 @@ export function createMemoryStore() {
       for (const r of rows) await store.insert(table, r);
     },
 
+    async remove(table, filters) {
+      db[table] = db[table].filter((r) => !(r.user_id === OWNER && filters.every((f) => matches(r, f))));
+    },
+
     async update(table, filters, patch) {
       const rows = db[table].filter((r) => r.user_id === OWNER && filters.every((f) => matches(r, f)));
       const out: Row[] = [];

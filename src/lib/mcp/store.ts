@@ -49,6 +49,8 @@ export interface Store {
   insertMany(table: Table, rows: Row[]): Promise<void>;
   /** Updates the owner's rows matching the filters; returns the updated rows (empty if none matched). */
   update(table: Table, filters: Filter[], patch: Row): Promise<Row[]>;
+  /** Deletes the owner's rows matching the filters (housekeeping only: CRM data is archived, never deleted). */
+  remove(table: Table, filters: Filter[]): Promise<void>;
 }
 
 /** Database error with the Postgres message but no stack, safe to surface as a tool error. */
@@ -66,8 +68,8 @@ export class UniqueViolationError extends Error {
 }
 
 /** Fetches every row matching the query, page by page. */
-export async function selectAll(store: Store, table: Table, query: Query = {}): Promise<Row[]> {
-  const PAGE = 1000;
+export async function selectAll(store: Store, table: Table, query: Query = {}, pageSize = 1000): Promise<Row[]> {
+  const PAGE = pageSize;
   const rows: Row[] = [];
   const order = query.order ?? [{ col: 'id', asc: true }];
   for (let offset = 0; ; offset += PAGE) {
