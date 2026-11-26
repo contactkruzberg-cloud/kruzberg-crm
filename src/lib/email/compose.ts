@@ -1,3 +1,4 @@
+import { decodeEntities } from './text';
 // What Greg types in the CRM → the mail that leaves: links written
 // [texte](adresse) become real links (HTML part), with a plain-text part in
 // Apple Mail's "texte <adresse>" form for clients that show text only.
@@ -50,4 +51,43 @@ function autolink(escaped: string) {
 export function insertLink(value: string, start: number, end: number, label: string, href: string) {
   const md = `[${label.replace(/[[\]]/g, '')}](${href})`;
   return { value: value.slice(0, start) + md + value.slice(end), caret: start + md.length };
+}
+
+/**
+ * Rich text copied from a page, a mail or a document (clipboard text/html)
+ * → what the composer holds: plain text, links kept as [label](url).
+ * Null when the copied text has no link (the plain paste is then enough).
+ */
+export function pastedHtmlToComposer(html: string): string | null {
+  if (!/<a\b[^>]*href=/i.test(html)) return null;
+  const strip = (s: string) => decodeEntities(s.replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
+  let found = false;
+  let s = html
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<(head|style|script)\b[\s\S]*?<\/\1>/gi, '')
+    // Links first: [label](url), or the bare url when the label is the url itself.
+    .replace(/<a\b[^>]*?href\s*=\s*("([^"]*)"|'([^']*)')[^>]*>([\s\S]*?)<\/a>/gi, (m, _q, h1: string, h2: string, inner: string) => {
+      const href = normalizeHref(decodeEntities(h1 ?? h2 ?? ''));
+      const label = strip(inner);
+      if (!href || !label) return label || m.replace(/<[^>]+>/g, '');
+      found = true;
+      const bare = href.replace(/^mailto:/, '').replace(/\/$/, '');
+      return label.replace(/\/$/, '') === bare || `https://${label}`.replace(/\/$/, '') === bare ? href.replace(/^mailto:/, '') : `\u0001${label.replace(/[[\]]/g, '')}\u0002${href}\u0003`;
+    })
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<li\b[^>]*>/gi, '\n- ')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<\/(div|h[1-6]|tr|blockquote|ul|ol)>/gi, '\n')
+    .replace(/<[^>]+>/g, '');
+  if (!found) return null;
+  s = decodeEntities(s)
+    .replace(/ /g, ' ')
+    .replace(/[ \t]+/g, ' ')
+    .split('\n')
+    .map((l) => l.trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  // Markers → markdown links, once the text is decoded (an entity can't break them).
+  return s.replace(/\u0001([^\u0002]*)\u0002([^\u0003]*)\u0003/g, (_m, label: string, href: string) => `[${label}](${href})`);
 }

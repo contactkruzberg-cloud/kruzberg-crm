@@ -7,7 +7,7 @@ import { isSetupError, useEmails, useFullText, useMarkSeen, useSendMessage } fro
 import { matches, replySubject, replyTarget, type EmailRow, type Match } from '@/lib/email/messages';
 import { cn } from '@/lib/utils';
 import { cleanBody, linkify, prettyUrl, withoutSignature } from '@/lib/email/text';
-import { insertLink, normalizeHref } from '@/lib/email/compose';
+import { insertLink, normalizeHref, pastedHtmlToComposer } from '@/lib/email/compose';
 
 const dayLabel = (iso: string) => {
   const d = new Date(iso);
@@ -358,6 +358,15 @@ export function Conversation({
                 const r = insertLink(body, el.selectionStart, el.selectionEnd, body.slice(el.selectionStart, el.selectionEnd), href);
                 setBody(r.value);
                 requestAnimationFrame(() => el.setSelectionRange(r.caret, r.caret));
+                return;
+              }
+              // Rich text (a page, a mail, a document): its links are kept as [texte](adresse).
+              const md = pastedHtmlToComposer(e.clipboardData.getData('text/html'));
+              if (md) {
+                e.preventDefault();
+                const start = el.selectionStart;
+                setBody(body.slice(0, start) + md + body.slice(el.selectionEnd));
+                requestAnimationFrame(() => el.setSelectionRange(start + md.length, start + md.length));
               }
             }}
             rows={Math.min(14, Math.max(1, body.split('\n').length))}

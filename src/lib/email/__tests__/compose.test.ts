@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { composeBodies, insertLink, normalizeHref } from '../compose';
+import { composeBodies, insertLink, normalizeHref, pastedHtmlToComposer } from '../compose';
 
 describe('normalizeHref', () => {
   test('web and mail links, scheme added when missing', () => {
@@ -30,5 +30,20 @@ describe('composeBodies', () => {
 describe('insertLink', () => {
   test('replaces the selection', () => {
     expect(insertLink('Voir le dossier ici', 5, 15, 'le dossier', 'https://k.com')).toEqual({ value: 'Voir [le dossier](https://k.com) ici', caret: 32 });
+  });
+});
+
+describe('pastedHtmlToComposer', () => {
+  test('rich text keeps its links as [label](url)', () => {
+    const html =
+      '<meta charset="utf-8"><div>Kit Promo - <a href="https://drive.google.com/x">Vidéo Live Session</a> - <a href="https://kruzberg.com/">kruzberg.com</a></div><div>Écrire à <a href="mailto:booking@kruzberg.com">booking@kruzberg.com</a>&nbsp;!</div>';
+    expect(pastedHtmlToComposer(html)).toBe('Kit Promo - [Vidéo Live Session](https://drive.google.com/x) - https://kruzberg.com/\nÉcrire à booking@kruzberg.com !');
+  });
+  test('no link: plain paste', () => {
+    expect(pastedHtmlToComposer('<p>Bonjour</p>')).toBeNull();
+    expect(pastedHtmlToComposer('')).toBeNull();
+  });
+  test('paragraphs and lists', () => {
+    expect(pastedHtmlToComposer('<p>Style : <a href="https://youtu.be/T">Teaser</a></p><ul><li>Un</li><li>Deux</li></ul>')).toBe('Style : [Teaser](https://youtu.be/T)\n\n- Un\n- Deux');
   });
 });
