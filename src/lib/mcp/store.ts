@@ -21,6 +21,7 @@ export type Table =
   | 'radar_docs'
   | 'radar_sync'
   | 'constellation_docs'
+  | 'emails'
   | 'mcp_audit_log';
 
 export type Filter =

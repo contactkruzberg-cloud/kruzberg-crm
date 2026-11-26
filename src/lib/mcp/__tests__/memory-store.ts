@@ -24,6 +24,7 @@ const DEFAULTS: Record<Table, Row> = {
   radar_docs: { data: {}, version: 1 },
   radar_sync: { base: {}, artifact_version: null, crm_version: null, pending: null },
   constellation_docs: { data: {}, version: 1 },
+  emails: { peers: [], subject: '', direction: 'out' },
   mcp_audit_log: {},
 };
 

@@ -9,11 +9,36 @@ import { selectAll, type Row, type Store } from './store';
 
 export interface InsightDeps {
   store: Store;
-  /** Injected in tests; defaults to the cached IMAP scan of the Sent folder. */
+  /** Injected in tests; defaults to the synced mail (table emails), IMAP scan as fallback. */
   sent?: () => Promise<{ data: KnownData['sent']; error?: string }>;
 }
 
 const ACTIVE = { col: 'deleted_at', op: 'is_null' } as const;
+
+/**
+ * Who booking@ already wrote to, from the mail synced in the CRM (table
+ * emails): seconds, where the IMAP scan of 3 years of Sent mail took more
+ * than the 60 s a connector call is allowed. The IMAP scan (time-boxed) only
+ * runs if the messaging is not set up yet.
+ */
+async function sentRecipients(store: Store): Promise<{ data: KnownData['sent']; error?: string }> {
+  try {
+    const rows = await selectAll(store, 'emails', { filters: [{ col: 'direction', op: 'eq', value: 'out' }], order: [{ col: 'sent_at', asc: false }] });
+    const by = new Map<string, KnownData['sent'][number]>();
+    for (const m of rows) {
+      for (const email of (m.peers as string[]) ?? []) {
+        const cur = by.get(email);
+        if (cur) cur.count++;
+        else by.set(email, { email, lastAt: String(m.sent_at), subject: String(m.subject ?? ''), count: 1 });
+      }
+    }
+    if (by.size) return { data: [...by.values()] };
+  } catch {
+    /* table missing: fall back to IMAP */
+  }
+  const timeout = new Promise<{ data: KnownData['sent']; error: string }>((r) => setTimeout(() => r({ data: [], error: 'scan des mails envoyés trop long, ignoré' }), 20_000));
+  return Promise.race([sentRecipientsCached(), timeout]);
+}
 
 export interface Candidate {
   ref?: string;
@@ -30,7 +55,7 @@ export async function radarKnownCheck(deps: InsightDeps, args: { candidates: Can
     selectAll(deps.store, 'venues', { filters: [ACTIVE] }),
     selectAll(deps.store, 'contacts', { filters: [ACTIVE] }),
     selectAll(deps.store, 'deals', { filters: [ACTIVE] }),
-    (deps.sent ?? (() => sentRecipientsCached()))(),
+    (deps.sent ?? (() => sentRecipients(deps.store)))(),
   ]);
   const data: KnownData = { entities: knownEntities(venues, contacts, deals), sent: sent.data, sentError: sent.error, scannedAt: new Date().toISOString() };
   const idx = buildKnownIndex(data);
