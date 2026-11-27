@@ -87,9 +87,13 @@ async function saveToSentFolder(rawMessage: Buffer) {
     await client.connect();
     const date = new Date();
     const mailboxes = await client.list();
+    // Apple Mail keeps its own "Sent Messages" folder next to OVH's "Sent" and
+    // shows only that one as Envoyés: write there when it exists, so mail sent
+    // from the CRM sits with the rest in Mail.
     const sentBox =
+      mailboxes.find((m) => /^(inbox[./])?sent messages$/i.test(m.path)) ??
       mailboxes.find((m) => m.specialUse === '\\Sent') ??
-      mailboxes.find((m) => /^(inbox[./])?(sent|sent messages|envoy&aok-s|envoy[ée]s)$/i.test(m.path));
+      mailboxes.find((m) => /^(inbox[./])?(sent|envoy&aok-s|envoy[ée]s)$/i.test(m.path));
     if (sentBox) await client.append(sentBox.path, rawMessage, ['\\Seen'], date);
     await client.logout();
   } catch (err) {
