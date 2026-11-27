@@ -1,7 +1,8 @@
 import nodemailer from 'nodemailer';
 import { ImapFlow } from 'imapflow';
 import MailComposer from 'nodemailer/lib/mail-composer';
-import { withSignature } from './signature';
+import { SIGNATURE_PHOTO_CID, SIGNATURE_PHOTO_HTML, withSignature } from './signature';
+import { SIGNATURE_PHOTO_JPEG_BASE64 } from './signature-photo';
 import { composeBodies } from './compose';
 
 const transporter = nodemailer.createTransport({
@@ -37,7 +38,11 @@ export async function sendEmail({ to, subject, body, replyTo, cc, inReplyTo, ref
   const from = `"KRUZBERG" <${user}>`;
   // Sent by the CRM itself: Apple Mail won't add Greg's signature, so we do.
   // Links typed [texte](adresse) leave as real links (HTML) + "texte <adresse>" (text).
-  const { text, html, hasLinks } = composeBodies(withSignature(body));
+  const signed = withSignature(body);
+  const { text, html: bodyHtml } = composeBodies(signed);
+  // The signature photo goes under the signature, inline (only when it is our signature).
+  const ours = signed.endsWith('(https://kruzberg.com)');
+  const html = ours ? bodyHtml.replace(/<\/div>$/, `${SIGNATURE_PHOTO_HTML}</div>`) : bodyHtml;
   // Our own Message-ID: the copy in « Envoyés » and the CRM share it (no duplicate on sync).
   const messageId = `<crm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@${user.split('@')[1] || 'kruzberg.com'}>`;
   const mail = {
@@ -46,7 +51,10 @@ export async function sendEmail({ to, subject, body, replyTo, cc, inReplyTo, ref
     cc: cc || undefined,
     subject,
     text,
-    html: hasLinks ? html : undefined,
+    html,
+    attachments: ours
+      ? [{ filename: 'KRUZBERG.jpg', content: Buffer.from(SIGNATURE_PHOTO_JPEG_BASE64, 'base64'), contentType: 'image/jpeg', cid: SIGNATURE_PHOTO_CID, contentDisposition: 'inline' as const }]
+      : undefined,
     replyTo: replyTo || user,
     messageId,
     inReplyTo: inReplyTo || undefined,
